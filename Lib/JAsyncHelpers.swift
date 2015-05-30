@@ -8,7 +8,7 @@
 
 import Foundation
 
-import JUtils
+import iAsync_utils
 
 public func asyncWithJResult<T>(result: JResult<T>) -> JAsyncTypes<T>.JAsync {
     

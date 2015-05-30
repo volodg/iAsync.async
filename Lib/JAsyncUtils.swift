@@ -8,7 +8,7 @@
 
 import Foundation
 
-import JUtils
+import iAsync_utils
 
 private let defaultQueueName = "com.jff.async_operations_library.general_queue"
 

@@ -8,7 +8,7 @@
 
 import Foundation
 
-import JUtils
+import iAsync_utils
 
 //TODO remove inheritence from NSObject
 public class JAsyncTimerResult : NSObject {}

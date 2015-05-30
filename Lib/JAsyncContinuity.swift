@@ -8,7 +8,7 @@
 
 import Foundation
 
-import JUtils
+import iAsync_utils
 
 private var waterfallFirstObjectInstance: JWaterwallFirstObject? = nil
 

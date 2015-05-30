@@ -8,7 +8,7 @@
 
 import Foundation
 
-import JUtils
+import iAsync_utils
 import Dispatch
 
 public protocol JAsyncInterface {
