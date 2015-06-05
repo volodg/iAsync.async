@@ -600,7 +600,7 @@ private func groupOfAsyncsPair<R1, R2>(firstLoader: JAsyncTypes<R1>.JAsync, seco
 ///////////////////////// ADD OBSERVERS OF ASYNC OP. RESULT ////////////////////////
 
 //doneCallbackHook called an cancel or finish loader's callbacks
-public func asyncWithDoneBlock<T>(loader: JAsyncTypes<T>.JAsync, doneCallbackHook: JSimpleBlock?) -> JAsyncTypes<T>.JAsync {
+public func asyncWithDoneBlock<T>(loader: JAsyncTypes<T>.JAsync, doneCallbackHook: SimpleBlock?) -> JAsyncTypes<T>.JAsync {
     
     if let doneCallbackHook = doneCallbackHook {
         

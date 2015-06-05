@@ -144,7 +144,7 @@ public func asyncWithFinishHookBlock<T, R>(loader: JAsyncTypes<T>.JAsync, finish
 
 func asyncWithStartAndFinishBlocks<T>(
     loader          : JAsyncTypes<T>.JAsync,
-    startBlockOption: JSimpleBlock?,
+    startBlockOption: SimpleBlock?,
     finishCallback  : JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncTypes<T>.JAsync
 {
     return { (progressCallback: JAsyncProgressCallback?,
@@ -167,7 +167,7 @@ func asyncWithStartAndFinishBlocks<T>(
 
 func asyncWithOptionalStartAndFinishBlocks<T>(
     loader        : JAsyncTypes<T>.JAsync,
-    startBlock    : JSimpleBlock?,
+    startBlock    : SimpleBlock?,
     finishCallback: JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncTypes<T>.JAsync
 {
     return { (progressCallback: JAsyncProgressCallback?,
@@ -200,7 +200,7 @@ func asyncWithOptionalStartAndFinishBlocks<T>(
 }
 
 public func asyncWithAnalyzer<T, R>(
-    data: T, analyzer: JUtilsBlockDefinitions2<T, R>.JAnalyzer) -> JAsyncTypes<R>.JAsync {
+    data: T, analyzer: UtilsBlockDefinitions2<T, R>.JAnalyzer) -> JAsyncTypes<R>.JAsync {
     
     return { (progressCallback: JAsyncProgressCallback?,
               stateCallback   : JAsyncChangeStateCallback?,
@@ -211,7 +211,7 @@ public func asyncWithAnalyzer<T, R>(
     }
 }
 
-public func asyncBinderWithAnalyzer<T, R>(analyzer: JUtilsBlockDefinitions2<T, R>.JAnalyzer) -> JAsyncTypes2<T, R>.JAsyncBinder {
+public func asyncBinderWithAnalyzer<T, R>(analyzer: UtilsBlockDefinitions2<T, R>.JAnalyzer) -> JAsyncTypes2<T, R>.JAsyncBinder {
     
     return { (result: T) -> JAsyncTypes<R>.JAsync in
         return asyncWithAnalyzer(result, analyzer)
@@ -220,7 +220,7 @@ public func asyncBinderWithAnalyzer<T, R>(analyzer: JUtilsBlockDefinitions2<T, R
 
 public func asyncWithChangedResult<T, R>(
     loader: JAsyncTypes<T>.JAsync,
-    resultBuilder: JUtilsBlockDefinitions2<T, R>.JMappingBlock) -> JAsyncTypes<R>.JAsync
+    resultBuilder: UtilsBlockDefinitions2<T, R>.JMappingBlock) -> JAsyncTypes<R>.JAsync
 {
     let secondLoaderBinder = asyncBinderWithAnalyzer({ (result: T) -> Result<R> in
         
@@ -233,7 +233,7 @@ public func asyncWithChangedResult<T, R>(
 
 func asyncWithChangedProgress<T>(
     loader: JAsyncTypes<T>.JAsync,
-    resultBuilder: JUtilsBlockDefinitions2<AnyObject, AnyObject>.JMappingBlock) -> JAsyncTypes<T>.JAsync
+    resultBuilder: UtilsBlockDefinitions2<AnyObject, AnyObject>.JMappingBlock) -> JAsyncTypes<T>.JAsync
 {
     return { (progressCallback: JAsyncProgressCallback?,
               stateCallback   : JAsyncChangeStateCallback?,
