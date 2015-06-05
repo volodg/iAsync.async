@@ -1,6 +1,6 @@
 //
 //  JTimerAsyncHelpers.swift
-//  JTimer
+//  Timer
 //
 //  Created by Vladimir Gorbenko on 27.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -18,7 +18,7 @@ private class JAsyncScheduler : NSObject, JAsyncInterface {
     
     typealias ResultType = JAsyncTimerResult
     
-    private var _timer: JTimer?
+    private var _timer: Timer?
     
     private let duration: NSTimeInterval
     private let leeway  : NSTimeInterval
@@ -68,12 +68,12 @@ private class JAsyncScheduler : NSObject, JAsyncInterface {
             return
         }
         
-        let timer = JTimer()
+        let timer = Timer()
         _timer = timer
         let cancel = timer.addBlock( { [weak self] (cancel: JCancelScheduledBlock) in
             
             cancel()
-            self?._finishCallback?(result: JResult.value(JAsyncTimerResult()))
+            self?._finishCallback?(result: Result.value(JAsyncTimerResult()))
         }, duration:duration, leeway:leeway, dispatchQueue:callbacksQueue)
     }
 }
@@ -126,7 +126,7 @@ func asyncAfterDelayWithDispatchQueue<T>(
 
 enum JRepeatAsyncTypes<T> {
     
-    typealias JContinueLoaderWithResult = (result: JResult<T>) -> JAsyncTypes<T>.JAsync?
+    typealias JContinueLoaderWithResult = (result: Result<T>) -> JAsyncTypes<T>.JAsync?
 }
 
 public func repeatAsyncWithDelayLoader<T>(
@@ -154,7 +154,7 @@ public func repeatAsyncWithDelayLoader<T>(
             stateCallbackHolder?(state: state)
             return
         }
-        let doneCallbackkWrapper = { (result: JResult<T>) -> () in
+        let doneCallbackkWrapper = { (result: Result<T>) -> () in
             
             if let finishCallback = finishCallbackHolder {
                 finishCallbackHolder = nil
@@ -172,7 +172,7 @@ public func repeatAsyncWithDelayLoader<T>(
         
         var finishHookHolder: JAsyncTypes2<T, T>.JDidFinishAsyncHook?
         
-        let finishCallbackHook = { (result: JResult<T>, _: JAsyncTypes<T>.JDidFinishAsyncCallback?) -> () in
+        let finishCallbackHook = { (result: Result<T>, _: JAsyncTypes<T>.JDidFinishAsyncCallback?) -> () in
             
             let finish = { () -> () in
                 
@@ -252,7 +252,7 @@ public func repeatAsync<T>(
     leeway: NSTimeInterval,
     maxRepeatCount: Int) -> JAsyncTypes<T>.JAsync
 {
-    let continueLoaderBuilderWrapper = { (result: JResult<T>) -> JAsyncTypes<T>.JAsync? in
+    let continueLoaderBuilderWrapper = { (result: Result<T>) -> JAsyncTypes<T>.JAsync? in
         
         let loaderOption = continueLoaderBuilder(result: result)
         

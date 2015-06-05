@@ -41,7 +41,7 @@ public class JAsyncsOwner {
                 let loaderData = ActiveLoaderData()
                 self_.loaders.append(loaderData)
                 
-                let finishCallbackWrapper = { (result: JResult<T>) -> () in
+                let finishCallbackWrapper = { (result: Result<T>) -> () in
                     
                     if let self_ = self {
                         
@@ -87,7 +87,7 @@ public class JAsyncsOwner {
             } else {
                 
                 let error = JAsyncFinishedByCancellationError()
-                finishCallback?(result: JResult.error(error))
+                finishCallback?(result: Result.error(error))
                 return jStubHandlerAsyncBlock
             }
         }

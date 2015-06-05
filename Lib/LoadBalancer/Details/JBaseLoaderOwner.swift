@@ -46,7 +46,7 @@ public class JBaseLoaderOwner<T> {
             return
         }
         
-        let doneCallbackWrapper = { (result: JResult<T>) -> () in
+        let doneCallbackWrapper = { (result: Result<T>) -> () in
             
             self.didFinishActiveLoaderCallback?(self)
             

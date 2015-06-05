@@ -183,7 +183,7 @@ private func generalAsyncWithSyncOperationAndQueue<T>(
     currentQueue: dispatch_queue_t,
     attr: dispatch_queue_attr_t) -> JAsyncTypes<T>.JAsync
 {
-    let progressLoadDataBlock = { (progressCallback: JAsyncProgressCallback?) -> JResult<T> in
+    let progressLoadDataBlock = { (progressCallback: JAsyncProgressCallback?) -> Result<T> in
         
         return loadDataBlock()
     }

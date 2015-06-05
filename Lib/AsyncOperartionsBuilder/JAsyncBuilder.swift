@@ -53,7 +53,7 @@ public class JAsyncBuilder<T: JAsyncInterface> {
             
             var finishCallbackHolder = finishCallback
             
-            let completionHandler = { (result: JResult<T.ResultType>) -> () in
+            let completionHandler = { (result: Result<T.ResultType>) -> () in
                 
                 if asyncObject == nil {
                     return
@@ -70,7 +70,7 @@ public class JAsyncBuilder<T: JAsyncInterface> {
                 asyncObject = nil
             }
             
-            let completionHandlerWrapper = { (result: JResult<T.ResultType>) -> () in
+            let completionHandlerWrapper = { (result: Result<T.ResultType>) -> () in
                 
                 if let asyncObject = asyncObject {
                     
@@ -122,7 +122,7 @@ public class JAsyncBuilder<T: JAsyncInterface> {
                     
                     if let error = errorOption {
                         
-                        completionHandler(JResult.error(error))
+                        completionHandler(Result.error(error))
                     } else if !stateCallbackCalled {
                         
                         if let stateCallback = stateCallbackHolder {

@@ -80,7 +80,7 @@ public class JArrayLoadersMerger<Arg: Hashable, Res> {
                         self._pendingLoadersCallbacksByKey.removeAtIndex(index)
                         if let finishCallback = callbacks.doneCallback {
                             callbacks.doneCallback = nil
-                            finishCallback(result: JResult.error(JAsyncFinishedByUnsubscriptionError()))
+                            finishCallback(result: Result.error(JAsyncFinishedByUnsubscriptionError()))
                         }
                         callbacks.unsubscribe()
                     } else {
@@ -93,7 +93,7 @@ public class JArrayLoadersMerger<Arg: Hashable, Res> {
                         self._pendingLoadersCallbacksByKey.removeAtIndex(index)
                         if let finishCallback = callbacks.doneCallback {
                             callbacks.doneCallback = nil
-                            finishCallback(result: JResult.error(JAsyncFinishedByCancellationError()))
+                            finishCallback(result: Result.error(JAsyncFinishedByCancellationError()))
                         }
                         callbacks.unsubscribe()
                     } else {
@@ -266,7 +266,7 @@ private class ActiveArrayLoader<Arg: Hashable, Res> {
                 stateCallback?(state: state)
             }
             
-            let doneCallbackWrapper = { (result: JResult<[Res]>) -> () in
+            let doneCallbackWrapper = { (result: Result<[Res]>) -> () in
                 
                 let (results, error) = { () -> ([Res]?, NSError?) in
                     
@@ -295,10 +295,10 @@ private class ActiveArrayLoader<Arg: Hashable, Res> {
                         
                         if let result = result {
                             
-                            value.doneCallback?(result: JResult.value(result))
+                            value.doneCallback?(result: Result.value(result))
                         } else {
                             
-                            value.doneCallback?(result: JResult.error(error!))
+                            value.doneCallback?(result: Result.error(error!))
                         }
                         
                         value.unsubscribe()
@@ -307,10 +307,10 @@ private class ActiveArrayLoader<Arg: Hashable, Res> {
                 
                 if let results = results {
                     
-                    finishCallback?(result: JResult.value(results))
+                    finishCallback?(result: Result.value(results))
                 } else {
                     
-                    finishCallback?(result: JResult.error(error!))
+                    finishCallback?(result: Result.error(error!))
                 }
             }
             
@@ -335,7 +335,7 @@ private class ActiveArrayLoader<Arg: Hashable, Res> {
         let handler = nativeLoader(
             progressCallback: nil,
             stateCallback: nil,
-            finishCallback: { (result: JResult<[Res]>) -> () in finished = true })
+            finishCallback: { (result: Result<[Res]>) -> () in finished = true })
         
         if !finished {
             _nativeHandler = handler

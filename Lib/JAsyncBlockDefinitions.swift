@@ -19,7 +19,7 @@ public typealias JAsyncHandler = (task: JAsyncHandlerTask) -> ()
 public enum JAsyncTypes<T> {
     
     public typealias ResultType = T
-    public typealias JDidFinishAsyncCallback = (result: JResult<T>) -> ()
+    public typealias JDidFinishAsyncCallback = (result: Result<T>) -> ()
     
     public typealias JAsync = (
         progressCallback: JAsyncProgressCallback?,
@@ -27,10 +27,10 @@ public enum JAsyncTypes<T> {
         finishCallback  : JDidFinishAsyncCallback?) -> JAsyncHandler
     
     //Synchronous block which can take a lot of time
-    public typealias JSyncOperation = () -> JResult<T>
+    public typealias JSyncOperation = () -> Result<T>
     
     //This block should call progress_callback_ block only from own thread
-    public typealias JSyncOperationWithProgress = (progressCallback: JAsyncProgressCallback?) -> JResult<T>
+    public typealias JSyncOperationWithProgress = (progressCallback: JAsyncProgressCallback?) -> Result<T>
 }
 
 public enum JAsyncTypes2<T1, T2> {
@@ -41,6 +41,6 @@ public enum JAsyncTypes2<T1, T2> {
     public typealias JAsyncBinder = (T1) -> JAsyncTypes<T2>.JAsync
 
     public typealias JDidFinishAsyncHook = (
-        result        : JResult<T1>,
+        result        : Result<T1>,
         finishCallback: JAsyncTypes<T2>.JDidFinishAsyncCallback?) -> ()
 }

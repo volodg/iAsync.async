@@ -132,7 +132,7 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
                             if objectIndex != Int.max {
                                 self.state.pendingLoaders.removeAtIndex(objectIndex)
                             }
-                            finishCallback?(result: JResult.error(JAsyncFinishedByCancellationError()))
+                            finishCallback?(result: Result.error(JAsyncFinishedByCancellationError()))
                         }
                     default:
                         assert(false) // "Unsupported type of task: %lu", (unsigned long)task)
