@@ -606,8 +606,8 @@ public func asyncWithDoneBlock<T>(loader: JAsyncTypes<T>.JAsync, doneCallbackHoo
         
         return { (
             progressCallback: JAsyncProgressCallback?,
-            stateCallback: JAsyncChangeStateCallback?,
-            finishCallback: JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+            stateCallback   : JAsyncChangeStateCallback?,
+            finishCallback  : JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
             
             let wrappedDoneCallback = { (result: Result<T>) -> () in
                 
