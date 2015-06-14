@@ -23,7 +23,7 @@ public class JBaseStrategy<T> {
         
         var objectIndex = Int.max
         
-        for (index, loader) in enumerate(queueState.pendingLoaders) {
+        for (index, loader) in queueState.pendingLoaders.enumerate() {
             if loader === pendingLoader {
                 objectIndex = index
                 break

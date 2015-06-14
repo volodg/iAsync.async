@@ -10,13 +10,13 @@ import Foundation
 
 public class JAsyncFinishedByCancellationError: JAsyncAbstractFinishError {
     
-    public init() {
+    required public init() {
         
         let str = "JFF_ASYNC_OPERATION_FINISHED_BY_CANCELLATION_ERROR"
         super.init(description: str)
     }
     
-    required public init(coder aDecoder: NSCoder) {
+    required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     

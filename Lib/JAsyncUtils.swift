@@ -20,28 +20,26 @@ private class JBlockOperation<T> {
     
     init(
         queueName         : String?,
-        loadDataBlock     : JAsyncTypes<T>.JSyncOperationWithProgress,
+        jobWithProgress   : JAsyncTypes<T>.JSyncOperationWithProgress,
         didLoadDataBlock  : JAsyncTypes<T>.JDidFinishAsyncCallback?,
         progressBlock     : JAsyncProgressCallback?,
         barrier           : Bool,
         currentQueue      : dispatch_queue_t = dispatch_get_main_queue(),
-        serialOrConcurrent: dispatch_queue_attr_t = DISPATCH_QUEUE_CONCURRENT) {
+        serialOrConcurrent: dispatch_queue_attr_t = DISPATCH_QUEUE_CONCURRENT)
+    {
+        let queue: dispatch_queue_t
         
-        //TODO use cStringUsingEncoding(NSUTF8StringEncoding) instead
-        let queue: dispatch_queue_t = { () -> dispatch_queue_t in
-            
-            if let queueName = queueName {
-                return dispatch_queue_get_or_create(queueName, serialOrConcurrent)
-            }
-            
-            return dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-        }()
+        if let queueName = queueName {
+            queue = dispatch_queue_get_or_create(label: queueName, attr: serialOrConcurrent)
+        } else {
+            queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+        }
         
         performBackgroundOperationInQueue(
             queue,
             barrier         : barrier,
             currentQueue    : currentQueue,
-            loadDataBlock   : loadDataBlock,
+            jobWithProgress : jobWithProgress,
             didLoadDataBlock: didLoadDataBlock,
             progressBlock   : progressBlock)
     }
@@ -60,7 +58,7 @@ private class JBlockOperation<T> {
         queue           : dispatch_queue_t,
         barrier         : Bool,
         currentQueue    : dispatch_queue_t,
-        loadDataBlock   : JAsyncTypes<T>.JSyncOperationWithProgress,
+        jobWithProgress : JAsyncTypes<T>.JSyncOperationWithProgress,
         didLoadDataBlock: JAsyncTypes<T>.JDidFinishAsyncCallback?,
         progressBlock   : JAsyncProgressCallback?) {
         
@@ -68,7 +66,7 @@ private class JBlockOperation<T> {
             ?{(dispatch_queue_t queue, dispatch_block_t block) -> () in dispatch_barrier_async(queue, block) }
             :{(dispatch_queue_t queue, dispatch_block_t block) -> () in dispatch_async(queue, block) }
         
-        dispatchAsyncMethod(queue, { () -> () in
+        dispatchAsyncMethod(dispatch_queue_t: queue, dispatch_block_t: { () -> () in
             
             if self.finishedOrCanceled {
                 return
@@ -86,7 +84,7 @@ private class JBlockOperation<T> {
                 })
             }
             
-            let result = loadDataBlock(progressCallback: progressCallback)
+            let result = jobWithProgress(progressCallback: progressCallback)
             
             dispatch_async(currentQueue, {
                 
@@ -105,19 +103,19 @@ private class JBlockOperation<T> {
 //TODO !!! remove NSObjet inheritence
 private class JAsyncAdapter<T> : NSObject, JAsyncInterface {
     
-    let loadDataBlock  : JAsyncTypes<T>.JSyncOperationWithProgress
+    let jobWithProgress: JAsyncTypes<T>.JSyncOperationWithProgress
     let queueName      : String?
     let barrier        : Bool
     let currentQueue   : dispatch_queue_t
     let queueAttributes: dispatch_queue_attr_t
     
-    init(loadDataBlock  : JAsyncTypes<T>.JSyncOperationWithProgress,
+    init(jobWithProgress: JAsyncTypes<T>.JSyncOperationWithProgress,
          queueName      : String?,
          barrier        : Bool,
          currentQueue   : dispatch_queue_t,
-         queueAttributes: dispatch_queue_attr_t) {
-        
-        self.loadDataBlock   = loadDataBlock
+         queueAttributes: dispatch_queue_attr_t)
+    {
+        self.jobWithProgress = jobWithProgress
         self.queueName       = queueName
         self.barrier         = barrier
         self.currentQueue    = currentQueue
@@ -133,7 +131,7 @@ private class JAsyncAdapter<T> : NSObject, JAsyncInterface {
             
         operation = JBlockOperation(
             queueName         : queueName,
-            loadDataBlock     : loadDataBlock,
+            jobWithProgress   : jobWithProgress,
             didLoadDataBlock  : finishCallback,
             progressBlock     : progressCallback,
             barrier           : barrier,
@@ -155,17 +153,17 @@ private class JAsyncAdapter<T> : NSObject, JAsyncInterface {
     }
 }
 
-private func asyncWithSyncOperationWithProgressBlockAndQueue<T>(
-    progressLoadDataBlock: JAsyncTypes<T>.JSyncOperationWithProgress,
-    queueName: String,
-    barrier: Bool,
-    currentQueue: dispatch_queue_t,
+private func async<T>(
+    jobWithProgress jobWithProgress: JAsyncTypes<T>.JSyncOperationWithProgress,
+    queueName      : String,
+    barrier        : Bool,
+    currentQueue   : dispatch_queue_t,
     queueAttributes: dispatch_queue_attr_t) -> JAsyncTypes<T>.JAsync {
     
     let factory = { () -> JAsyncAdapter<T> in
         
         let asyncObject = JAsyncAdapter(
-            loadDataBlock  : progressLoadDataBlock,
+            jobWithProgress: jobWithProgress,
             queueName      : queueName,
             barrier        : barrier,
             currentQueue   : currentQueue,
@@ -176,75 +174,74 @@ private func asyncWithSyncOperationWithProgressBlockAndQueue<T>(
     return JAsyncBuilder.buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: currentQueue)
 }
 
-private func generalAsyncWithSyncOperationAndQueue<T>(
-    loadDataBlock: JAsyncTypes<T>.JSyncOperation,
-    queueName: String,
-    barrier: Bool,
+private func async<T>(
+    job job     : JAsyncTypes<T>.JSyncOperation,
+    queueName   : String,
+    barrier     : Bool,
     currentQueue: dispatch_queue_t,
-    attr: dispatch_queue_attr_t) -> JAsyncTypes<T>.JAsync
+    attributes  : dispatch_queue_attr_t) -> JAsyncTypes<T>.JAsync
 {
-    let progressLoadDataBlock = { (progressCallback: JAsyncProgressCallback?) -> Result<T> in
-        
-        return loadDataBlock()
+    let jobWithProgress = { (progressCallback: JAsyncProgressCallback?) -> Result<T> in
+        return job()
     }
     
-    return asyncWithSyncOperationWithProgressBlockAndQueue(
-        progressLoadDataBlock,
-        queueName,
-        barrier,
-        currentQueue,
-        attr)
+    return async(
+        jobWithProgress: jobWithProgress,
+        queueName      : queueName,
+        barrier        : barrier,
+        currentQueue   : currentQueue,
+        queueAttributes: attributes)
 }
 
-public func asyncWithSyncOperation<T>(loadDataBlock: JAsyncTypes<T>.JSyncOperation) -> JAsyncTypes<T>.JAsync {
+public func async<T>(job job: JAsyncTypes<T>.JSyncOperation) -> JAsyncTypes<T>.JAsync {
     
-    return asyncWithSyncOperationAndQueue(loadDataBlock, defaultQueueName)
+    return async(job: job, queueName: defaultQueueName)
 }
 
-public func asyncWithSyncOperationAndQueue<T>(loadDataBlock: JAsyncTypes<T>.JSyncOperation, queueName: String) -> JAsyncTypes<T>.JAsync {
+public func async<T>(job job: JAsyncTypes<T>.JSyncOperation, queueName: String) -> JAsyncTypes<T>.JAsync {
     
     assert(NSThread.isMainThread())
-    return generalAsyncWithSyncOperationAndQueue(
-        loadDataBlock,
-        queueName,
-        false,
-        dispatch_get_main_queue(),
-        DISPATCH_QUEUE_CONCURRENT)
+    return async(
+        job         : job,
+        queueName   : queueName,
+        barrier     : false,
+        currentQueue: dispatch_get_main_queue(),
+        attributes  : DISPATCH_QUEUE_CONCURRENT)
 }
 
-func asyncWithSyncOperationAndConfigurableQueue<T>(loadDataBlock: JAsyncTypes<T>.JSyncOperation, queueName: String, isSerialQueue: Bool) -> JAsyncTypes<T>.JAsync {
+func async<T>(jobWithProgress: JAsyncTypes<T>.JSyncOperation, queueName: String, isSerialQueue: Bool) -> JAsyncTypes<T>.JAsync {
     
     assert(NSThread.isMainThread())
     let attr: dispatch_queue_attr_t = isSerialQueue
         ?0/*DISPATCH_QUEUE_SERIAL*/
         :DISPATCH_QUEUE_CONCURRENT
     
-    return generalAsyncWithSyncOperationAndQueue(
-        loadDataBlock,
-        queueName,
-        false,
-        dispatch_get_main_queue(),
-        attr)
+    return async(
+        job         : jobWithProgress,
+        queueName   : queueName,
+        barrier     : false,
+        currentQueue: dispatch_get_main_queue(),
+        attributes  : attr)
 }
 
-func barrierAsyncWithSyncOperationAndQueue<T>(loadDataBlock: JAsyncTypes<T>.JSyncOperation, queueName: String) -> JAsyncTypes<T>.JAsync {
+func barrierAsync<T>(jobWithProgress: JAsyncTypes<T>.JSyncOperation, queueName: String) -> JAsyncTypes<T>.JAsync {
     
     assert(NSThread.isMainThread())
-    return generalAsyncWithSyncOperationAndQueue(
-        loadDataBlock,
-        queueName,
-        true,
-        dispatch_get_main_queue(),
-        DISPATCH_QUEUE_CONCURRENT)
+    return async(
+        job         : jobWithProgress,
+        queueName   : queueName,
+        barrier     : true,
+        currentQueue: dispatch_get_main_queue(),
+        attributes  : DISPATCH_QUEUE_CONCURRENT)
 }
 
-public func asyncWithSyncOperationWithProgressBlock<T>(progressLoadDataBlock: JAsyncTypes<T>.JSyncOperationWithProgress) -> JAsyncTypes<T>.JAsync {
+public func async<T>(jobWithProgress: JAsyncTypes<T>.JSyncOperationWithProgress) -> JAsyncTypes<T>.JAsync {
     
     assert(NSThread.isMainThread())
-    return asyncWithSyncOperationWithProgressBlockAndQueue(
-        progressLoadDataBlock,
-        defaultQueueName,
-        false,
-        dispatch_get_main_queue(),
-        DISPATCH_QUEUE_CONCURRENT)
+    return async(
+        jobWithProgress: jobWithProgress,
+        queueName      : defaultQueueName,
+        barrier        : false,
+        currentQueue   : dispatch_get_main_queue(),
+        queueAttributes: DISPATCH_QUEUE_CONCURRENT)
 }

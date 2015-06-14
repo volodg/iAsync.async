@@ -25,7 +25,7 @@ public class JArrayLoadersMerger<Arg: Hashable, Res> {
     
     private func removeActiveLoader(loader: ActiveArrayLoader<Arg, Res>) {
         
-        for (index, element) in enumerate(activeArrayLoaders) {
+        for (index, element) in activeArrayLoaders.enumerate() {
             
             if element === loader {
                 self.activeArrayLoaders.removeAtIndex(index)
@@ -49,7 +49,7 @@ public class JArrayLoadersMerger<Arg: Hashable, Res> {
                 
                 let loader = bindSequenceOfAsyncs(currentLoader.nativeLoader!, { (result: [Res]) -> JAsyncTypes<Res>.JAsync in
                     //TODO check length of result
-                    return asyncWithResult(result[resultIndex])
+                    return async(result: result[resultIndex])
                 })
                 
                 return loader(
@@ -129,7 +129,7 @@ public class JArrayLoadersMerger<Arg: Hashable, Res> {
     
     private func activeLoaderForKey(key: Arg) -> ActiveArrayLoader<Arg, Res>? {
         
-        let result: ActiveArrayLoader<Arg, Res>? = firstMatch(activeArrayLoaders) { (activeLoader: ActiveArrayLoader<Arg, Res>) -> Bool in
+        let result: ActiveArrayLoader<Arg, Res>? = activeArrayLoaders.firstMatch { (activeLoader: ActiveArrayLoader<Arg, Res>) -> Bool in
             return activeLoader.loadersCallbacksByKey[key] != nil
         }
         return result
@@ -175,7 +175,7 @@ private class ActiveArrayLoader<Arg: Hashable, Res> {
     
     private func indexOfKey(key: Arg) -> Int {
         
-        for (index, currentKey) in enumerate(keys) {
+        for (index, currentKey) in keys.enumerate() {
             if currentKey == key {
                 return index
             }
@@ -268,15 +268,14 @@ private class ActiveArrayLoader<Arg: Hashable, Res> {
             
             let doneCallbackWrapper = { (result: Result<[Res]>) -> () in
                 
-                let (results, error) = { () -> ([Res]?, NSError?) in
-                    
-                    switch result {
-                    case let .Value(v):
-                        return (v.value, nil)
-                    case let .Error(locError):
-                        return (nil, locError)
-                    }
-                }()
+                let resError: ([Res]?, NSError?)
+                
+                switch result {
+                case let .Value(v):
+                    resError = (v.value, nil)
+                case let .Error(locError):
+                    resError = (nil, locError)
+                }
                 
                 if let self_ = self {
                     
@@ -289,8 +288,8 @@ private class ActiveArrayLoader<Arg: Hashable, Res> {
                     for (key, value) in loadersCallbacksByKey {
                         
                         //TODO test not full results array
-                        let result : Res? = results != nil
-                            ?results![self_.indexOfKey(key)]
+                        let result : Res? = resError.0 != nil
+                            ?(resError.0)![self_.indexOfKey(key)]
                             :nil
                         
                         if let result = result {
@@ -298,19 +297,19 @@ private class ActiveArrayLoader<Arg: Hashable, Res> {
                             value.doneCallback?(result: Result.value(result))
                         } else {
                             
-                            value.doneCallback?(result: Result.error(error!))
+                            value.doneCallback?(result: Result.error(resError.1!))
                         }
                         
                         value.unsubscribe()
                     }
                 }
                 
-                if let results = results {
+                if let results = resError.0 {
                     
                     finishCallback?(result: Result.value(results))
                 } else {
                     
-                    finishCallback?(result: Result.error(error!))
+                    finishCallback?(result: Result.error(resError.1!))
                 }
             }
             

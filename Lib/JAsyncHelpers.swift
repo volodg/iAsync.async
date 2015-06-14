@@ -10,7 +10,7 @@ import Foundation
 
 import iAsync_utils
 
-public func asyncWithJResult<T>(result: Result<T>) -> JAsyncTypes<T>.JAsync {
+public func async<T>(resultOrError result: Result<T>) -> JAsyncTypes<T>.JAsync {
     
     return { (progressCallback: JAsyncProgressCallback?,
         stateCallback: JAsyncChangeStateCallback?,
@@ -21,7 +21,7 @@ public func asyncWithJResult<T>(result: Result<T>) -> JAsyncTypes<T>.JAsync {
     }
 }
 
-public func asyncWithResult<T>(result: T) -> JAsyncTypes<T>.JAsync {
+public func async<T>(result result: T) -> JAsyncTypes<T>.JAsync {
     
     return { (progressCallback: JAsyncProgressCallback?,
               stateCallback: JAsyncChangeStateCallback?,
@@ -32,7 +32,7 @@ public func asyncWithResult<T>(result: T) -> JAsyncTypes<T>.JAsync {
     }
 }
 
-public func asyncWithError<T>(error: NSError) -> JAsyncTypes<T>.JAsync {
+public func async<T>(error error: NSError) -> JAsyncTypes<T>.JAsync {
     
     return { (progressCallback: JAsyncProgressCallback?,
               stateCallback   : JAsyncChangeStateCallback?,
@@ -43,18 +43,18 @@ public func asyncWithError<T>(error: NSError) -> JAsyncTypes<T>.JAsync {
     }
 }
 
-public func asyncWithHandlerFlag<T>(task: JAsyncHandlerTask) -> JAsyncTypes<T>.JAsync {
+public func async<T>(task task: JAsyncHandlerTask) -> JAsyncTypes<T>.JAsync {
     
     return { (progressCallback: JAsyncProgressCallback?,
               stateCallback: JAsyncChangeStateCallback?,
               doneCallback: JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
-        processHandlerFlag(task, stateCallback, doneCallback)
+        processHandlerTast(task, stateCallback: stateCallback, doneCallback: doneCallback)
         return jStubHandlerAsyncBlock
     }
 }
 
-public func processHandlerFlag<T>(
+public func processHandlerTast<T>(
     task         : JAsyncHandlerTask,
     stateCallback: JAsyncChangeStateCallback?,
     doneCallback : JAsyncTypes<T>.JDidFinishAsyncCallback?) {
@@ -91,18 +91,18 @@ func neverFinishAsync() -> JAsyncTypes<AnyObject>.JAsync {
             wasCanceled = (task == .Cancel
                 || task == .UnSubscribe)
             
-            processHandlerFlag(task, stateCallback, doneCallback)
+            processHandlerTast(task, stateCallback: stateCallback, doneCallback: doneCallback)
         }
     }
 }
 
-public func asyncWithSyncOperationInCurrentQueue<T>(block: JAsyncTypes<T>.JSyncOperation) -> JAsyncTypes<T>.JAsync
+public func async<T>(sameThreadJob: JAsyncTypes<T>.JSyncOperation) -> JAsyncTypes<T>.JAsync
 {
     return { (progressCallback: JAsyncProgressCallback?,
               stateCallback   : JAsyncChangeStateCallback?,
               doneCallback    : JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
-        doneCallback?(result: block())
+        doneCallback?(result: sameThreadJob())
         return jStubHandlerAsyncBlock
     }
 }
@@ -199,38 +199,6 @@ func asyncWithOptionalStartAndFinishBlocks<T>(
     }
 }
 
-public func asyncWithAnalyzer<T, R>(
-    data: T, analyzer: UtilsBlockDefinitions2<T, R>.JAnalyzer) -> JAsyncTypes<R>.JAsync {
-    
-    return { (progressCallback: JAsyncProgressCallback?,
-              stateCallback   : JAsyncChangeStateCallback?,
-              finishCallback  : JAsyncTypes<R>.JDidFinishAsyncCallback?) -> JAsyncHandler in
-        
-        finishCallback?(result: analyzer(object: data))
-        return jStubHandlerAsyncBlock
-    }
-}
-
-public func asyncBinderWithAnalyzer<T, R>(analyzer: UtilsBlockDefinitions2<T, R>.JAnalyzer) -> JAsyncTypes2<T, R>.JAsyncBinder {
-    
-    return { (result: T) -> JAsyncTypes<R>.JAsync in
-        return asyncWithAnalyzer(result, analyzer)
-    }
-}
-
-public func asyncWithChangedResult<T, R>(
-    loader: JAsyncTypes<T>.JAsync,
-    resultBuilder: UtilsBlockDefinitions2<T, R>.JMappingBlock) -> JAsyncTypes<R>.JAsync
-{
-    let secondLoaderBinder = asyncBinderWithAnalyzer({ (result: T) -> Result<R> in
-        
-        let newResult = resultBuilder(object: result)
-        return Result.value(newResult)
-    })
-    
-    return bindSequenceOfAsyncs(loader, secondLoaderBinder)
-}
-
 func asyncWithChangedProgress<T>(
     loader: JAsyncTypes<T>.JAsync,
     resultBuilder: UtilsBlockDefinitions2<AnyObject, AnyObject>.JMappingBlock) -> JAsyncTypes<T>.JAsync
@@ -250,21 +218,6 @@ func asyncWithChangedProgress<T>(
             stateCallback   : stateCallback          ,
             finishCallback  : finishCallback)
     }
-}
-
-func loaderWithAdditionalParalelLoaders<R, T>(
-    original: JAsyncTypes<R>.JAsync,
-    additionalLoaders: JAsyncTypes<T>.JAsync...) -> JAsyncTypes<R>.JAsync
-{
-    let groupLoader = groupOfAsyncsArray(additionalLoaders)
-    let allLoaders  = groupOfAsyncs(original, groupLoader)
-    
-    let getResult = { (result: (R, [T])) -> JAsyncTypes<R>.JAsync in
-        
-        return asyncWithResult(result.0)
-    }
-    
-    return bindSequenceOfAsyncs(allLoaders, getResult)
 }
 
 public func logErrorForLoader<T>(loader: JAsyncTypes<T>.JAsync) -> JAsyncTypes<T>.JAsync

@@ -70,7 +70,7 @@ private class JAsyncScheduler : NSObject, JAsyncInterface {
         
         let timer = Timer()
         _timer = timer
-        let cancel = timer.addBlock( { [weak self] (cancel: JCancelScheduledBlock) in
+        let _ = timer.addBlock( { [weak self] (cancel: JCancelScheduledBlock) in
             
             cancel()
             self?._finishCallback?(result: Result.value(JAsyncTimerResult()))
@@ -81,7 +81,7 @@ private class JAsyncScheduler : NSObject, JAsyncInterface {
 public func asyncWithDelay(delay: NSTimeInterval, leeway: NSTimeInterval) -> JAsyncTypes<JAsyncTimerResult>.JAsync {
     
     assert(NSThread.isMainThread(), "main thread expected")
-    return asyncWithDelayWithDispatchQueue(delay, leeway, dispatch_get_main_queue())
+    return asyncWithDelayWithDispatchQueue(delay, leeway: leeway, callbacksQueue: dispatch_get_main_queue())
 }
 
 func asyncWithDelayWithDispatchQueue(
@@ -105,9 +105,9 @@ public func asyncAfterDelay<T>(
     assert(NSThread.isMainThread())
     return asyncAfterDelayWithDispatchQueue(
         delay,
-        leeway,
-        loader,
-        dispatch_get_main_queue())
+        leeway        : leeway,
+        loader        : loader,
+        callbacksQueue: dispatch_get_main_queue())
 }
 
 func asyncAfterDelayWithDispatchQueue<T>(
@@ -116,9 +116,9 @@ func asyncAfterDelayWithDispatchQueue<T>(
     loader: JAsyncTypes<T>.JAsync,
     callbacksQueue: dispatch_queue_t) -> JAsyncTypes<T>.JAsync
 {
-    let timerLoader = asyncWithDelayWithDispatchQueue(delay, leeway, callbacksQueue)
+    let timerLoader = asyncWithDelayWithDispatchQueue(delay, leeway: leeway, callbacksQueue: callbacksQueue)
     let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: JAsyncTimerResult) -> JAsyncTypes<JAsyncTimerResult>.JAsync in
-        return asyncWithResult(result)
+        return async(result: result)
     })
     
     return sequenceOfAsyncs(delayedLoader, loader)
@@ -192,7 +192,7 @@ public func repeatAsyncWithDelayLoader<T>(
                 break
             }
             
-            var newLoader = continueLoaderBuilder(result: result)
+            let newLoader = continueLoaderBuilder(result: result)
             
             if newLoader == nil || currentLeftCount == 0 {
                 
@@ -203,7 +203,7 @@ public func repeatAsyncWithDelayLoader<T>(
                     ?currentLeftCount - 1
                     :currentLeftCount
                 
-                let loader = asyncWithFinishHookBlock(newLoader!, finishHookHolder!)
+                let loader = asyncWithFinishHookBlock(newLoader!, finishCallbackHook: finishHookHolder!)
                 
                 currentLoaderHandlerHolder = loader(
                     progressCallback: progressCallbackWrapper,
@@ -214,7 +214,7 @@ public func repeatAsyncWithDelayLoader<T>(
         
         finishHookHolder = finishCallbackHook
         
-        let loader = asyncWithFinishHookBlock(nativeLoader, finishCallbackHook)
+        let loader = asyncWithFinishHookBlock(nativeLoader, finishCallbackHook: finishCallbackHook)
         
         currentLoaderHandlerHolder = loader(
             progressCallback: progressCallback,
@@ -257,9 +257,9 @@ public func repeatAsync<T>(
         let loaderOption = continueLoaderBuilder(result: result)
         
         if let loader = loaderOption {
-            let timerLoader = asyncWithDelay(delay, leeway)
+            let timerLoader = asyncWithDelay(delay, leeway: leeway)
             let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: JAsyncTimerResult) -> JAsyncTypes<JAsyncTimerResult>.JAsync in
-                return asyncWithResult(result)
+                return async(result: result)
             })
             
             return sequenceOfAsyncs(delayedLoader, loader)
@@ -268,5 +268,5 @@ public func repeatAsync<T>(
         return nil
     }
     
-    return repeatAsyncWithDelayLoader(nativeLoader, continueLoaderBuilderWrapper, maxRepeatCount)
+    return repeatAsyncWithDelayLoader(nativeLoader, continueLoaderBuilder: continueLoaderBuilderWrapper, maxRepeatCount: maxRepeatCount)
 }

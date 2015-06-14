@@ -247,7 +247,7 @@ private class ObjectRelatedPropertyData<T>
     }
     
     func removeDelegate(delegate: CallbacksBlocksHolder<T>) {
-        for (index, callbacks) in enumerate(delegates) {
+        for (index, callbacks) in delegates.enumerate() {
             if delegate === callbacks {
                 delegates.removeAtIndex(index)
                 break

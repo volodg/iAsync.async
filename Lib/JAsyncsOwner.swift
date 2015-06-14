@@ -45,7 +45,7 @@ public class JAsyncsOwner {
                     
                     if let self_ = self {
                         
-                        for (index, element) in enumerate(self_.loaders) {
+                        for (index, element) in self_.loaders.enumerate() {
                             if self_.loaders[index] === loaderData {
                                 self_.loaders.removeAtIndex(index)
                                 break
@@ -68,7 +68,7 @@ public class JAsyncsOwner {
                         
                         var loaderIndex = Int.max
                         
-                        for (index, element) in enumerate(self_.loaders) {
+                        for (index, element) in self_.loaders.enumerate() {
                             if self_.loaders[index] === loaderData {
                                 loaderIndex = index
                                 break
@@ -97,7 +97,7 @@ public class JAsyncsOwner {
         
         let tmpLoaders = loaders
         loaders.removeAll(keepCapacity: false)
-        for (_, element) in enumerate(tmpLoaders) {
+        for (_, element) in tmpLoaders.enumerate() {
             element.handler?(task: task)
         }
     }

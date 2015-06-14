@@ -12,9 +12,9 @@ public func asyncWaitAllMap<Sequence: SequenceType, R>(
     sequence : Sequence,
     binder: JAsyncTypes2<Sequence.Generator.Element, R>.JAsyncBinder) -> JAsyncTypes<[R]>.JAsync
 {
-    let loaders = map(sequence, { (transform) -> JAsyncTypes<R>.JAsync in
+    let loaders = sequence.map { (transform) -> JAsyncTypes<R>.JAsync in
         return binder(transform)
-    })
+    }
     
     return groupOfAsyncsArray(loaders)
 }

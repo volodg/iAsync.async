@@ -54,7 +54,7 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
         
         if result {
             
-            return all(state.activeLoaders) { (activeLoader: JBaseLoaderOwner<Strategy.ResultType>) -> Bool in
+            return state.activeLoaders.all { (activeLoader: JBaseLoaderOwner<Strategy.ResultType>) -> Bool in
                 return !activeLoader.barrier
             }
         }
@@ -123,7 +123,7 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
                             let doneCallback = loaderHolder.doneCallback
                             
                             var objectIndex = Int.max
-                            for (index, object) in enumerate(self.state.pendingLoaders) {
+                            for (index, object) in self.state.pendingLoaders.enumerate() {
                                 if object === loaderHolder {
                                     objectIndex = index
                                     break
@@ -132,7 +132,7 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
                             if objectIndex != Int.max {
                                 self.state.pendingLoaders.removeAtIndex(objectIndex)
                             }
-                            finishCallback?(result: Result.error(JAsyncFinishedByCancellationError()))
+                            doneCallback?(result: Result.error(JAsyncFinishedByCancellationError()))
                         }
                     default:
                         assert(false) // "Unsupported type of task: %lu", (unsigned long)task)
@@ -150,7 +150,7 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
     private func didFinishActiveLoader(activeLoader: JBaseLoaderOwner<Strategy.ResultType>) {
         
         var objectIndex = Int.max
-        for (index, object) in enumerate(self.state.activeLoaders) {
+        for (index, object) in self.state.activeLoaders.enumerate() {
             if object === activeLoader {
                 objectIndex = index
                 break
