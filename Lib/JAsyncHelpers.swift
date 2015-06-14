@@ -96,7 +96,7 @@ func neverFinishAsync() -> JAsyncTypes<AnyObject>.JAsync {
     }
 }
 
-public func async<T>(sameThreadJob: JAsyncTypes<T>.JSyncOperation) -> JAsyncTypes<T>.JAsync
+public func async<T>(sameThreadJob sameThreadJob: JAsyncTypes<T>.JSyncOperation) -> JAsyncTypes<T>.JAsync
 {
     return { (progressCallback: JAsyncProgressCallback?,
               stateCallback   : JAsyncChangeStateCallback?,
