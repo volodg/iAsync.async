@@ -271,8 +271,8 @@ private class ActiveArrayLoader<Arg: Hashable, Res> {
                 let resError: ([Res]?, NSError?)
                 
                 switch result {
-                case let .Value(v):
-                    resError = (v.value, nil)
+                case let .Value(value):
+                    resError = (value, nil)
                 case let .Error(locError):
                     resError = (nil, locError)
                 }

@@ -121,8 +121,8 @@ private func bindSequenceOfBindersPair<P1, R1, R2>(
             let fistLoaderDoneCallback = { (result: Result<R1>) -> () in
                 
                 switch result {
-                case let .Value(v):
-                    let secondLoader = secondBinder(v.value)
+                case let .Value(value):
+                    let secondLoader = secondBinder(value)
                     handlerBlockHolder = secondLoader(
                         progressCallback: progressCallbackWrapper,
                         stateCallback   : stateCallbackWrapper,
@@ -319,7 +319,7 @@ private func bindTrySequenceOfBindersPair<T, R>(
                         
                         switch result {
                         case let .Value(v):
-                            doneCallbackWrapper(Result.value(v.value))
+                            doneCallbackWrapper(Result.value(v))
                         case let .Error(error):
                             if error is JAsyncFinishedByCancellationError {
                                 
@@ -477,7 +477,7 @@ private func makeResultHandler<RT, R1, R2>(
         switch result {
         case let .Value(v):
             
-            resultSetter(v: v.value, fields: fields)
+            resultSetter(v: v, fields: fields)
             
             if fields.loaded {
                 
