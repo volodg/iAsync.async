@@ -375,7 +375,7 @@ private func bindTrySequenceOfBindersPair<T, R>(
 
 //calls loaders while success
 //@@ next binder will receive an error if previous operation fails
-public func bindTrySequenceOfAsyncs<R>(firstLoader: JAsyncTypes<R>.JAsync, nextBinders: JAsyncTypes2<NSError, R>.JAsyncBinder...) -> JAsyncTypes<R>.JAsync {
+public func bindTrySequenceOfAsyncs<R>(firstLoader: JAsyncTypes<R>.JAsync, _ nextBinders: JAsyncTypes2<NSError, R>.JAsyncBinder...) -> JAsyncTypes<R>.JAsync {
     
     var firstBlock = { (data: JWaterwallFirstObject) -> JAsyncTypes<R>.JAsync in
         return firstLoader
