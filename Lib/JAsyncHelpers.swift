@@ -10,7 +10,9 @@ import Foundation
 
 import iAsync_utils
 
-public func async<T>(resultOrError result: Result<T>) -> JAsyncTypes<T>.JAsync {
+import Result
+
+public func async<T>(resultOrError result: Result<T, NSError>) -> JAsyncTypes<T>.JAsync {
     
     return { (progressCallback: JAsyncProgressCallback?,
         stateCallback: JAsyncChangeStateCallback?,
@@ -27,7 +29,7 @@ public func async<T>(result result: T) -> JAsyncTypes<T>.JAsync {
               stateCallback: JAsyncChangeStateCallback?,
               doneCallback: JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
-        doneCallback?(result: Result.value(result))
+        doneCallback?(result: Result.success(result))
         return jStubHandlerAsyncBlock
     }
 }
@@ -38,7 +40,7 @@ public func async<T>(error error: NSError) -> JAsyncTypes<T>.JAsync {
               stateCallback   : JAsyncChangeStateCallback?,
               doneCallback    : JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
-        doneCallback?(result: Result.error(error))
+        doneCallback?(result: Result.failure(error))
         return jStubHandlerAsyncBlock
     }
 }
@@ -63,7 +65,7 @@ public func processHandlerTast<T>(
     
     if let error = errorOption {
         
-        doneCallback?(result: Result.error(error))
+        doneCallback?(result: Result.failure(error))
     } else {
         
         assert(task.rawValue <= JAsyncHandlerTask.Undefined.rawValue)
@@ -118,7 +120,7 @@ public func asyncWithFinishCallbackBlock<T>(
         return loader(
             progressCallback: progressCallback,
             stateCallback   : stateCallback,
-            finishCallback  : { (result: Result<T>) -> () in
+            finishCallback  : { (result: Result<T, NSError>) -> () in
                 
             finishCallbackBlock(result: result)
             doneCallback?(result: result)
@@ -135,7 +137,7 @@ public func asyncWithFinishHookBlock<T, R>(loader: JAsyncTypes<T>.JAsync, finish
         return loader(
             progressCallback: progressCallback,
             stateCallback   : stateCallback   ,
-            finishCallback: { (result: Result<T>) -> () in
+            finishCallback: { (result: Result<T, NSError>) -> () in
             
             finishCallbackHook(result: result, finishCallback: finishCallback)
         })
@@ -153,7 +155,7 @@ func asyncWithStartAndFinishBlocks<T>(
         
         startBlockOption?()
         
-        let wrappedDoneCallback = { (result: Result<T>) -> () in
+        let wrappedDoneCallback = { (result: Result<T, NSError>) -> () in
             
             finishCallback?(result: result)
             doneCallback?(result: result)
@@ -176,7 +178,7 @@ func asyncWithOptionalStartAndFinishBlocks<T>(
         
         var loading = true
         
-        let wrappedDoneCallback = { (result: Result<T>) -> () in
+        let wrappedDoneCallback = { (result: Result<T, NSError>) -> () in
             
             loading = false
             
@@ -227,9 +229,9 @@ public func logErrorForLoader<T>(loader: JAsyncTypes<T>.JAsync) -> JAsyncTypes<T
         stateCallback   : JAsyncChangeStateCallback?,
         finishCallback  : JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
-        let wrappedDoneCallback = { (result: Result<T>) -> () in
+        let wrappedDoneCallback = { (result: Result<T, NSError>) -> () in
             
-            result.onError { $0.writeErrorWithJLogger() }
+            result.error?.writeErrorWithJLogger()
             finishCallback?(result: result)
         }
         

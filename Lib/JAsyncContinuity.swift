@@ -10,6 +10,8 @@ import Foundation
 
 import iAsync_utils
 
+import Result
+
 private var waterfallFirstObjectInstance: JWaterwallFirstObject? = nil
 
 private class JWaterwallFirstObject {
@@ -103,7 +105,7 @@ private func bindSequenceOfBindersPair<P1, R1, R2>(
                 
                 stateCallbackHolder?(state: state)
             }
-            let doneCallbackWrapper = { (result: Result<R2>) -> () in
+            let doneCallbackWrapper = { (result: Result<R2, NSError>) -> () in
                 
                 if let callback = finishCallbackHolder {
                     
@@ -118,18 +120,18 @@ private func bindSequenceOfBindersPair<P1, R1, R2>(
             
             var finished = false
             
-            let fistLoaderDoneCallback = { (result: Result<R1>) -> () in
+            let fistLoaderDoneCallback = { (result: Result<R1, NSError>) -> () in
                 
                 switch result {
-                case let .Value(value):
+                case let .Success(value):
                     let secondLoader = secondBinder(value)
                     handlerBlockHolder = secondLoader(
                         progressCallback: progressCallbackWrapper,
                         stateCallback   : stateCallbackWrapper,
                         finishCallback  : doneCallbackWrapper)
-                case let .Error(error):
+                case let .Failure(error):
                     finished = true
-                    doneCallbackWrapper(Result.error(error))
+                    doneCallbackWrapper(Result.failure(error))
                 }
             }
             
@@ -157,7 +159,7 @@ private func bindSequenceOfBindersPair<P1, R1, R2>(
                     }
                     
                     if task == .UnSubscribe {
-                        finishCallbackHolder?(result: Result.error(JAsyncFinishedByUnsubscriptionError()))
+                        finishCallbackHolder?(result: Result.failure(JAsyncFinishedByUnsubscriptionError()))
                     } else {
                         currentHandler(task: task)
                     }
@@ -300,7 +302,7 @@ private func bindTrySequenceOfBindersPair<T, R>(
                     stateCallbackHolder?(state: state)
                     return
                 }
-                let doneCallbackWrapper = { (result: Result<R>) -> () in
+                let doneCallbackWrapper = { (result: Result<R, NSError>) -> () in
                     
                     if let finish = finishCallbackHolder {
                         finishCallbackHolder = nil
@@ -315,15 +317,15 @@ private func bindTrySequenceOfBindersPair<T, R>(
                 let firstHandler = firstLoader(
                     progressCallback: progressCallbackWrapper,
                     stateCallback: stateCallbackWrapper,
-                    finishCallback: { (result: Result<R>) -> () in
+                    finishCallback: { (result: Result<R, NSError>) -> () in
                         
                         switch result {
-                        case let .Value(v):
-                            doneCallbackWrapper(Result.value(v))
-                        case let .Error(error):
+                        case let .Success(value):
+                            doneCallbackWrapper(Result.success(value))
+                        case let .Failure(error):
                             if error is JAsyncFinishedByCancellationError {
                                 
-                                doneCallbackWrapper(Result.error(error))
+                                doneCallbackWrapper(Result.failure(error))
                                 return
                             }
                             
@@ -352,7 +354,7 @@ private func bindTrySequenceOfBindersPair<T, R>(
                     }
                     
                     if task == .UnSubscribe {
-                        finishCallbackHolder?(result: Result.error(JAsyncFinishedByUnsubscriptionError()))
+                        finishCallbackHolder?(result: Result.failure(JAsyncFinishedByUnsubscriptionError()))
                     } else {
                         currentHandler!(task: task)
                     }
@@ -462,7 +464,7 @@ private func makeResultHandler<RT, R1, R2>(
     fields: ResultHandlerData<R1, R2>
     ) -> JAsyncTypes<RT>.JDidFinishAsyncCallback
 {
-    return { (result: Result<RT>) -> () in
+    return { (result: Result<RT, NSError>) -> () in
         
         if fields.finished {
             return
@@ -475,7 +477,7 @@ private func makeResultHandler<RT, R1, R2>(
         }
         
         switch result {
-        case let .Value(v):
+        case let .Success(v):
             
             resultSetter(v: v, fields: fields)
             
@@ -492,13 +494,13 @@ private func makeResultHandler<RT, R1, R2>(
                 if let finish = fields.finishCallbackHolder {
                     fields.finishCallbackHolder   = nil
                     let completeResult = (fields.completeResult1!, fields.completeResult2!)
-                    finish(result: Result.value(completeResult))
+                    finish(result: Result.success(completeResult))
                 }
             } else {
                 
                 fields.loaded = true
             }
-        case let .Error(error):
+        case let .Failure(error):
             fields.finished = true
             
             fields.progressCallbackHolder = nil
@@ -506,7 +508,7 @@ private func makeResultHandler<RT, R1, R2>(
             
             if let finish = fields.finishCallbackHolder {
                 fields.finishCallbackHolder = nil
-                finish(result: Result.error(error))
+                finish(result: Result.failure(error))
             }
         }
     }
@@ -612,7 +614,7 @@ public func asyncWithDoneBlock<T>(loader: JAsyncTypes<T>.JAsync, doneCallbackHoo
             stateCallback   : JAsyncChangeStateCallback?,
             finishCallback  : JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
             
-            let wrappedDoneCallback = { (result: Result<T>) -> () in
+            let wrappedDoneCallback = { (result: Result<T, NSError>) -> () in
                 
                 doneCallbackHook()
                 finishCallback?(result: result)

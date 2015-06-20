@@ -10,6 +10,8 @@ import Foundation
 
 import iAsync_utils
 
+import Result
+
 public enum CachedAsyncTypes<Value>
 {
     public typealias JResultSetter = (value: Value) -> ()
@@ -65,7 +67,7 @@ public class JCachedAsync<Key: Hashable, Value> {
                     propertyExtractor.removeDelegate(callbacks)
                     callbacks.clearCallbacks()
                     
-                    didLoadDataBlock?(result: Result.error(JAsyncFinishedByUnsubscriptionError()))
+                    didLoadDataBlock?(result: Result.failure(JAsyncFinishedByUnsubscriptionError()))
                 case .Cancel:
                     handler(task: .Cancel)
                     self.clearDataForPropertyExtractor(propertyExtractor)//TODO should be already cleared here in finish callback
@@ -89,7 +91,7 @@ public class JCachedAsync<Key: Hashable, Value> {
     
     private func doneCallbackBlock(propertyExtractor: PropertyExtractorType) -> JAsyncTypes<Value>.JDidFinishAsyncCallback {
         
-        return { (result: Result<Value>) -> () in
+        return { (result: Result<Value, NSError>) -> () in
             
             //TODO test this if
             //may happen when cancel
@@ -97,7 +99,7 @@ public class JCachedAsync<Key: Hashable, Value> {
                 return
             }
             
-            result.onValue { value -> Void in
+            if let value = result.value {
                 propertyExtractor.setterOption?(value: value)
             }
             
@@ -184,7 +186,7 @@ public class JCachedAsync<Key: Hashable, Value> {
             
             if let result = propertyExtractor.getAsyncResult() {
                 
-                finishCallback?(result: Result.value(result))
+                finishCallback?(result: Result.success(result))
                 
                 propertyExtractor.clear()
                 return jStubHandlerAsyncBlock

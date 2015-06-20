@@ -10,6 +10,8 @@ import Foundation
 
 import iAsync_utils
 
+import Result
+
 private let defaultQueueName = "com.jff.async_operations_library.general_queue"
 
 //TODO remove this class
@@ -181,7 +183,7 @@ private func async<T>(
     currentQueue: dispatch_queue_t,
     attributes  : dispatch_queue_attr_t) -> JAsyncTypes<T>.JAsync
 {
-    let jobWithProgress = { (progressCallback: JAsyncProgressCallback?) -> Result<T> in
+    let jobWithProgress = { (progressCallback: JAsyncProgressCallback?) -> Result<T, NSError> in
         return job()
     }
     
