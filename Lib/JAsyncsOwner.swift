@@ -10,6 +10,8 @@ import Foundation
 
 import iAsync_utils
 
+import Result
+
 public class JAsyncsOwner {
     
     private class ActiveLoaderData {
@@ -41,7 +43,7 @@ public class JAsyncsOwner {
                 let loaderData = ActiveLoaderData()
                 self_.loaders.append(loaderData)
                 
-                let finishCallbackWrapper = { (result: Result<T>) -> () in
+                let finishCallbackWrapper = { (result: Result<T, NSError>) -> () in
                     
                     if let self_ = self {
                         
@@ -87,7 +89,7 @@ public class JAsyncsOwner {
             } else {
                 
                 let error = JAsyncFinishedByCancellationError()
-                finishCallback?(result: Result.error(error))
+                finishCallback?(result: Result.failure(error))
                 return jStubHandlerAsyncBlock
             }
         }

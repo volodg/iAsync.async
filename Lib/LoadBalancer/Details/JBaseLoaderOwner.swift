@@ -10,6 +10,8 @@ import Foundation
 
 import iAsync_utils
 
+import Result
+
 public class JBaseLoaderOwner<T> {
     
     var barrier = false
@@ -46,7 +48,7 @@ public class JBaseLoaderOwner<T> {
             return
         }
         
-        let doneCallbackWrapper = { (result: Result<T>) -> () in
+        let doneCallbackWrapper = { (result: Result<T, NSError>) -> () in
             
             self.didFinishActiveLoaderCallback?(self)
             

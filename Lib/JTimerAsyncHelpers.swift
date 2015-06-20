@@ -10,6 +10,8 @@ import Foundation
 
 import iAsync_utils
 
+import Result
+
 //TODO remove inheritence from NSObject
 public class JAsyncTimerResult : NSObject {}
 
@@ -73,7 +75,7 @@ private class JAsyncScheduler : NSObject, JAsyncInterface {
         let cancel = timer.addBlock( { [weak self] (cancel: JCancelScheduledBlock) in
             
             cancel()
-            self?._finishCallback?(result: Result.value(JAsyncTimerResult()))
+            self?._finishCallback?(result: Result.success(JAsyncTimerResult()))
         }, duration:duration, leeway:leeway, dispatchQueue:callbacksQueue)
     }
 }
@@ -126,7 +128,7 @@ func asyncAfterDelayWithDispatchQueue<T>(
 
 enum JRepeatAsyncTypes<T> {
     
-    typealias JContinueLoaderWithResult = (result: Result<T>) -> JAsyncTypes<T>.JAsync?
+    typealias JContinueLoaderWithResult = (result: Result<T, NSError>) -> JAsyncTypes<T>.JAsync?
 }
 
 public func repeatAsyncWithDelayLoader<T>(
@@ -154,7 +156,7 @@ public func repeatAsyncWithDelayLoader<T>(
             stateCallbackHolder?(state: state)
             return
         }
-        let doneCallbackkWrapper = { (result: Result<T>) -> () in
+        let doneCallbackkWrapper = { (result: Result<T, NSError>) -> () in
             
             if let finishCallback = finishCallbackHolder {
                 finishCallbackHolder = nil
@@ -172,7 +174,7 @@ public func repeatAsyncWithDelayLoader<T>(
         
         var finishHookHolder: JAsyncTypes2<T, T>.JDidFinishAsyncHook?
         
-        let finishCallbackHook = { (result: Result<T>, _: JAsyncTypes<T>.JDidFinishAsyncCallback?) -> () in
+        let finishCallbackHook = { (result: Result<T, NSError>, _: JAsyncTypes<T>.JDidFinishAsyncCallback?) -> () in
             
             let finish = { () -> () in
                 
@@ -183,8 +185,8 @@ public func repeatAsyncWithDelayLoader<T>(
             }
             
             switch result {
-            case let .Error(error):
-                if error is JAsyncFinishedByCancellationError {
+            case let .Failure(error):
+                if error.value is JAsyncFinishedByCancellationError {
                     finish()
                     return
                 }
@@ -252,7 +254,7 @@ public func repeatAsync<T>(
     leeway: NSTimeInterval,
     maxRepeatCount: Int) -> JAsyncTypes<T>.JAsync
 {
-    let continueLoaderBuilderWrapper = { (result: Result<T>) -> JAsyncTypes<T>.JAsync? in
+    let continueLoaderBuilderWrapper = { (result: Result<T, NSError>) -> JAsyncTypes<T>.JAsync? in
         
         let loaderOption = continueLoaderBuilder(result: result)
         

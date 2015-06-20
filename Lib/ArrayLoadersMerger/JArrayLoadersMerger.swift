@@ -10,6 +10,8 @@ import Foundation
 
 import iAsync_utils
 
+import Result
+
 public class JArrayLoadersMerger<Arg: Hashable, Res> {
     
     private typealias JAsyncOpAr = JAsyncTypes<[Res]>.JAsync
@@ -80,7 +82,7 @@ public class JArrayLoadersMerger<Arg: Hashable, Res> {
                         self._pendingLoadersCallbacksByKey.removeAtIndex(index)
                         if let finishCallback = callbacks.doneCallback {
                             callbacks.doneCallback = nil
-                            finishCallback(result: Result.error(JAsyncFinishedByUnsubscriptionError()))
+                            finishCallback(result: Result.failure(JAsyncFinishedByUnsubscriptionError()))
                         }
                         callbacks.unsubscribe()
                     } else {
@@ -93,7 +95,7 @@ public class JArrayLoadersMerger<Arg: Hashable, Res> {
                         self._pendingLoadersCallbacksByKey.removeAtIndex(index)
                         if let finishCallback = callbacks.doneCallback {
                             callbacks.doneCallback = nil
-                            finishCallback(result: Result.error(JAsyncFinishedByCancellationError()))
+                            finishCallback(result: Result.failure(JAsyncFinishedByCancellationError()))
                         }
                         callbacks.unsubscribe()
                     } else {
@@ -266,15 +268,15 @@ private class ActiveArrayLoader<Arg: Hashable, Res> {
                 stateCallback?(state: state)
             }
             
-            let doneCallbackWrapper = { (result: Result<[Res]>) -> () in
+            let doneCallbackWrapper = { (result: Result<[Res], NSError>) -> () in
                 
                 let (results, error) = { () -> ([Res]?, NSError?) in
                     
                     switch result {
-                    case let .Value(v):
+                    case let .Success(v):
                         return (v.value, nil)
-                    case let .Error(locError):
-                        return (nil, locError)
+                    case let .Failure(locError):
+                        return (nil, locError.value)
                     }
                 }()
                 
@@ -295,10 +297,10 @@ private class ActiveArrayLoader<Arg: Hashable, Res> {
                         
                         if let result = result {
                             
-                            value.doneCallback?(result: Result.value(result))
+                            value.doneCallback?(result: Result.success(result))
                         } else {
                             
-                            value.doneCallback?(result: Result.error(error!))
+                            value.doneCallback?(result: Result.failure(error!))
                         }
                         
                         value.unsubscribe()
@@ -307,10 +309,10 @@ private class ActiveArrayLoader<Arg: Hashable, Res> {
                 
                 if let results = results {
                     
-                    finishCallback?(result: Result.value(results))
+                    finishCallback?(result: Result.success(results))
                 } else {
                     
-                    finishCallback?(result: Result.error(error!))
+                    finishCallback?(result: Result.failure(error!))
                 }
             }
             
@@ -335,7 +337,7 @@ private class ActiveArrayLoader<Arg: Hashable, Res> {
         let handler = nativeLoader(
             progressCallback: nil,
             stateCallback: nil,
-            finishCallback: { (result: Result<[Res]>) -> () in finished = true })
+            finishCallback: { (result: Result<[Res], NSError>) -> () in finished = true })
         
         if !finished {
             _nativeHandler = handler

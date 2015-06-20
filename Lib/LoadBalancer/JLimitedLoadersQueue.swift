@@ -10,6 +10,8 @@ import Foundation
 
 import iAsync_utils
 
+import Result
+
 public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
     
     private let state = JQueueState<Strategy.ResultType>()//TODO remove
@@ -132,7 +134,7 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
                             if objectIndex != Int.max {
                                 self.state.pendingLoaders.removeAtIndex(objectIndex)
                             }
-                            finishCallback?(result: Result.error(JAsyncFinishedByCancellationError()))
+                            finishCallback?(result: Result.failure(JAsyncFinishedByCancellationError()))
                         }
                     default:
                         assert(false) // "Unsupported type of task: %lu", (unsigned long)task)

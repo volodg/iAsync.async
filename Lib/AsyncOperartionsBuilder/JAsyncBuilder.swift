@@ -9,6 +9,9 @@
 import Foundation
 
 import iAsync_utils
+
+import Result
+
 import Dispatch
 
 public protocol JAsyncInterface {
@@ -53,7 +56,7 @@ public class JAsyncBuilder<T: JAsyncInterface> {
             
             var finishCallbackHolder = finishCallback
             
-            let completionHandler = { (result: Result<T.ResultType>) -> () in
+            let completionHandler = { (result: Result<T.ResultType, NSError>) -> () in
                 
                 if asyncObject == nil {
                     return
@@ -70,7 +73,7 @@ public class JAsyncBuilder<T: JAsyncInterface> {
                 asyncObject = nil
             }
             
-            let completionHandlerWrapper = { (result: Result<T.ResultType>) -> () in
+            let completionHandlerWrapper = { (result: Result<T.ResultType, NSError>) -> () in
                 
                 if let asyncObject = asyncObject {
                     
@@ -122,7 +125,7 @@ public class JAsyncBuilder<T: JAsyncInterface> {
                     
                     if let error = errorOption {
                         
-                        completionHandler(Result.error(error))
+                        completionHandler(Result.failure(error))
                     } else if !stateCallbackCalled {
                         
                         if let stateCallback = stateCallbackHolder {
