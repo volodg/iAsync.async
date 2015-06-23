@@ -394,9 +394,27 @@ public func bindTrySequenceOfAsyncs<R>(firstLoader: JAsyncTypes<R>.JAsync, _ nex
 /////////////////////////////////////// GROUP //////////////////////////////////////
 
 //calls finish callback when all loaders finished
-public func groupOfAsyncs<R1, R2>(firstLoaer: JAsyncTypes<R1>.JAsync, _ secondLoaer: JAsyncTypes<R2>.JAsync) -> JAsyncTypes<(R1, R2)>.JAsync {
+public func groupOfAsyncs<R1, R2>(
+    firstLoader : JAsyncTypes<R1>.JAsync,
+    _ secondLoader: JAsyncTypes<R2>.JAsync) -> JAsyncTypes<(R1, R2)>.JAsync
+{
+    return groupOfAsyncsPair(firstLoader, secondLoader)
+}
+
+public func groupOfAsyncs<R1, R2, R3>(
+    firstLoader : JAsyncTypes<R1>.JAsync,
+    _ secondLoader: JAsyncTypes<R2>.JAsync,
+    _ thirdLoader : JAsyncTypes<R3>.JAsync) -> JAsyncTypes<(R1, R2, R3)>.JAsync
+{
+    let loader = groupOfAsyncsPair(firstLoader, secondLoader)
     
-    return groupOfAsyncsPair(firstLoaer, secondLoaer)
+    return bindSequenceOfAsyncs(loader, { (r1, r2)  -> JAsyncTypes<(R1, R2, R3)>.JAsync in
+        
+        return bindSequenceOfAsyncs(thirdLoader, { r3  -> JAsyncTypes<(R1, R2, R3)>.JAsync in
+            
+            return async(result: (r1, r2, r3))
+        })
+    })
 }
 
 public func groupOfAsyncsArray<R>(loaders: [JAsyncTypes<R>.JAsync]) -> JAsyncTypes<[R]>.JAsync {
