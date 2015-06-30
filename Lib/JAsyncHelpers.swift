@@ -15,8 +15,8 @@ import Result
 public func asyncWithJResult<T>(result: Result<T, NSError>) -> JAsyncTypes<T>.JAsync {
     
     return { (progressCallback: JAsyncProgressCallback?,
-        stateCallback: JAsyncChangeStateCallback?,
-        doneCallback: JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+              stateCallback: JAsyncChangeStateCallback?,
+              doneCallback: JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         doneCallback?(result: result)
         return jStubHandlerAsyncBlock
@@ -26,8 +26,8 @@ public func asyncWithJResult<T>(result: Result<T, NSError>) -> JAsyncTypes<T>.JA
 public func asyncWithResult<T>(result: T) -> JAsyncTypes<T>.JAsync {
     
     return { (progressCallback: JAsyncProgressCallback?,
-              stateCallback: JAsyncChangeStateCallback?,
-              doneCallback: JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+              stateCallback   : JAsyncChangeStateCallback?,
+              doneCallback    : JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         doneCallback?(result: Result.success(result))
         return jStubHandlerAsyncBlock
@@ -48,8 +48,8 @@ public func asyncWithError<T>(error: NSError) -> JAsyncTypes<T>.JAsync {
 public func asyncWithHandlerFlag<T>(task: JAsyncHandlerTask) -> JAsyncTypes<T>.JAsync {
     
     return { (progressCallback: JAsyncProgressCallback?,
-              stateCallback: JAsyncChangeStateCallback?,
-              doneCallback: JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+              stateCallback   : JAsyncChangeStateCallback?,
+              doneCallback    : JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         processHandlerFlag(task, stateCallback, doneCallback)
         return jStubHandlerAsyncBlock
@@ -137,7 +137,7 @@ public func asyncWithFinishHookBlock<T, R>(loader: JAsyncTypes<T>.JAsync, finish
         return loader(
             progressCallback: progressCallback,
             stateCallback   : stateCallback   ,
-            finishCallback: { (result: Result<T, NSError>) -> () in
+            finishCallback  : { (result: Result<T, NSError>) -> () in
             
             finishCallbackHook(result: result, finishCallback: finishCallback)
         })
@@ -284,8 +284,8 @@ public func logErrorForLoader<T>(loader: JAsyncTypes<T>.JAsync) -> JAsyncTypes<T
         
         let cancel = loader(
             progressCallback: progressCallback,
-            stateCallback: stateCallback,
-            finishCallback: wrappedDoneCallback)
+            stateCallback   : stateCallback,
+            finishCallback  : wrappedDoneCallback)
         
         return cancel
     }
@@ -300,7 +300,7 @@ public func ignoreProgressLoader<T>(loader: JAsyncTypes<T>.JAsync) -> JAsyncType
         
         return loader(
             progressCallback: progressCallback,
-            stateCallback: stateCallback,
-            finishCallback: finishCallback)
+            stateCallback   : stateCallback,
+            finishCallback  : finishCallback)
     }
 }

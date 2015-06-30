@@ -138,8 +138,8 @@ private func bindSequenceOfBindersPair<P1, R1, R2>(
             let firstLoader = firstBinder(bindResult)
             let firstCancel = firstLoader(
                 progressCallback: progressCallbackWrapper,
-                stateCallback: stateCallbackWrapper,
-                finishCallback: fistLoaderDoneCallback)
+                stateCallback   : stateCallbackWrapper,
+                finishCallback  : fistLoaderDoneCallback)
             
             if finished {
                 return jStubHandlerAsyncBlock
@@ -282,8 +282,8 @@ private func bindTrySequenceOfBindersPair<T, R>(firstBinder: JAsyncTypes2<T, R>.
             let firstLoader = firstBinder(binderResult)
             
             return { (progressCallback: JAsyncProgressCallback?,
-                      stateCallback: JAsyncChangeStateCallback?,
-                      finishCallback: JAsyncTypes<R>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+                      stateCallback   : JAsyncChangeStateCallback?,
+                      finishCallback  : JAsyncTypes<R>.JDidFinishAsyncCallback?) -> JAsyncHandler in
                 
                 var handlerBlockHolder: JAsyncHandler?
                 
@@ -315,8 +315,8 @@ private func bindTrySequenceOfBindersPair<T, R>(firstBinder: JAsyncTypes2<T, R>.
                 
                 let firstHandler = firstLoader(
                     progressCallback: progressCallbackWrapper,
-                    stateCallback: stateCallbackWrapper,
-                    finishCallback: { (result: Result<R, NSError>) -> () in
+                    stateCallback   : stateCallbackWrapper,
+                    finishCallback  : { (result: Result<R, NSError>) -> () in
                         
                         switch result {
                         case let .Success(v):
@@ -331,8 +331,8 @@ private func bindTrySequenceOfBindersPair<T, R>(firstBinder: JAsyncTypes2<T, R>.
                             let secondLoader = secondBinder(error.value)
                             handlerBlockHolder = secondLoader(
                                 progressCallback: progressCallbackWrapper,
-                                stateCallback: stateCallbackWrapper,
-                                finishCallback: doneCallbackWrapper)
+                                stateCallback   : stateCallbackWrapper,
+                                finishCallback  : doneCallbackWrapper)
                         }
                 })
                 
@@ -466,8 +466,8 @@ private class ResultHandlerData<R1, R2> {
     var finishCallbackHolder  : JAsyncTypes<(R1, R2)>.JDidFinishAsyncCallback?
     
     init(progressCallback: JAsyncProgressCallback?,
-         stateCallback: JAsyncChangeStateCallback?,
-         finishCallback: JAsyncTypes<(R1, R2)>.JDidFinishAsyncCallback?)
+         stateCallback   : JAsyncChangeStateCallback?,
+         finishCallback  : JAsyncTypes<(R1, R2)>.JDidFinishAsyncCallback?)
     {
         progressCallbackHolder = progressCallback
         stateCallbackHolder    = stateCallback
@@ -534,8 +534,8 @@ private func makeResultHandler<RT, R1, R2>(
 private func groupOfAsyncsPair<R1, R2>(firstLoader: JAsyncTypes<R1>.JAsync, secondLoader: JAsyncTypes<R2>.JAsync) -> JAsyncTypes<(R1, R2)>.JAsync
 {
     return { (progressCallback: JAsyncProgressCallback?,
-              stateCallback: JAsyncChangeStateCallback?,
-              finishCallback: JAsyncTypes<(R1, R2)>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+              stateCallback   : JAsyncChangeStateCallback?,
+              finishCallback  : JAsyncTypes<(R1, R2)>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         let fields = ResultHandlerData(
             progressCallback: progressCallback,
@@ -559,12 +559,12 @@ private func groupOfAsyncsPair<R1, R2>(firstLoader: JAsyncTypes<R1>.JAsync, seco
         let firstLoaderResultHandler = makeResultHandler(0, setter1, fields)
         let loaderHandler1 = firstLoader(
             progressCallback: progressCallbackWrapper,
-            stateCallback: stateCallbackWrapper,
-            finishCallback: firstLoaderResultHandler)
+            stateCallback   : stateCallbackWrapper,
+            finishCallback  : firstLoaderResultHandler)
         
         if fields.finished {
             
-            let cancel = secondLoader(progressCallback: nil, stateCallback: nil, finishCallback: nil)
+            runAsync(secondLoader, nil)
             return jStubHandlerAsyncBlock
         }
         
@@ -577,8 +577,8 @@ private func groupOfAsyncsPair<R1, R2>(firstLoader: JAsyncTypes<R1>.JAsync, seco
         let secondLoaderResultHandler = makeResultHandler(1, setter2, fields)
         let loaderHandler2 = secondLoader(
             progressCallback: progressCallback,
-            stateCallback: stateCallback,
-            finishCallback: secondLoaderResultHandler)
+            stateCallback   : stateCallback,
+            finishCallback  : secondLoaderResultHandler)
         
         if fields.finished {
             
@@ -636,8 +636,8 @@ public func asyncWithDoneBlock<T>(loader: JAsyncTypes<T>.JAsync, doneCallbackHoo
             }
             return loader(
                 progressCallback: progressCallback,
-                stateCallback: stateCallback,
-                finishCallback: wrappedDoneCallback)
+                stateCallback   : stateCallback,
+                finishCallback  : wrappedDoneCallback)
         }
     }
     

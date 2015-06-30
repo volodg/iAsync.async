@@ -139,8 +139,8 @@ public class JCachedAsync<Key: Hashable, Value> {
         let loader  = propertyExtractor.getAsyncLoader()
         let handler = loader!(
             progressCallback: progressCallback,
-            stateCallback: stateCallback,
-            finishCallback: doneCallback)
+            stateCallback   : stateCallback,
+            finishCallback  : doneCallback)
         
         if propertyExtractor.cacheObject == nil {
             return jStubHandlerAsyncBlock

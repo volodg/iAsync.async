@@ -56,8 +56,8 @@ public class JArrayLoadersMerger<Arg: Hashable, Res> {
                 
                 return loader(
                     progressCallback: progressCallback,
-                    stateCallback: stateCallback,
-                    finishCallback: finishCallback)
+                    stateCallback   : stateCallback,
+                    finishCallback  : finishCallback)
             }
             
             let callbacks = JLoadersCallbacksData(
@@ -146,7 +146,8 @@ private class JLoadersCallbacksData<Res> {
     
     var suspended = false
     
-    init(progressCallback: JAsyncProgressCallback?,
+    init(
+        progressCallback: JAsyncProgressCallback?,
         stateCallback   : JAsyncChangeStateCallback?,
         doneCallback    : JAsyncTypes<Res>.JDidFinishAsyncCallback?)
     {
@@ -318,8 +319,8 @@ private class ActiveArrayLoader<Arg: Hashable, Res> {
             
             return arrayLoader(
                 progressCallback: progressCallbackWrapper,
-                stateCallback: stateCallbackWrapper,
-                finishCallback: doneCallbackWrapper)
+                stateCallback   : stateCallbackWrapper,
+                finishCallback  : doneCallbackWrapper)
         }
         
         let setter: CachedAsyncTypes<[Res]>.JResultSetter? = nil
@@ -336,8 +337,8 @@ private class ActiveArrayLoader<Arg: Hashable, Res> {
         var finished = false
         let handler = nativeLoader(
             progressCallback: nil,
-            stateCallback: nil,
-            finishCallback: { (result: Result<[Res], NSError>) -> () in finished = true })
+            stateCallback   : nil,
+            finishCallback  : { (result: Result<[Res], NSError>) -> () in finished = true })
         
         if !finished {
             _nativeHandler = handler
