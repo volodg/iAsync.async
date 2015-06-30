@@ -35,8 +35,8 @@ public class JAsyncsOwner {
         
         return { [weak self] (
             progressCallback: JAsyncProgressCallback?,
-            stateCallback: JAsyncChangeStateCallback?,
-            finishCallback: JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+            stateCallback   : JAsyncChangeStateCallback?,
+            finishCallback  : JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
             
             if let self_ = self {
                 

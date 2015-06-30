@@ -59,8 +59,8 @@ public class JBaseLoaderOwner<T> {
         
         loadersHandler = loader(
             progressCallback: progressCallbackWrapper,
-            stateCallback: stateCallbackWrapper,
-            finishCallback: doneCallbackWrapper)
+            stateCallback   : stateCallbackWrapper,
+            finishCallback  : doneCallbackWrapper)
     }
     
     private func clear() {

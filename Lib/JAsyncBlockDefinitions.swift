@@ -46,3 +46,17 @@ public enum JAsyncTypes2<T1, T2> {
         result        : Result<T1, NSError>,
         finishCallback: JAsyncTypes<T2>.JDidFinishAsyncCallback?) -> ()
 }
+
+public func runAsync<R>(loader: JAsyncTypes<R>.JAsync, onFinish: JAsyncTypes<R>.JDidFinishAsyncCallback?)
+{
+    if let onFinish = onFinish {
+        
+        let _ = loader(progressCallback: nil, stateCallback: nil, finishCallback: { (result) -> () in
+            
+            onFinish(result: result)
+        })
+    } else {
+        
+        let _ = loader(progressCallback: nil, stateCallback: nil, finishCallback: nil)
+    }
+}

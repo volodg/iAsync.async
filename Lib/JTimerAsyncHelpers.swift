@@ -209,8 +209,8 @@ public func repeatAsyncWithDelayLoader<T>(
                 
                 currentLoaderHandlerHolder = loader(
                     progressCallback: progressCallbackWrapper,
-                    stateCallback: stateCallbackWrapper,
-                    finishCallback: doneCallbackkWrapper)
+                    stateCallback   : stateCallbackWrapper,
+                    finishCallback  : doneCallbackkWrapper)
             }
         }
         

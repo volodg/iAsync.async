@@ -87,8 +87,8 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
     public func balancedLoaderWithLoader(loader: JAsyncTypes<Strategy.ResultType>.JAsync, barrier: Bool) -> JAsyncTypes<Strategy.ResultType>.JAsync {
         
         return { (progressCallback: JAsyncProgressCallback?,
-                  stateCallback: JAsyncChangeStateCallback?,
-                  finishCallback: JAsyncTypes<Strategy.ResultType>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+                  stateCallback   : JAsyncChangeStateCallback?,
+                  finishCallback  : JAsyncTypes<Strategy.ResultType>.JDidFinishAsyncCallback?) -> JAsyncHandler in
             
             let loaderHolder = JBaseLoaderOwner(loader:loader, didFinishActiveLoaderCallback: { (loader: JBaseLoaderOwner<Strategy.ResultType>) -> () in
                 

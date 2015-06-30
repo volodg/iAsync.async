@@ -19,8 +19,8 @@ public protocol JAsyncInterface {
     typealias ResultType : Any
     
     func asyncWithResultCallback(
-        finishCallback: JAsyncTypes<ResultType>.JDidFinishAsyncCallback,
-        stateCallback: JAsyncChangeStateCallback,
+        finishCallback  : JAsyncTypes<ResultType>.JDidFinishAsyncCallback,
+        stateCallback   : JAsyncChangeStateCallback,
         progressCallback: JAsyncProgressCallback)
     
     func doTask(task: JAsyncHandlerTask)
@@ -111,7 +111,7 @@ public class JAsyncBuilder<T: JAsyncInterface> {
             
             asyncObject!.asyncWithResultCallback(
                 completionHandlerWrapper,
-                stateCallback: handlerCallbackWrapper,
+                stateCallback   : handlerCallbackWrapper,
                 progressCallback: progressHandlerWrapper)
             
             return { (task: JAsyncHandlerTask) -> () in
