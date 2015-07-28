@@ -10,7 +10,7 @@ import Foundation
 
 public class JBaseStrategy<T> {
     
-    typealias ResultType = T
+    public typealias ResultType = T
     
     var queueState: JQueueState<ResultType>!
     

@@ -8,16 +8,14 @@
 
 import Foundation
 
-import iAsync_async
-
 public enum JAsyncTypesTransform<T1, T2> {
     
-    private typealias Async1 = JAsyncTypes<T1>.JAsync
-    private typealias Async2 = JAsyncTypes<T2>.JAsync
+    public typealias Async1 = JAsyncTypes<T1>.JAsync
+    public typealias Async2 = JAsyncTypes<T2>.JAsync
     
     public typealias PackedType = (T1?, T2?)
     
-    private typealias PackedAsync = JAsyncTypes<PackedType>.JAsync
+    public typealias PackedAsync = JAsyncTypes<PackedType>.JAsync
     
     public typealias AsyncTransformer = (PackedAsync) -> PackedAsync
     

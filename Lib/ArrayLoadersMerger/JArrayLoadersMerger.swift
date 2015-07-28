@@ -14,7 +14,7 @@ import Result
 
 public class JArrayLoadersMerger<Arg: Hashable, Res> {
     
-    private typealias JAsyncOpAr = JAsyncTypes<[Res]>.JAsync
+    public typealias JAsyncOpAr = JAsyncTypes<[Res]>.JAsync
     
     public typealias JArrayOfObjectsLoader = (keys: [Arg]) -> JAsyncOpAr
     

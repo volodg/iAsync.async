@@ -126,9 +126,9 @@ func asyncAfterDelayWithDispatchQueue<T>(
     return sequenceOfAsyncs(delayedLoader, loader)
 }
 
-enum JRepeatAsyncTypes<T> {
+public enum JRepeatAsyncTypes<T> {
     
-    typealias JContinueLoaderWithResult = (result: Result<T, NSError>) -> JAsyncTypes<T>.JAsync?
+    public typealias JContinueLoaderWithResult = (result: Result<T, NSError>) -> JAsyncTypes<T>.JAsync?
 }
 
 public func repeatAsyncWithDelayLoader<T>(
