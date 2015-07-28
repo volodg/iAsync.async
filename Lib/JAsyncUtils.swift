@@ -218,7 +218,7 @@ func asyncWithSyncOperationAndConfigurableQueue<T>(loadDataBlock: JAsyncTypes<T>
     
     assert(NSThread.isMainThread())
     let attr: dispatch_queue_attr_t = isSerialQueue
-        ?0/*DISPATCH_QUEUE_SERIAL*/
+        ?DISPATCH_QUEUE_SERIAL
         :DISPATCH_QUEUE_CONCURRENT
     
     return generalAsyncWithSyncOperationAndQueue(
