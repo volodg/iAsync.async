@@ -69,7 +69,6 @@ public class JArrayLoadersMerger<Arg: Hashable, Res> {
             
             dispatch_async(dispatch_get_main_queue(), { [weak self] () -> () in
                 self?.runLoadingOfPendingKeys()
-                return ()
             })
             
             return { (task: JAsyncHandlerTask) -> () in
