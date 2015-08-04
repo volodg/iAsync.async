@@ -104,8 +104,7 @@ private class JBlockOperation<T> {
     }
 }
 
-//TODO !!! remove NSObjet inheritence
-private class JAsyncAdapter<T> : NSObject, JAsyncInterface {
+private class JAsyncAdapter<T> : JAsyncInterface {
     
     let loadDataBlock  : JAsyncTypes<T>.JSyncOperationWithProgress
     let queueName      : String?

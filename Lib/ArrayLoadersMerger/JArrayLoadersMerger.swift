@@ -187,8 +187,7 @@ private class ActiveArrayLoader<Arg: Hashable, Res> {
     
     var nativeLoader : JAsyncTypes<[Res]>.JAsync? //Should be strong
     
-    //TODO private
-    var _nativeHandler: JAsyncHandler?
+    private var _nativeHandler: JAsyncHandler?
     
     init(loadersCallbacksByKey: [Arg:JLoadersCallbacksData<Res>], owner: JArrayLoadersMerger<Arg, Res>) {
         self.loadersCallbacksByKey = loadersCallbacksByKey
