@@ -567,7 +567,7 @@ private func groupOfAsyncsPair<R1, R2>(
         
         if fields.finished {
             
-            runAsync(secondLoader, onFinish: nil)
+            runAsync(secondLoader)
             return jStubHandlerAsyncBlock
         }
         
