@@ -564,7 +564,7 @@ private func groupOfAsyncsPair<R1, R2>(firstLoader: JAsyncTypes<R1>.JAsync, seco
         
         if fields.finished {
             
-            runAsync(secondLoader, nil)
+            runAsync(secondLoader)
             return jStubHandlerAsyncBlock
         }
         

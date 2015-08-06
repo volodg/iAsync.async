@@ -47,7 +47,7 @@ public enum JAsyncTypes2<T1, T2> {
         finishCallback: JAsyncTypes<T2>.JDidFinishAsyncCallback?) -> ()
 }
 
-public func runAsync<R>(loader: JAsyncTypes<R>.JAsync, onFinish: JAsyncTypes<R>.JDidFinishAsyncCallback?)
+public func runAsync<R>(loader: JAsyncTypes<R>.JAsync, onFinish: JAsyncTypes<R>.JDidFinishAsyncCallback? = nil)
 {
     if let onFinish = onFinish {
         
