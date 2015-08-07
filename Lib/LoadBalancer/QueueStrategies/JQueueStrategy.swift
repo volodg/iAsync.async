@@ -8,12 +8,15 @@
 
 import Foundation
 
+import iAsync_utils
+
 public protocol JQueueStrategy {
     
-    typealias ResultType : Any
+    typealias ValueT : Any
+    typealias ErrorT : ErrorType
     
-    init(queueState: JQueueState<ResultType>)
+    init(queueState: JQueueState<ValueT, ErrorT>)
     
-    func firstPendingLoader() -> JBaseLoaderOwner<ResultType>?
-    func executePendingLoader(pendingLoader: JBaseLoaderOwner<ResultType>)
+    func firstPendingLoader() -> JBaseLoaderOwner<ValueT, ErrorT>?
+    func executePendingLoader(pendingLoader: JBaseLoaderOwner<ValueT, ErrorT>)
 }

@@ -10,15 +10,14 @@ import Foundation
 
 import iAsync_utils
 
-import Result
-
 //TODO remove inheritence from NSObject
 public class JAsyncTimerResult : NSObject {}
 
 //TODO remove inheritence from NSObject
 private class JAsyncScheduler : NSObject, JAsyncInterface {
     
-    typealias ResultType = JAsyncTimerResult
+    typealias ErrorT = NSError //TODO use NoError
+    typealias ValueT = JAsyncTimerResult
     
     private var _timer: Timer?
     
@@ -35,16 +34,16 @@ private class JAsyncScheduler : NSObject, JAsyncInterface {
             self.callbacksQueue = callbacksQueue
     }
     
-    private var _finishCallback: JAsyncTypes<ResultType>.JDidFinishAsyncCallback?
+    private var _finishCallback: JAsyncTypes<ValueT, ErrorT>.JDidFinishAsyncCallback?
     
     func asyncWithResultCallback(
-        finishCallback  : JAsyncTypes<ResultType>.JDidFinishAsyncCallback,
+        finishCallback  : JAsyncTypes<ValueT, ErrorT>.JDidFinishAsyncCallback,
         stateCallback   : JAsyncChangeStateCallback,
         progressCallback: JAsyncProgressCallback) {
             
-            _finishCallback   = finishCallback
-            
-            startIfNeeds()
+        _finishCallback   = finishCallback
+        
+        startIfNeeds()
     }
     
     func doTask(task: JAsyncHandlerTask) {
@@ -75,12 +74,12 @@ private class JAsyncScheduler : NSObject, JAsyncInterface {
         let _ = timer.addBlock( { [weak self] (cancel: JCancelScheduledBlock) in
             
             cancel()
-            self?._finishCallback?(result: Result.success(JAsyncTimerResult()))
+            self?._finishCallback?(result: AsyncResult.success(JAsyncTimerResult()))
         }, duration:duration, leeway:leeway, dispatchQueue:callbacksQueue)
     }
 }
 
-public func asyncWithDelay(delay: NSTimeInterval, leeway: NSTimeInterval) -> JAsyncTypes<JAsyncTimerResult>.JAsync {
+public func asyncWithDelay(delay: NSTimeInterval, leeway: NSTimeInterval) -> JAsyncTypes<JAsyncTimerResult, NSError>.JAsync {
     
     assert(NSThread.isMainThread(), "main thread expected")
     return asyncWithDelayWithDispatchQueue(delay, leeway: leeway, callbacksQueue: dispatch_get_main_queue())
@@ -89,7 +88,7 @@ public func asyncWithDelay(delay: NSTimeInterval, leeway: NSTimeInterval) -> JAs
 func asyncWithDelayWithDispatchQueue(
     delay         : NSTimeInterval,
     leeway        : NSTimeInterval,
-    callbacksQueue: dispatch_queue_t) -> JAsyncTypes<JAsyncTimerResult>.JAsync
+    callbacksQueue: dispatch_queue_t) -> JAsyncTypes<JAsyncTimerResult, NSError>.JAsync
 {
     let factory = { () -> JAsyncScheduler in
         
@@ -99,10 +98,10 @@ func asyncWithDelayWithDispatchQueue(
     return JAsyncBuilder.buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: callbacksQueue)
 }
 
-public func asyncAfterDelay<T>(
+public func asyncAfterDelay(
     delay : NSTimeInterval,
     leeway: NSTimeInterval,
-    loader: JAsyncTypes<T>.JAsync) -> JAsyncTypes<T>.JAsync
+    loader: JAsyncTypes<JAsyncTimerResult, NSError>.JAsync) -> JAsyncTypes<JAsyncTimerResult, NSError>.JAsync
 {
     assert(NSThread.isMainThread())
     return asyncAfterDelayWithDispatchQueue(
@@ -112,33 +111,34 @@ public func asyncAfterDelay<T>(
         callbacksQueue: dispatch_get_main_queue())
 }
 
-func asyncAfterDelayWithDispatchQueue<T>(
+func asyncAfterDelayWithDispatchQueue(
     delay : NSTimeInterval,
     leeway: NSTimeInterval,
-    loader: JAsyncTypes<T>.JAsync,
-    callbacksQueue: dispatch_queue_t) -> JAsyncTypes<T>.JAsync
+    loader: JAsyncTypes<JAsyncTimerResult, NSError>.JAsync,
+    callbacksQueue: dispatch_queue_t) -> JAsyncTypes<JAsyncTimerResult, NSError>.JAsync
 {
     let timerLoader = asyncWithDelayWithDispatchQueue(delay, leeway: leeway, callbacksQueue: callbacksQueue)
-    let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: JAsyncTimerResult) -> JAsyncTypes<JAsyncTimerResult>.JAsync in
+    let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: JAsyncTimerResult) -> JAsyncTypes<JAsyncTimerResult, NSError>.JAsync in
         return async(result: result)
     })
     
     return sequenceOfAsyncs(delayedLoader, loader)
 }
 
-public enum JRepeatAsyncTypes<T> {
+public enum JRepeatAsyncTypes<Value, Error: ErrorType> {
     
-    public typealias JContinueLoaderWithResult = (result: Result<T, NSError>) -> JAsyncTypes<T>.JAsync?
+    public typealias JContinueLoaderWithResult = (result: AsyncResult<Value, Error>) -> JAsyncTypes<Value, Error>.JAsync?
 }
 
-public func repeatAsyncWithDelayLoader<T>(
-    nativeLoader: JAsyncTypes<T>.JAsync,
-    continueLoaderBuilder: JRepeatAsyncTypes<T>.JContinueLoaderWithResult,
-    maxRepeatCount: Int/*remove redundent parameter*/) -> JAsyncTypes<T>.JAsync
+public func repeatAsyncWithDelayLoader<Value, Error: ErrorType>(
+    nativeLoader: JAsyncTypes<Value, Error>.JAsync,
+    continueLoaderBuilder: JRepeatAsyncTypes<Value, Error>.JContinueLoaderWithResult,
+    maxRepeatCount: Int/*remove redundent parameter*/) -> JAsyncTypes<Value, Error>.JAsync
 {
-    return { (progressCallback: JAsyncProgressCallback?,
+    return { (
+        progressCallback: JAsyncProgressCallback?,
         stateCallback   : JAsyncChangeStateCallback?,
-        finishCallback  : JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+        finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         var currentLoaderHandlerHolder: JAsyncHandler?
         
@@ -156,7 +156,7 @@ public func repeatAsyncWithDelayLoader<T>(
             stateCallbackHolder?(state: state)
             return
         }
-        let doneCallbackkWrapper = { (result: Result<T, NSError>) -> () in
+        let doneCallbackkWrapper = { (result: AsyncResult<Value, Error>) -> () in
             
             if let finishCallback = finishCallbackHolder {
                 finishCallbackHolder = nil
@@ -172,9 +172,9 @@ public func repeatAsyncWithDelayLoader<T>(
             finishCallbackHolder   = nil
         }
         
-        var finishHookHolder: JAsyncTypes2<T, T>.JDidFinishAsyncHook?
+        var finishHookHolder: JAsyncTypes2<Value, Value, Error>.JDidFinishAsyncHook?
         
-        let finishCallbackHook = { (result: Result<T, NSError>, _: JAsyncTypes<T>.JDidFinishAsyncCallback?) -> () in
+        let finishCallbackHook = { (result: AsyncResult<Value, Error>, _: JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> () in
             
             let finish = { () -> () in
                 
@@ -185,11 +185,9 @@ public func repeatAsyncWithDelayLoader<T>(
             }
             
             switch result {
-            case let .Failure(error):
-                if error is JAsyncFinishedByCancellationError {
-                    finish()
-                    return
-                }
+            case .Interrupted:
+                finish()
+                return
             default:
                 break
             }
@@ -247,20 +245,21 @@ public func repeatAsyncWithDelayLoader<T>(
     }
 }
 
-public func repeatAsync<T>(
-    nativeLoader: JAsyncTypes<T>.JAsync,
-    continueLoaderBuilder: JRepeatAsyncTypes<T>.JContinueLoaderWithResult,
+//TODO add Error template arg
+public func repeatAsync<Value>(
+    nativeLoader: JAsyncTypes<Value, NSError>.JAsync,
+    continueLoaderBuilder: JRepeatAsyncTypes<Value, NSError>.JContinueLoaderWithResult,
     delay : NSTimeInterval,
     leeway: NSTimeInterval,
-    maxRepeatCount: Int) -> JAsyncTypes<T>.JAsync
+    maxRepeatCount: Int) -> JAsyncTypes<Value, NSError>.JAsync
 {
-    let continueLoaderBuilderWrapper = { (result: Result<T, NSError>) -> JAsyncTypes<T>.JAsync? in
+    let continueLoaderBuilderWrapper = { (result: AsyncResult<Value, NSError>) -> JAsyncTypes<Value, NSError>.JAsync? in
         
         let loaderOption = continueLoaderBuilder(result: result)
         
         if let loader = loaderOption {
             let timerLoader = asyncWithDelay(delay, leeway: leeway)
-            let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: JAsyncTimerResult) -> JAsyncTypes<JAsyncTimerResult>.JAsync in
+            let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: JAsyncTimerResult) -> JAsyncTypes<JAsyncTimerResult, NSError>.JAsync in
                 return async(result: result)
             })
             

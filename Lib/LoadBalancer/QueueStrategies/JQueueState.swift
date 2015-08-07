@@ -8,7 +8,9 @@
 
 import Foundation
 
-public class JQueueState<T>  {
-    var activeLoaders  = [JBaseLoaderOwner<T>]()
-    var pendingLoaders = [JBaseLoaderOwner<T>]()
+import iAsync_utils
+
+public class JQueueState<Value, Error: ErrorType>  {
+    var activeLoaders  = [JBaseLoaderOwner<Value, Error>]()
+    var pendingLoaders = [JBaseLoaderOwner<Value, Error>]()
 }

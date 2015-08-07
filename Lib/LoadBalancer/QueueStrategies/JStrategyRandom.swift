@@ -8,13 +8,15 @@
 
 import Foundation
 
-internal class JStrategyRandom<T> : JBaseStrategy<T>, JQueueStrategy {
+import iAsync_utils
+
+internal class JStrategyRandom<Value, Error: ErrorType> : JBaseStrategy<Value, Error>, JQueueStrategy {
     
-    required override init(queueState: JQueueState<ResultType>) {
+    required override init(queueState: JQueueState<Value, Error>) {
         super.init(queueState: queueState)
     }
     
-    func firstPendingLoader() -> JBaseLoaderOwner<T>? {
+    func firstPendingLoader() -> JBaseLoaderOwner<Value, Error>? {
         
         let index = Int(arc4random_uniform(UInt32(queueState.pendingLoaders.count)))
         

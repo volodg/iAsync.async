@@ -10,8 +10,6 @@ import Foundation
 
 import iAsync_utils
 
-import Result
-
 public class JAsyncsOwner {
     
     private class ActiveLoaderData {
@@ -31,19 +29,19 @@ public class JAsyncsOwner {
         self.task = task
     }
     
-    public func ownedAsync<T>(loader: JAsyncTypes<T>.JAsync) -> JAsyncTypes<T>.JAsync {
+    public func ownedAsync<Value, Error: ErrorType>(loader: JAsyncTypes<Value, Error>.JAsync) -> JAsyncTypes<Value, Error>.JAsync {
         
         return { [weak self] (
             progressCallback: JAsyncProgressCallback?,
             stateCallback   : JAsyncChangeStateCallback?,
-            finishCallback  : JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+            finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
             
             if let self_ = self {
                 
                 let loaderData = ActiveLoaderData()
                 self_.loaders.append(loaderData)
                 
-                let finishCallbackWrapper = { (result: Result<T, NSError>) -> () in
+                let finishCallbackWrapper = { (result: AsyncResult<Value, Error>) -> () in
                     
                     if let self_ = self {
                         
@@ -88,8 +86,7 @@ public class JAsyncsOwner {
                 }
             } else {
                 
-                let error = JAsyncFinishedByCancellationError()
-                finishCallback?(result: Result.failure(error))
+                finishCallback?(result: .Interrupted)
                 return jStubHandlerAsyncBlock
             }
         }

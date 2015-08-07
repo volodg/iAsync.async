@@ -10,16 +10,15 @@ import Foundation
 
 import iAsync_utils
 
-import Result
-
 import Dispatch
 
 public protocol JAsyncInterface {
     
-    typealias ResultType : Any
+    typealias ValueT : Any
+    typealias ErrorT : ErrorType
     
     func asyncWithResultCallback(
-        finishCallback  : JAsyncTypes<ResultType>.JDidFinishAsyncCallback,
+        finishCallback  : JAsyncTypes<ValueT, ErrorT>.JDidFinishAsyncCallback,
         stateCallback   : JAsyncChangeStateCallback,
         progressCallback: JAsyncProgressCallback)
     
@@ -32,7 +31,7 @@ public class JAsyncBuilder<T: JAsyncInterface> {
     
     public typealias JAsyncInstanceBuilder = () -> T
     
-    public class func buildWithAdapterFactory(factory: JAsyncInstanceBuilder) -> JAsyncTypes<T.ResultType>.JAsync {
+    public class func buildWithAdapterFactory(factory: JAsyncInstanceBuilder) -> JAsyncTypes<T.ValueT, T.ErrorT>.JAsync {
         
         assert(NSThread.isMainThread(), "main thread expected")
         return buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: dispatch_get_main_queue())
@@ -40,12 +39,12 @@ public class JAsyncBuilder<T: JAsyncInterface> {
     
     public class func buildWithAdapterFactoryWithDispatchQueue(
         factory: JAsyncInstanceBuilder,
-        callbacksQueue: dispatch_queue_t) -> JAsyncTypes<T.ResultType>.JAsync {
+        callbacksQueue: dispatch_queue_t) -> JAsyncTypes<T.ValueT, T.ErrorT>.JAsync {
             
         return { (
             progressCallback: JAsyncProgressCallback?,
             stateCallback   : JAsyncChangeStateCallback?,
-            finishCallback  : JAsyncTypes<T.ResultType>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+            finishCallback  : JAsyncTypes<T.ValueT, T.ErrorT>.JDidFinishAsyncCallback?) -> JAsyncHandler in
             
             var asyncObject: T? = factory()
             
@@ -56,7 +55,7 @@ public class JAsyncBuilder<T: JAsyncInterface> {
             
             var finishCallbackHolder = finishCallback
             
-            let completionHandler = { (result: Result<T.ResultType, NSError>) -> () in
+            let completionHandler = { (result: AsyncResult<T.ValueT, T.ErrorT>) -> () in
                 
                 if asyncObject == nil {
                     return
@@ -73,7 +72,7 @@ public class JAsyncBuilder<T: JAsyncInterface> {
                 asyncObject = nil
             }
             
-            let completionHandlerWrapper = { (result: Result<T.ResultType, NSError>) -> () in
+            let completionHandlerWrapper = { (result: AsyncResult<T.ValueT, T.ErrorT>) -> Void in
                 
                 if let asyncObject = asyncObject {
                     
@@ -121,11 +120,11 @@ public class JAsyncBuilder<T: JAsyncInterface> {
                     stateCallbackCalled = false
                     asyncObject.doTask(task)
                     
-                    let errorOption = JAsyncAbstractFinishError.buildFinishError(task)
+                    let errorOption: AsyncResult<T.ValueT, T.ErrorT>? = task.buildFinishError()
                     
                     if let error = errorOption {
                         
-                        completionHandler(Result.failure(error))
+                        completionHandler(error)
                     } else if !stateCallbackCalled {
                         
                         if let stateCallback = stateCallbackHolder {

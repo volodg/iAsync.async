@@ -10,8 +10,6 @@ import Foundation
 
 import iAsync_utils
 
-import Result
-
 private var waterfallFirstObjectInstance: JWaterwallFirstObject? = nil
 
 private class JWaterwallFirstObject {
@@ -28,50 +26,50 @@ private class JWaterwallFirstObject {
 }
 
 //calls loaders while success
-public func sequenceOfAsyncs<T, R>(
-    loader1: JAsyncTypes<T>.JAsync,
-    _ loader2: JAsyncTypes<R>.JAsync) -> JAsyncTypes<R>.JAsync {
+public func sequenceOfAsyncs<Result1, Result2, Error: ErrorType>(
+    loader1: JAsyncTypes<Result1, Error>.JAsync,
+    _ loader2: JAsyncTypes<Result2, Error>.JAsync) -> JAsyncTypes<Result2, Error>.JAsync {
     
-    let binder1 = { (result: JWaterwallFirstObject) -> JAsyncTypes<T>.JAsync in
+    let binder1 = { (result: JWaterwallFirstObject) -> JAsyncTypes<Result1, Error>.JAsync in
         return loader1
     }
-    let binder2 = { (result: T) -> JAsyncTypes<R>.JAsync in
+    let binder2 = { (result: Result1) -> JAsyncTypes<Result2, Error>.JAsync in
         return loader2
     }
     let binder = bindSequenceOfBindersPair(binder1, binder2)
     return binder(JWaterwallFirstObject.sharedWaterwallFirstObject())
 }
 
-public func sequenceOfAsyncs<T1, T2, R>(
-    loader1: JAsyncTypes<T1>.JAsync,
-    _ loader2: JAsyncTypes<T2>.JAsync,
-    _ loader3: JAsyncTypes<R>.JAsync) -> JAsyncTypes<R>.JAsync
+public func sequenceOfAsyncs<Result1, Result2, Result3, Error: ErrorType>(
+    loader1: JAsyncTypes<Result1, Error>.JAsync,
+    _ loader2: JAsyncTypes<Result2, Error>.JAsync,
+    _ loader3: JAsyncTypes<Result3, Error>.JAsync) -> JAsyncTypes<Result3, Error>.JAsync
 {
     return sequenceOfAsyncs(
         sequenceOfAsyncs(loader1, loader2),
         loader3)
 }
 
-public func sequenceOfAsyncs<T1, T2, T3, R>(
-    loader1: JAsyncTypes<T1>.JAsync,
-    _ loader2: JAsyncTypes<T2>.JAsync,
-    _ loader3: JAsyncTypes<T3>.JAsync,
-    _ loader4: JAsyncTypes<R>.JAsync) -> JAsyncTypes<R>.JAsync
+public func sequenceOfAsyncs<Result1, Result2, Result3, Result4, Error: ErrorType>(
+    loader1: JAsyncTypes<Result1, Error>.JAsync,
+    _ loader2: JAsyncTypes<Result2, Error>.JAsync,
+    _ loader3: JAsyncTypes<Result3, Error>.JAsync,
+    _ loader4: JAsyncTypes<Result4, Error>.JAsync) -> JAsyncTypes<Result4, Error>.JAsync
 {
     return sequenceOfAsyncs(
         sequenceOfAsyncs(loader1, loader2, loader3),
         loader4)
 }
 
-func sequenceOfAsyncsArray<T>(loaders: [JAsyncTypes<T>.JAsync]) -> JAsyncTypes<T>.JAsync {
+func sequenceOfAsyncsArray<Value, Error: ErrorType>(loaders: [JAsyncTypes<Value, Error>.JAsync]) -> JAsyncTypes<Value, Error>.JAsync {
 
-    var firstBlock = { (result: JWaterwallFirstObject) -> JAsyncTypes<T>.JAsync in
+    var firstBlock = { (result: JWaterwallFirstObject) -> JAsyncTypes<Value, Error>.JAsync in
         return loaders[0]
     }
     
     for index in 1..<(loaders.count) {
         
-        let secondBlockBinder = { (result: T) -> JAsyncTypes<T>.JAsync in
+        let secondBlockBinder = { (result: Value) -> JAsyncTypes<Value, Error>.JAsync in
             return loaders[index]
         }
         firstBlock = bindSequenceOfBindersPair(firstBlock, secondBlockBinder)
@@ -80,16 +78,16 @@ func sequenceOfAsyncsArray<T>(loaders: [JAsyncTypes<T>.JAsync]) -> JAsyncTypes<T
     return firstBlock(JWaterwallFirstObject.sharedWaterwallFirstObject())
 }
 
-private func bindSequenceOfBindersPair<P1, R1, R2>(
-    firstBinder : JAsyncTypes2<P1, R1>.JAsyncBinder,
-    _ secondBinder: JAsyncTypes2<R1, R2>.JAsyncBinder) -> JAsyncTypes2<P1, R2>.JAsyncBinder {
+private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType>(
+    firstBinder : JAsyncTypes2<Param, Result1, Error>.JAsyncBinder,
+    _ secondBinder: JAsyncTypes2<Result1, Result2, Error>.JAsyncBinder) -> JAsyncTypes2<Param, Result2, Error>.JAsyncBinder {
     
-    return { (bindResult: P1) -> JAsyncTypes<R2>.JAsync in
+    return { (bindResult: Param) -> JAsyncTypes<Result2, Error>.JAsync in
         
         return { (
             progressCallback: JAsyncProgressCallback?,
             stateCallback   : JAsyncChangeStateCallback?,
-            finishCallback  : JAsyncTypes<R2>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+            finishCallback  : JAsyncTypes<Result2, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
             
             var handlerBlockHolder: JAsyncHandler?
             
@@ -105,7 +103,7 @@ private func bindSequenceOfBindersPair<P1, R1, R2>(
                 
                 stateCallbackHolder?(state: state)
             }
-            let doneCallbackWrapper = { (result: Result<R2, NSError>) -> () in
+            let doneCallbackWrapper = { (result: AsyncResult<Result2, Error>) -> () in
                 
                 if let callback = finishCallbackHolder {
                     
@@ -120,7 +118,7 @@ private func bindSequenceOfBindersPair<P1, R1, R2>(
             
             var finished = false
             
-            let fistLoaderDoneCallback = { (result: Result<R1, NSError>) -> () in
+            let fistLoaderDoneCallback = { (result: AsyncResult<Result1, Error>) -> () in
                 
                 switch result {
                 case let .Success(value):
@@ -131,7 +129,13 @@ private func bindSequenceOfBindersPair<P1, R1, R2>(
                         finishCallback  : doneCallbackWrapper)
                 case let .Failure(error):
                     finished = true
-                    doneCallbackWrapper(Result.failure(error))
+                    doneCallbackWrapper(AsyncResult.failure(error))
+                case .Interrupted:
+                    finished = true
+                    doneCallbackWrapper(.Interrupted)
+                case .Unsubscribed:
+                    finished = true
+                    doneCallbackWrapper(.Unsubscribed)
                 }
             }
             
@@ -159,7 +163,7 @@ private func bindSequenceOfBindersPair<P1, R1, R2>(
                     }
                     
                     if task == .UnSubscribe {
-                        finishCallbackHolder?(result: Result.failure(JAsyncFinishedByUnsubscriptionError()))
+                        finishCallbackHolder?(result: .Unsubscribed)
                     } else {
                         currentHandler(task: task)
                     }
@@ -176,11 +180,11 @@ private func bindSequenceOfBindersPair<P1, R1, R2>(
     }
 }
 
-public func bindSequenceOfAsyncs<R1, R2>(
-    firstLoader: JAsyncTypes<R1>.JAsync,
-    _ firstBinder: JAsyncTypes2<R1, R2>.JAsyncBinder) -> JAsyncTypes<R2>.JAsync
+public func bindSequenceOfAsyncs<R1, R2, Error: ErrorType>(
+    firstLoader: JAsyncTypes<R1, Error>.JAsync,
+    _ firstBinder: JAsyncTypes2<R1, R2, Error>.JAsyncBinder) -> JAsyncTypes<R2, Error>.JAsync
 {
-    let firstBlock = { (result: JWaterwallFirstObject) -> JAsyncTypes<R1>.JAsync in
+    let firstBlock = { (result: JWaterwallFirstObject) -> JAsyncTypes<R1, Error>.JAsync in
         return firstLoader
     }
     
@@ -189,10 +193,10 @@ public func bindSequenceOfAsyncs<R1, R2>(
     return binder(JWaterwallFirstObject.sharedWaterwallFirstObject())
 }
 
-public func bindSequenceOfAsyncs<R1, R2, R3>(
-    firstLoader : JAsyncTypes<R1>.JAsync,
-    _ firstBinder : JAsyncTypes2<R1, R2>.JAsyncBinder,
-    _ secondBinder: JAsyncTypes2<R2, R3>.JAsyncBinder) -> JAsyncTypes<R3>.JAsync
+public func bindSequenceOfAsyncs<R1, R2, R3, Error: ErrorType>(
+    firstLoader : JAsyncTypes<R1, Error>.JAsync,
+    _ firstBinder : JAsyncTypes2<R1, R2, Error>.JAsyncBinder,
+    _ secondBinder: JAsyncTypes2<R2, R3, Error>.JAsyncBinder) -> JAsyncTypes<R3, Error>.JAsync
 {
     let loader = bindSequenceOfAsyncs(
         bindSequenceOfAsyncs(firstLoader, firstBinder),
@@ -200,23 +204,23 @@ public func bindSequenceOfAsyncs<R1, R2, R3>(
     return loader
 }
 
-public func bindSequenceOfAsyncs<R1, R2, R3, R4>(
-    firstLoader : JAsyncTypes<R1>.JAsync,
-    _ binder1: JAsyncTypes2<R1, R2>.JAsyncBinder,
-    _ binder2: JAsyncTypes2<R2, R3>.JAsyncBinder,
-    _ binder3: JAsyncTypes2<R3, R4>.JAsyncBinder) -> JAsyncTypes<R4>.JAsync
+public func bindSequenceOfAsyncs<R1, R2, R3, R4, Error: ErrorType>(
+    firstLoader : JAsyncTypes<R1, Error>.JAsync,
+    _ binder1: JAsyncTypes2<R1, R2, Error>.JAsyncBinder,
+    _ binder2: JAsyncTypes2<R2, R3, Error>.JAsyncBinder,
+    _ binder3: JAsyncTypes2<R3, R4, Error>.JAsyncBinder) -> JAsyncTypes<R4, Error>.JAsync
 {
     let loader = bindSequenceOfAsyncs(
         bindSequenceOfAsyncs(firstLoader, binder1, binder2), binder3)
     return loader
 }
 
-public func bindSequenceOfAsyncs<R1, R2, R3, R4, R5>(
-    firstLoader : JAsyncTypes<R1>.JAsync,
-    _ binder1: JAsyncTypes2<R1, R2>.JAsyncBinder,
-    _ binder2: JAsyncTypes2<R2, R3>.JAsyncBinder,
-    _ binder3: JAsyncTypes2<R3, R4>.JAsyncBinder,
-    _ binder4: JAsyncTypes2<R4, R5>.JAsyncBinder) -> JAsyncTypes<R5>.JAsync
+public func bindSequenceOfAsyncs<R1, R2, R3, R4, R5, Error: ErrorType>(
+    firstLoader : JAsyncTypes<R1, Error>.JAsync,
+    _ binder1: JAsyncTypes2<R1, R2, Error>.JAsyncBinder,
+    _ binder2: JAsyncTypes2<R2, R3, Error>.JAsyncBinder,
+    _ binder3: JAsyncTypes2<R3, R4, Error>.JAsyncBinder,
+    _ binder4: JAsyncTypes2<R4, R5, Error>.JAsyncBinder) -> JAsyncTypes<R5, Error>.JAsync
 {
     let loader = bindSequenceOfAsyncs(
         bindSequenceOfAsyncs(firstLoader, binder1, binder2, binder3), binder4)
@@ -226,7 +230,7 @@ public func bindSequenceOfAsyncs<R1, R2, R3, R4, R5>(
 /////////////////////////////// SEQUENCE WITH BINDING ///////////////////////////////
 
 //calls binders while success
-public func binderAsSequenceOfBinders<T>(binders: JAsyncTypes2<T, T>.JAsyncBinder...) -> JAsyncTypes2<T, T>.JAsyncBinder {
+public func binderAsSequenceOfBinders<T, Error: ErrorType>(binders: JAsyncTypes2<T, T, Error>.JAsyncBinder...) -> JAsyncTypes2<T, T, Error>.JAsyncBinder {
     
     var firstBinder = binders[0]
     
@@ -245,7 +249,9 @@ public func binderAsSequenceOfBinders<T>(binders: JAsyncTypes2<T, T>.JAsyncBinde
 /////////////////////////////////// TRY SEQUENCE ///////////////////////////////////
 
 //calls loaders untill success
-public func trySequenceOfAsyncs<T: Any>(firstLoader: JAsyncTypes<T>.JAsync, _ nextLoaders: JAsyncTypes<T>.JAsync...) -> JAsyncTypes<T>.JAsync
+public func trySequenceOfAsyncs<Value, Error: ErrorType>(
+    firstLoader: JAsyncTypes<Value, Error>.JAsync,
+    _ nextLoaders: JAsyncTypes<Value, Error>.JAsync...) -> JAsyncTypes<Value, Error>.JAsync
 {
     var allLoaders = [firstLoader]
     allLoaders += nextLoaders
@@ -253,17 +259,17 @@ public func trySequenceOfAsyncs<T: Any>(firstLoader: JAsyncTypes<T>.JAsync, _ ne
     return trySequenceOfAsyncsArray(allLoaders)
 }
 
-public func trySequenceOfAsyncsArray<T>(loaders: [JAsyncTypes<T>.JAsync]) -> JAsyncTypes<T>.JAsync {
+public func trySequenceOfAsyncsArray<Value, Error: ErrorType>(loaders: [JAsyncTypes<Value, Error>.JAsync]) -> JAsyncTypes<Value, Error>.JAsync {
     
     assert(loaders.count > 0)
     
-    var firstBlock = { (result: JWaterwallFirstObject) -> JAsyncTypes<T>.JAsync in
+    var firstBlock = { (result: JWaterwallFirstObject) -> JAsyncTypes<Value, Error>.JAsync in
         return loaders[0]
     }
     
     for index in 1..<(loaders.count) {
         
-        let secondBlockBinder = { (result: NSError) -> JAsyncTypes<T>.JAsync in
+        let secondBlockBinder = { (result: Error) -> JAsyncTypes<Value, Error>.JAsync in
             return loaders[index]
         }
         firstBlock = bindTrySequenceOfBindersPair(firstBlock, secondBlockBinder)
@@ -272,19 +278,19 @@ public func trySequenceOfAsyncsArray<T>(loaders: [JAsyncTypes<T>.JAsync]) -> JAs
     return firstBlock(JWaterwallFirstObject.sharedWaterwallFirstObject())
 }
 
-private func bindTrySequenceOfBindersPair<T, R>(
-    firstBinder: JAsyncTypes2<T, R>.JAsyncBinder,
-    _ secondBinder: JAsyncTypes2<NSError, R>.JAsyncBinder?) -> JAsyncTypes2<T, R>.JAsyncBinder
+private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
+    firstBinder: JAsyncTypes2<Value, Result, Error>.JAsyncBinder,
+    _ secondBinder: JAsyncTypes2<Error, Result, Error>.JAsyncBinder?) -> JAsyncTypes2<Value, Result, Error>.JAsyncBinder
 {
     if let secondBinder = secondBinder {
         
-        return { (binderResult: T) -> JAsyncTypes<R>.JAsync in
+        return { (binderResult: Value) -> JAsyncTypes<Result, Error>.JAsync in
             
             let firstLoader = firstBinder(binderResult)
             
             return { (progressCallback: JAsyncProgressCallback?,
                       stateCallback   : JAsyncChangeStateCallback?,
-                      finishCallback  : JAsyncTypes<R>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+                      finishCallback  : JAsyncTypes<Result, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
                 
                 var handlerBlockHolder: JAsyncHandler?
                 
@@ -302,7 +308,7 @@ private func bindTrySequenceOfBindersPair<T, R>(
                     stateCallbackHolder?(state: state)
                     return
                 }
-                let doneCallbackWrapper = { (result: Result<R, NSError>) -> () in
+                let doneCallbackWrapper = { (result: AsyncResult<Result, Error>) -> () in
                     
                     if let finish = finishCallbackHolder {
                         finishCallbackHolder = nil
@@ -317,23 +323,21 @@ private func bindTrySequenceOfBindersPair<T, R>(
                 let firstHandler = firstLoader(
                     progressCallback: progressCallbackWrapper,
                     stateCallback   : stateCallbackWrapper,
-                    finishCallback  : { (result: Result<R, NSError>) -> () in
+                    finishCallback  : { (result: AsyncResult<Result, Error>) -> () in
                         
                         switch result {
                         case let .Success(value):
-                            doneCallbackWrapper(Result.success(value))
+                            doneCallbackWrapper(AsyncResult.success(value))
                         case let .Failure(error):
-                            if error is JAsyncFinishedByCancellationError {
-                                
-                                doneCallbackWrapper(Result.failure(error))
-                                return
-                            }
-                            
                             let secondLoader = secondBinder(error)
                             handlerBlockHolder = secondLoader(
                                 progressCallback: progressCallbackWrapper,
                                 stateCallback   : stateCallbackWrapper,
                                 finishCallback  : doneCallbackWrapper)
+                        case .Interrupted:
+                            doneCallbackWrapper(.Interrupted)
+                        case .Unsubscribed:
+                            doneCallbackWrapper(.Unsubscribed) //TODO review
                         }
                 })
                 
@@ -349,17 +353,17 @@ private func bindTrySequenceOfBindersPair<T, R>(
                     
                     let currentHandler = handlerBlockHolder
                     
-                    if task.rawValue <= JAsyncHandlerTask.Cancel.rawValue {
+                    if task.unsubscribedOrCanceled {
                         handlerBlockHolder = nil
                     }
                     
                     if task == .UnSubscribe {
-                        finishCallbackHolder?(result: Result.failure(JAsyncFinishedByUnsubscriptionError()))
+                        finishCallbackHolder?(result: .Unsubscribed)
                     } else {
                         currentHandler!(task: task)
                     }
                     
-                    if task.rawValue <= JAsyncHandlerTask.Cancel.rawValue {
+                    if task.unsubscribedOrCanceled {
                         
                         progressCallbackHolder = nil
                         stateCallbackHolder    = nil
@@ -377,9 +381,11 @@ private func bindTrySequenceOfBindersPair<T, R>(
 
 //calls loaders while success
 //@@ next binder will receive an error if previous operation fails
-public func bindTrySequenceOfAsyncs<R>(firstLoader: JAsyncTypes<R>.JAsync, _ nextBinders: JAsyncTypes2<NSError, R>.JAsyncBinder...) -> JAsyncTypes<R>.JAsync {
+public func bindTrySequenceOfAsyncs<Value, Error: ErrorType>(
+    firstLoader: JAsyncTypes<Value, Error>.JAsync,
+    _ nextBinders: JAsyncTypes2<Error, Value, Error>.JAsyncBinder...) -> JAsyncTypes<Value, Error>.JAsync {
     
-    var firstBlock = { (data: JWaterwallFirstObject) -> JAsyncTypes<R>.JAsync in
+    var firstBlock = { (data: JWaterwallFirstObject) -> JAsyncTypes<Value, Error>.JAsync in
         return firstLoader
     }
     
@@ -394,46 +400,46 @@ public func bindTrySequenceOfAsyncs<R>(firstLoader: JAsyncTypes<R>.JAsync, _ nex
 /////////////////////////////////////// GROUP //////////////////////////////////////
 
 //calls finish callback when all loaders finished
-public func groupOfAsyncs<R1, R2>(
-    firstLoader : JAsyncTypes<R1>.JAsync,
-    _ secondLoader: JAsyncTypes<R2>.JAsync) -> JAsyncTypes<(R1, R2)>.JAsync
+public func groupOfAsyncs<Value1, Value2, Error: ErrorType>(
+    firstLoader : JAsyncTypes<Value1, Error>.JAsync,
+    _ secondLoader: JAsyncTypes<Value2, Error>.JAsync) -> JAsyncTypes<(Value1, Value2), Error>.JAsync
 {
     return groupOfAsyncsPair(firstLoader, secondLoader)
 }
 
-public func groupOfAsyncs<R1, R2, R3>(
-    firstLoader : JAsyncTypes<R1>.JAsync,
-    _ secondLoader: JAsyncTypes<R2>.JAsync,
-    _ thirdLoader : JAsyncTypes<R3>.JAsync) -> JAsyncTypes<(R1, R2, R3)>.JAsync
+public func groupOfAsyncs<Value1, Value2, Value3, Error: ErrorType>(
+    firstLoader : JAsyncTypes<Value1, Error>.JAsync,
+    _ secondLoader: JAsyncTypes<Value2, Error>.JAsync,
+    _ thirdLoader : JAsyncTypes<Value3, Error>.JAsync) -> JAsyncTypes<(Value1, Value2, Value3), Error>.JAsync
 {
     let loader = groupOfAsyncsPair(firstLoader, secondLoader)
     
-    return bindSequenceOfAsyncs(loader, { (r1, r2)  -> JAsyncTypes<(R1, R2, R3)>.JAsync in
+    return bindSequenceOfAsyncs(loader, { (r1, r2)  -> JAsyncTypes<(Value1, Value2, Value3), Error>.JAsync in
         
-        return bindSequenceOfAsyncs(thirdLoader, { r3  -> JAsyncTypes<(R1, R2, R3)>.JAsync in
+        return bindSequenceOfAsyncs(thirdLoader, { r3  -> JAsyncTypes<(Value1, Value2, Value3), Error>.JAsync in
             
             return async(result: (r1, r2, r3))
         })
     })
 }
 
-public func groupOfAsyncsArray<R>(loaders: [JAsyncTypes<R>.JAsync]) -> JAsyncTypes<[R]>.JAsync {
+public func groupOfAsyncsArray<Value, Error: ErrorType>(loaders: [JAsyncTypes<Value, Error>.JAsync]) -> JAsyncTypes<[Value], Error>.JAsync {
     
     if loaders.count == 0 {
         return async(result: [])
     }
     
-    func resultToArrayForLoader(loader: JAsyncTypes<R>.JAsync) -> JAsyncTypes<[R]>.JAsync {
+    func resultToArrayForLoader(loader: JAsyncTypes<Value, Error>.JAsync) -> JAsyncTypes<[Value], Error>.JAsync {
         
-        return bindSequenceOfAsyncs(loader, { (value: R) -> JAsyncTypes<[R]>.JAsync in
+        return bindSequenceOfAsyncs(loader, { (value: Value) -> JAsyncTypes<[Value], Error>.JAsync in
             
             return async(result: [value])
         })
     }
     
-    func pairToArrayForLoader(loader: JAsyncTypes<([R], R)>.JAsync) -> JAsyncTypes<[R]>.JAsync {
+    func pairToArrayForLoader(loader: JAsyncTypes<([Value], Value), Error>.JAsync) -> JAsyncTypes<[Value], Error>.JAsync {
         
-        return bindSequenceOfAsyncs(loader, { (value: ([R], R)) -> JAsyncTypes<[R]>.JAsync in
+        return bindSequenceOfAsyncs(loader, { (value: ([Value], Value)) -> JAsyncTypes<[Value], Error>.JAsync in
             
             return async(result: value.0 + [value.1])
         })
@@ -451,24 +457,24 @@ public func groupOfAsyncsArray<R>(loaders: [JAsyncTypes<R>.JAsync]) -> JAsyncTyp
     return arrayFirstBlock
 }
 
-private class ResultHandlerData<R1, R2> {
+private class ResultHandlerData<Value1, Value2, Error: ErrorType> {
     
     var finished = false
     var loaded   = false
     
-    var completeResult1: R1? = nil
-    var completeResult2: R2? = nil
+    var completeResult1: Value1? = nil
+    var completeResult2: Value2? = nil
     
     var handlerHolder1: JAsyncHandler?
     var handlerHolder2: JAsyncHandler?
     
     var progressCallbackHolder: JAsyncProgressCallback?
     var stateCallbackHolder   : JAsyncChangeStateCallback?
-    var finishCallbackHolder  : JAsyncTypes<(R1, R2)>.JDidFinishAsyncCallback?
+    var finishCallbackHolder  : JAsyncTypes<(Value1, Value2), Error>.JDidFinishAsyncCallback?
     
     init(progressCallback: JAsyncProgressCallback?,
          stateCallback   : JAsyncChangeStateCallback?,
-         finishCallback  : JAsyncTypes<(R1, R2)>.JDidFinishAsyncCallback?)
+         finishCallback  : JAsyncTypes<(Value1, Value2), Error>.JDidFinishAsyncCallback?)
     {
         progressCallbackHolder = progressCallback
         stateCallbackHolder    = stateCallback
@@ -476,13 +482,13 @@ private class ResultHandlerData<R1, R2> {
     }
 }
 
-private func makeResultHandler<RT, R1, R2>(
+private func makeResultHandler<Value, Value1, Value2, Error: ErrorType>(
     index index: Int,
-    resultSetter: (v: RT, fields: ResultHandlerData<R1, R2>) -> (),
-    fields: ResultHandlerData<R1, R2>
-    ) -> JAsyncTypes<RT>.JDidFinishAsyncCallback
+    resultSetter: (v: Value, fields: ResultHandlerData<Value1, Value2, Error>) -> (),
+    fields: ResultHandlerData<Value1, Value2, Error>
+    ) -> JAsyncTypes<Value, Error>.JDidFinishAsyncCallback
 {
-    return { (result: Result<RT, NSError>) -> () in
+    return { (result: AsyncResult<Value, Error>) -> () in
         
         if fields.finished {
             return
@@ -512,7 +518,7 @@ private func makeResultHandler<RT, R1, R2>(
                 if let finish = fields.finishCallbackHolder {
                     fields.finishCallbackHolder   = nil
                     let completeResult = (fields.completeResult1!, fields.completeResult2!)
-                    finish(result: Result.success(completeResult))
+                    finish(result: AsyncResult.success(completeResult))
                 }
             } else {
                 
@@ -526,19 +532,39 @@ private func makeResultHandler<RT, R1, R2>(
             
             if let finish = fields.finishCallbackHolder {
                 fields.finishCallbackHolder = nil
-                finish(result: Result.failure(error))
+                finish(result: AsyncResult.failure(error))
+            }
+        case .Interrupted:
+            fields.finished = true
+            
+            fields.progressCallbackHolder = nil
+            fields.stateCallbackHolder    = nil
+            
+            if let finish = fields.finishCallbackHolder {
+                fields.finishCallbackHolder = nil
+                finish(result: .Interrupted)
+            }
+        case .Unsubscribed:
+            fields.finished = true
+            
+            fields.progressCallbackHolder = nil
+            fields.stateCallbackHolder    = nil
+            
+            if let finish = fields.finishCallbackHolder {
+                fields.finishCallbackHolder = nil
+                finish(result: .Unsubscribed)
             }
         }
     }
 }
 
-private func groupOfAsyncsPair<R1, R2>(
-    firstLoader: JAsyncTypes<R1>.JAsync,
-    _ secondLoader: JAsyncTypes<R2>.JAsync) -> JAsyncTypes<(R1, R2)>.JAsync
+private func groupOfAsyncsPair<Value1, Value2, Error: ErrorType>(
+    firstLoader: JAsyncTypes<Value1, Error>.JAsync,
+    _ secondLoader: JAsyncTypes<Value2, Error>.JAsync) -> JAsyncTypes<(Value1, Value2), Error>.JAsync
 {
     return { (progressCallback: JAsyncProgressCallback?,
               stateCallback   : JAsyncChangeStateCallback?,
-              finishCallback  : JAsyncTypes<(R1, R2)>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+              finishCallback  : JAsyncTypes<(Value1, Value2), Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         let fields = ResultHandlerData(
             progressCallback: progressCallback,
@@ -554,8 +580,8 @@ private func groupOfAsyncsPair<R1, R2>(
             stateCallback?(state: state)
             return
         }
-            
-        func setter1(val: R1, fields: ResultHandlerData<R1, R2>) {
+        
+        func setter1(val: Value1, fields: ResultHandlerData<Value1, Value2, Error>) {
             fields.completeResult1 = val
         }
         
@@ -573,7 +599,7 @@ private func groupOfAsyncsPair<R1, R2>(
         
         fields.handlerHolder1 = loaderHandler1
         
-        func setter2(val: R2, fields: ResultHandlerData<R1, R2>) {
+        func setter2(val: Value2, fields: ResultHandlerData<Value1, Value2, Error>) {
             fields.completeResult2 = val
         }
 
@@ -592,7 +618,7 @@ private func groupOfAsyncsPair<R1, R2>(
         
         return { (task: JAsyncHandlerTask) -> () in
             
-            let cancelOrUnSubscribe = task.rawValue <= JAsyncHandlerTask.Cancel.rawValue
+            let cancelOrUnSubscribe = task.unsubscribedOrCanceled
             
             if let handler = fields.handlerHolder1 {
                 
@@ -623,16 +649,16 @@ private func groupOfAsyncsPair<R1, R2>(
 ///////////////////////// ADD OBSERVERS OF ASYNC OP. RESULT ////////////////////////
 
 //doneCallbackHook called an cancel or finish loader's callbacks
-public func asyncWithDoneBlock<T>(loader: JAsyncTypes<T>.JAsync, doneCallbackHook: SimpleBlock?) -> JAsyncTypes<T>.JAsync {
+public func asyncWithDoneBlock<Value, Error: ErrorType>(loader: JAsyncTypes<Value, Error>.JAsync, doneCallbackHook: SimpleBlock?) -> JAsyncTypes<Value, Error>.JAsync {
     
     if let doneCallbackHook = doneCallbackHook {
         
         return { (
             progressCallback: JAsyncProgressCallback?,
             stateCallback   : JAsyncChangeStateCallback?,
-            finishCallback  : JAsyncTypes<T>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+            finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
             
-            let wrappedDoneCallback = { (result: Result<T, NSError>) -> () in
+            let wrappedDoneCallback = { (result: AsyncResult<Value, Error>) -> () in
                 
                 doneCallbackHook()
                 finishCallback?(result: result)

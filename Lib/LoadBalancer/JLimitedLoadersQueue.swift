@@ -10,11 +10,9 @@ import Foundation
 
 import iAsync_utils
 
-import Result
-
 public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
     
-    private let state = JQueueState<Strategy.ResultType>()//TODO remove
+    private let state = JQueueState<Strategy.ValueT, Strategy.ErrorT>()//TODO remove
     
     private let orderStrategy: Strategy
     
@@ -45,7 +43,7 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
         }
     }
     
-    private func hasLoadersReadyToStartForPendingLoader(pendingLoader: JBaseLoaderOwner<Strategy.ResultType>) -> Bool {
+    private func hasLoadersReadyToStartForPendingLoader(pendingLoader: JBaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) -> Bool {
         
         if pendingLoader.barrier {
             
@@ -56,7 +54,7 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
         
         if result {
             
-            return state.activeLoaders.all { (activeLoader: JBaseLoaderOwner<Strategy.ResultType>) -> Bool in
+            return state.activeLoaders.all { (activeLoader: JBaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) -> Bool in
                 return !activeLoader.barrier
             }
         }
@@ -64,7 +62,7 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
         return result
     }
     
-    private func nextPendingLoader() -> JBaseLoaderOwner<Strategy.ResultType>? {
+    private func nextPendingLoader() -> JBaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>? {
         
         let result = state.pendingLoaders.count > 0
             ?orderStrategy.firstPendingLoader()
@@ -84,13 +82,13 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
         }
     }
     
-    public func balancedLoaderWithLoader(loader: JAsyncTypes<Strategy.ResultType>.JAsync, barrier: Bool) -> JAsyncTypes<Strategy.ResultType>.JAsync {
+    public func balancedLoaderWithLoader(loader: JAsyncTypes<Strategy.ValueT, Strategy.ErrorT>.JAsync, barrier: Bool) -> JAsyncTypes<Strategy.ValueT, Strategy.ErrorT>.JAsync {
         
         return { (progressCallback: JAsyncProgressCallback?,
                   stateCallback   : JAsyncChangeStateCallback?,
-                  finishCallback  : JAsyncTypes<Strategy.ResultType>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+                  finishCallback  : JAsyncTypes<Strategy.ValueT, Strategy.ErrorT>.JDidFinishAsyncCallback?) -> JAsyncHandler in
             
-            let loaderHolder = JBaseLoaderOwner(loader:loader, didFinishActiveLoaderCallback: { (loader: JBaseLoaderOwner<Strategy.ResultType>) -> () in
+            let loaderHolder = JBaseLoaderOwner(loader:loader, didFinishActiveLoaderCallback: { (loader: JBaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) -> () in
                 
                 self.didFinishActiveLoader(loader)
             })
@@ -134,7 +132,7 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
                             if objectIndex != Int.max {
                                 self.state.pendingLoaders.removeAtIndex(objectIndex)
                             }
-                            doneCallback?(result: Result.failure(JAsyncFinishedByCancellationError()))
+                            finishCallback?(result: .Interrupted)
                         }
                     default:
                         assert(false) // "Unsupported type of task: %lu", (unsigned long)task)
@@ -144,12 +142,12 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
         }
     }
     
-    public func barrierBalancedLoaderWithLoader(loader: JAsyncTypes<Strategy.ResultType>.JAsync) -> JAsyncTypes<Strategy.ResultType>.JAsync {
+    public func barrierBalancedLoaderWithLoader(loader: JAsyncTypes<Strategy.ValueT, Strategy.ErrorT>.JAsync) -> JAsyncTypes<Strategy.ValueT, Strategy.ErrorT>.JAsync {
         
         return balancedLoaderWithLoader(loader, barrier:true)
     }
     
-    private func didFinishActiveLoader(activeLoader: JBaseLoaderOwner<Strategy.ResultType>) {
+    private func didFinishActiveLoader(activeLoader: JBaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) {
         
         var objectIndex = Int.max
         for (index, object) in self.state.activeLoaders.enumerate() {
