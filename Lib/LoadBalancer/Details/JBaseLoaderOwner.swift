@@ -10,23 +10,21 @@ import Foundation
 
 import iAsync_utils
 
-import Result
-
-public class JBaseLoaderOwner<T> {
+public class JBaseLoaderOwner<Value, Error: ErrorType> {
     
     var barrier = false
     
-    var loader: JAsyncTypes<T>.JAsync!
+    var loader: JAsyncTypes<Value, Error>.JAsync!
     
     var loadersHandler  : JAsyncHandler?
     var progressCallback: JAsyncProgressCallback?
     var stateCallback   : JAsyncChangeStateCallback?
-    var doneCallback    : JAsyncTypes<T>.JDidFinishAsyncCallback?
+    var doneCallback    : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?
     
-    typealias FinishCallback = (JBaseLoaderOwner<T>) -> ()
+    typealias FinishCallback = (JBaseLoaderOwner<Value, Error>) -> ()
     private var didFinishActiveLoaderCallback: FinishCallback?
     
-    init(loader: JAsyncTypes<T>.JAsync, didFinishActiveLoaderCallback: FinishCallback) {
+    init(loader: JAsyncTypes<Value, Error>.JAsync, didFinishActiveLoaderCallback: FinishCallback) {
         
         self.loader = loader
         self.didFinishActiveLoaderCallback = didFinishActiveLoaderCallback
@@ -48,12 +46,10 @@ public class JBaseLoaderOwner<T> {
             return
         }
         
-        let doneCallbackWrapper = { (result: Result<T, NSError>) -> () in
+        let doneCallbackWrapper = { (result: AsyncResult<Value, Error>) -> () in
             
             self.didFinishActiveLoaderCallback?(self)
-            
             self.doneCallback?(result: result)
-            
             self.clear()
         }
         

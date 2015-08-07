@@ -10,28 +10,26 @@ import Foundation
 
 import iAsync_utils
 
-import Result
-
-public enum CachedAsyncTypes<Value>
+public enum CachedAsyncTypes<Value, Error: ErrorType>
 {
-    public typealias JResultSetter = (value: Value) -> ()
-    public typealias JResultGetter = () -> Value?
+    public typealias JResultSetter = (value: AsyncResult<Value, Error>) -> ()
+    public typealias JResultGetter = () -> AsyncResult<Value, Error>?
 }
 
 //TODO20 test immediately cancel
 //TODO20 test cancel calback for each observer
 
-public class JCachedAsync<Key: Hashable, Value> {
+public class JCachedAsync<Key: Hashable, Value, Error: ErrorType> {
     
     public init() {}
     
-    private var delegatesByKey = [Key:ObjectRelatedPropertyData<Value>]()
+    private var delegatesByKey = [Key:ObjectRelatedPropertyData<Value, Error>]()
     
     //type PropertyExtractorType = PropertyExtractor[Key, Value]
-    private typealias PropertyExtractorType = PropertyExtractor<Key, Value>
+    private typealias PropertyExtractorType = PropertyExtractor<Key, Value, Error>
     
     //func clearDelegates(delegates: mutable.ArrayBuffer[CallbacksBlocksHolder[Value]]) {
-    private func clearDelegates(delegates: [CallbacksBlocksHolder<Value>]) {
+    private func clearDelegates(delegates: [CallbacksBlocksHolder<Value, Error>]) {
         
         for callbacks in delegates {
             callbacks.clearCallbacks()
@@ -49,7 +47,7 @@ public class JCachedAsync<Key: Hashable, Value> {
         propertyExtractor.clear()
     }
     
-    private func cancelBlock(propertyExtractor: PropertyExtractorType, callbacks: CallbacksBlocksHolder<Value>) -> JAsyncHandler {
+    private func cancelBlock(propertyExtractor: PropertyExtractorType, callbacks: CallbacksBlocksHolder<Value, Error>) -> JAsyncHandler {
         
         return { (task: JAsyncHandlerTask) -> () in
             
@@ -67,13 +65,13 @@ public class JCachedAsync<Key: Hashable, Value> {
                     propertyExtractor.removeDelegate(callbacks)
                     callbacks.clearCallbacks()
                     
-                    didLoadDataBlock?(result: Result.failure(JAsyncFinishedByUnsubscriptionError()))
+                    didLoadDataBlock?(result: .Unsubscribed)
                 case .Cancel:
                     handler(task: .Cancel)
                     self.clearDataForPropertyExtractor(propertyExtractor)//TODO should be already cleared here in finish callback
                 case .Suspend, .Resume:
                     
-                    propertyExtractor.eachDelegate({(callback: CallbacksBlocksHolder<Value>) -> () in
+                    propertyExtractor.eachDelegate({(callback: CallbacksBlocksHolder<Value, Error>) -> () in
                         
                         if let onState = callback.stateCallback {
                             let state = task == .Resume
@@ -89,9 +87,9 @@ public class JCachedAsync<Key: Hashable, Value> {
         }
     }
     
-    private func doneCallbackBlock(propertyExtractor: PropertyExtractorType) -> JAsyncTypes<Value>.JDidFinishAsyncCallback {
+    private func doneCallbackBlock(propertyExtractor: PropertyExtractorType) -> JAsyncTypes<Value, Error>.JDidFinishAsyncCallback {
         
-        return { (result: Result<Value, NSError>) -> () in
+        return { (result: AsyncResult<Value, Error>) -> () in
             
             //TODO test this if
             //may happen when cancel
@@ -99,9 +97,7 @@ public class JCachedAsync<Key: Hashable, Value> {
                 return
             }
             
-            if let value = result.value {
-                propertyExtractor.setterOption?(value: value)
-            }
+            propertyExtractor.setterOption?(value: result)
             
             let copyDelegates = propertyExtractor.copyDelegates()
             
@@ -116,11 +112,11 @@ public class JCachedAsync<Key: Hashable, Value> {
     
     private func performNativeLoader(
         propertyExtractor: PropertyExtractorType,
-        callbacks: CallbacksBlocksHolder<Value>) -> JAsyncHandler
+        callbacks: CallbacksBlocksHolder<Value, Error>) -> JAsyncHandler
     {
         func progressCallback(progressInfo: AnyObject) {
             
-            propertyExtractor.eachDelegate({(delegate: CallbacksBlocksHolder<Value>) -> () in
+            propertyExtractor.eachDelegate({(delegate: CallbacksBlocksHolder<Value, Error>) -> () in
                 delegate.progressCallback?(progressInfo: progressInfo)
                 return
             })
@@ -130,7 +126,7 @@ public class JCachedAsync<Key: Hashable, Value> {
         
         func stateCallback(state: JAsyncState) {
             
-            propertyExtractor.eachDelegate({(delegate: CallbacksBlocksHolder<Value>) -> () in
+            propertyExtractor.eachDelegate({(delegate: CallbacksBlocksHolder<Value, Error>) -> () in
                 delegate.stateCallback?(state: state)
                 return
             })
@@ -162,23 +158,24 @@ public class JCachedAsync<Key: Hashable, Value> {
         return delegatesByKey.count != 0
     }
     
-    public func asyncOpMerger(loader: JAsyncTypes<Value>.JAsync, uniqueKey: Key) -> JAsyncTypes<Value>.JAsync {
+    public func asyncOpMerger(loader: JAsyncTypes<Value, Error>.JAsync, uniqueKey: Key) -> JAsyncTypes<Value, Error>.JAsync {
         
         return asyncOpWithPropertySetter(nil, getter: nil, uniqueKey: uniqueKey, loader: loader)
     }
     
     public func asyncOpWithPropertySetter(
-        setter: CachedAsyncTypes<Value>.JResultSetter?,
-        getter: CachedAsyncTypes<Value>.JResultGetter?,
+        setter: CachedAsyncTypes<Value, Error>.JResultSetter?,
+        getter: CachedAsyncTypes<Value, Error>.JResultGetter?,
         uniqueKey: Key,
-        loader: JAsyncTypes<Value>.JAsync) -> JAsyncTypes<Value>.JAsync
+        loader: JAsyncTypes<Value, Error>.JAsync) -> JAsyncTypes<Value, Error>.JAsync
     {
         return { (
             progressCallback: JAsyncProgressCallback?,
             stateCallback   : JAsyncChangeStateCallback?,
-            finishCallback  : JAsyncTypes<Value>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+            finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
             
-            let propertyExtractor = PropertyExtractorType(setter     : setter,
+            let propertyExtractor = PropertyExtractorType(
+                setter     : setter,
                 getter     : getter,
                 cacheObject: self,
                 uniqueKey  : uniqueKey,
@@ -186,7 +183,7 @@ public class JCachedAsync<Key: Hashable, Value> {
             
             if let result = propertyExtractor.getAsyncResult() {
                 
-                finishCallback?(result: Result.success(result))
+                finishCallback?(result: result)
                 
                 propertyExtractor.clear()
                 return jStubHandlerAsyncBlock
@@ -205,18 +202,18 @@ public class JCachedAsync<Key: Hashable, Value> {
     }
 }
 
-private class ObjectRelatedPropertyData<T>
+private class ObjectRelatedPropertyData<Value, Error: ErrorType>
 {
     //var delegates    : mutable.ArrayBuffer[CallbacksBlocksHolder[T]] = null
-    var delegates = [CallbacksBlocksHolder<T>]()
+    var delegates = [CallbacksBlocksHolder<Value, Error>]()
     
     var loaderHandler: JAsyncHandler?
     //var asyncLoader  : Async[T] = null
-    var asyncLoader  : JAsyncTypes<T>.JAsync?
+    var asyncLoader  : JAsyncTypes<Value, Error>.JAsync?
     
-    func copyDelegates() -> [CallbacksBlocksHolder<T>] {
+    func copyDelegates() -> [CallbacksBlocksHolder<Value, Error>] {
         
-        let result = delegates.map({ (callbacks: CallbacksBlocksHolder<T>) -> CallbacksBlocksHolder<T> in
+        let result = delegates.map({ (callbacks: CallbacksBlocksHolder<Value, Error>) -> CallbacksBlocksHolder<Value, Error> in
             
             return CallbacksBlocksHolder(
                 progressCallback: callbacks.progressCallback,
@@ -233,7 +230,7 @@ private class ObjectRelatedPropertyData<T>
         delegates.removeAll(keepCapacity: false)
     }
     
-    func eachDelegate(block: (obj: CallbacksBlocksHolder<T>) -> ()) {
+    func eachDelegate(block: (obj: CallbacksBlocksHolder<Value, Error>) -> ()) {
         for element in delegates {
             block(obj: element)
         }
@@ -244,11 +241,11 @@ private class ObjectRelatedPropertyData<T>
     }
     
     //func getDelegates: mutable.ArrayBuffer[CallbacksBlocksHolder[ValueT]] = {
-    func addDelegate(delegate: CallbacksBlocksHolder<T>) {
+    func addDelegate(delegate: CallbacksBlocksHolder<Value, Error>) {
         delegates.append(delegate)
     }
     
-    func removeDelegate(delegate: CallbacksBlocksHolder<T>) {
+    func removeDelegate(delegate: CallbacksBlocksHolder<Value, Error>) {
         for (index, callbacks) in enumerate(delegates) {
             if delegate === callbacks {
                 delegates.removeAtIndex(index)
@@ -258,15 +255,15 @@ private class ObjectRelatedPropertyData<T>
     }
 }
 
-private class CallbacksBlocksHolder<T>
+private class CallbacksBlocksHolder<Value, Error: ErrorType>
 {
     var progressCallback: JAsyncProgressCallback?
     var stateCallback   : JAsyncChangeStateCallback?
-    var finishCallback  : JAsyncTypes<T>.JDidFinishAsyncCallback?
+    var finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?
     
     init(progressCallback: JAsyncProgressCallback?,
         stateCallback   : JAsyncChangeStateCallback?,
-        finishCallback  : JAsyncTypes<T>.JDidFinishAsyncCallback?)
+        finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?)
     {
         self.progressCallback = progressCallback
         self.stateCallback    = stateCallback
@@ -281,21 +278,21 @@ private class CallbacksBlocksHolder<T>
     }
 }
 
-private class PropertyExtractor<KeyT: Hashable, ValueT> {
+private class PropertyExtractor<KeyT: Hashable, ValueT, ErrorT: ErrorType> {
     
     var cleared = false
     
-    var setterOption: CachedAsyncTypes<ValueT>.JResultSetter?
-    var getterOption: CachedAsyncTypes<ValueT>.JResultGetter?
-    var cacheObject : JCachedAsync<KeyT, ValueT>?
+    var setterOption: CachedAsyncTypes<ValueT, ErrorT>.JResultSetter?
+    var getterOption: CachedAsyncTypes<ValueT, ErrorT>.JResultGetter?
+    var cacheObject : JCachedAsync<KeyT, ValueT, ErrorT>?
     var uniqueKey   : KeyT
     
     init(
-        setter     : CachedAsyncTypes<ValueT>.JResultSetter?,
-        getter     : CachedAsyncTypes<ValueT>.JResultGetter?,
-        cacheObject: JCachedAsync<KeyT, ValueT>,
+        setter     : CachedAsyncTypes<ValueT, ErrorT>.JResultSetter?,
+        getter     : CachedAsyncTypes<ValueT, ErrorT>.JResultGetter?,
+        cacheObject: JCachedAsync<KeyT, ValueT, ErrorT>,
         uniqueKey  : KeyT,
-        loader     : JAsyncTypes<ValueT>.JAsync)
+        loader     : JAsyncTypes<ValueT, ErrorT>.JAsync)
     {
         self.setterOption = setter
         self.getterOption = getter
@@ -305,7 +302,7 @@ private class PropertyExtractor<KeyT: Hashable, ValueT> {
     }
     
     //private def getObjectRelatedPropertyData: ObjectRelatedPropertyData[ValueT] = {
-    func getObjectRelatedPropertyData() -> ObjectRelatedPropertyData<ValueT>
+    func getObjectRelatedPropertyData() -> ObjectRelatedPropertyData<ValueT, ErrorT>
     {
         let resultOption = cacheObject!.delegatesByKey[uniqueKey]
         
@@ -313,16 +310,16 @@ private class PropertyExtractor<KeyT: Hashable, ValueT> {
             return result
         }
         
-        let result = ObjectRelatedPropertyData<ValueT>()
+        let result = ObjectRelatedPropertyData<ValueT, ErrorT>()
         cacheObject!.delegatesByKey[uniqueKey] = result
         return result
     }
     
-    func copyDelegates() -> [CallbacksBlocksHolder<ValueT>] {
+    func copyDelegates() -> [CallbacksBlocksHolder<ValueT, ErrorT>] {
         return getObjectRelatedPropertyData().copyDelegates()
     }
     
-    func eachDelegate(block: (obj: CallbacksBlocksHolder<ValueT>) -> ()) {
+    func eachDelegate(block: (obj: CallbacksBlocksHolder<ValueT, ErrorT>) -> ()) {
         return getObjectRelatedPropertyData().eachDelegate(block)
     }
     
@@ -335,11 +332,11 @@ private class PropertyExtractor<KeyT: Hashable, ValueT> {
     }
     
     //func getDelegates: mutable.ArrayBuffer[CallbacksBlocksHolder[ValueT]] = {
-    func addDelegate(delegate: CallbacksBlocksHolder<ValueT>) {
+    func addDelegate(delegate: CallbacksBlocksHolder<ValueT, ErrorT>) {
         getObjectRelatedPropertyData().addDelegate(delegate)
     }
     
-    func removeDelegate(delegate: CallbacksBlocksHolder<ValueT>) {
+    func removeDelegate(delegate: CallbacksBlocksHolder<ValueT, ErrorT>) {
         getObjectRelatedPropertyData().removeDelegate(delegate)
     }
     
@@ -352,16 +349,16 @@ private class PropertyExtractor<KeyT: Hashable, ValueT> {
     }
     
     //def getAsyncLoader: Async[ValueT] =
-    func getAsyncLoader() -> JAsyncTypes<ValueT>.JAsync? {
+    func getAsyncLoader() -> JAsyncTypes<ValueT, ErrorT>.JAsync? {
         return getObjectRelatedPropertyData().asyncLoader
     }
     
     //def setAsyncLoader(loader: Async[ValueT])
-    func setAsyncLoader(loader: JAsyncTypes<ValueT>.JAsync?) {
+    func setAsyncLoader(loader: JAsyncTypes<ValueT, ErrorT>.JAsync?) {
         getObjectRelatedPropertyData().asyncLoader = loader
     }
     
-    func getAsyncResult() -> ValueT? {
+    func getAsyncResult() -> AsyncResult<ValueT, ErrorT>? {
         return getterOption?()
     }
     

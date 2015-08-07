@@ -8,18 +8,21 @@
 
 import Foundation
 
-public class JBaseStrategy<T> {
+import iAsync_utils
+
+public class JBaseStrategy<Value, Error: ErrorType> {
     
-    typealias ResultType = T
+    typealias ValueType = Value
+    typealias ErrorType = Error
     
-    var queueState: JQueueState<ResultType>!
+    var queueState: JQueueState<ValueType, ErrorType>!
     
-    init(queueState: JQueueState<ResultType>) {
+    init(queueState: JQueueState<ValueType, ErrorType>) {
         
         self.queueState = queueState
     }
     
-    public func executePendingLoader(pendingLoader: JBaseLoaderOwner<T>) {
+    public func executePendingLoader(pendingLoader: JBaseLoaderOwner<ValueType, ErrorType>) {
         
         var objectIndex = Int.max
         

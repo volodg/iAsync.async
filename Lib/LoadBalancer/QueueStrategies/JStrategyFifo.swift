@@ -8,13 +8,15 @@
 
 import Foundation
 
-public class JStrategyFifo<T> : JBaseStrategy<T>, JQueueStrategy {
+import iAsync_utils
+
+public class JStrategyFifo<Value, Error: ErrorType> : JBaseStrategy<Value, Error>, JQueueStrategy {
     
-    required override public init(queueState: JQueueState<ResultType>) {
+    required override public init(queueState: JQueueState<Value, Error>) {
         super.init(queueState: queueState)
     }
     
-    public func firstPendingLoader() -> JBaseLoaderOwner<ResultType>? {
+    public func firstPendingLoader() -> JBaseLoaderOwner<Value, Error>? {
         
         let result = queueState.pendingLoaders[0]
         return result

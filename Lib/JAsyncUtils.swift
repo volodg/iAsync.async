@@ -10,20 +10,18 @@ import Foundation
 
 import iAsync_utils
 
-import Result
-
 private let defaultQueueName = "com.jff.async_operations_library.general_queue"
 
 //TODO remove this class
-private class JBlockOperation<T> {
+private class JBlockOperation<Value, Error: ErrorType> {
     
     //TODO make atomic
     private var finishedOrCanceled = false
     
     init(
         queueName         : String?,
-        loadDataBlock     : JAsyncTypes<T>.JSyncOperationWithProgress,
-        didLoadDataBlock  : JAsyncTypes<T>.JDidFinishAsyncCallback?,
+        loadDataBlock     : JAsyncTypes<Value, Error>.JSyncOperationWithProgress,
+        didLoadDataBlock  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?,
         progressBlock     : JAsyncProgressCallback?,
         barrier           : Bool,
         currentQueue      : dispatch_queue_t = dispatch_get_main_queue(),
@@ -62,8 +60,8 @@ private class JBlockOperation<T> {
         queue           : dispatch_queue_t,
         barrier         : Bool,
         currentQueue    : dispatch_queue_t,
-        loadDataBlock   : JAsyncTypes<T>.JSyncOperationWithProgress,
-        didLoadDataBlock: JAsyncTypes<T>.JDidFinishAsyncCallback?,
+        loadDataBlock   : JAsyncTypes<Value, Error>.JSyncOperationWithProgress,
+        didLoadDataBlock: JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?,
         progressBlock   : JAsyncProgressCallback?) {
         
         let dispatchAsyncMethod = barrier
@@ -104,15 +102,15 @@ private class JBlockOperation<T> {
     }
 }
 
-private class JAsyncAdapter<T> : JAsyncInterface {
+private class JAsyncAdapter<Value, Error: ErrorType> : JAsyncInterface {
     
-    let loadDataBlock  : JAsyncTypes<T>.JSyncOperationWithProgress
+    let loadDataBlock  : JAsyncTypes<Value, Error>.JSyncOperationWithProgress
     let queueName      : String?
     let barrier        : Bool
     let currentQueue   : dispatch_queue_t
     let queueAttributes: dispatch_queue_attr_t
     
-    init(loadDataBlock  : JAsyncTypes<T>.JSyncOperationWithProgress,
+    init(loadDataBlock  : JAsyncTypes<Value, Error>.JSyncOperationWithProgress,
          queueName      : String?,
          barrier        : Bool,
          currentQueue   : dispatch_queue_t,
@@ -125,10 +123,10 @@ private class JAsyncAdapter<T> : JAsyncInterface {
         self.queueAttributes = queueAttributes
     }
     
-    var operation: JBlockOperation<T>? = nil
+    var operation: JBlockOperation<Value, Error>? = nil
     
     func asyncWithResultCallback(
-        finishCallback  : JAsyncTypes<T>.JDidFinishAsyncCallback,
+        finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback,
         stateCallback   : JAsyncChangeStateCallback,
         progressCallback: JAsyncProgressCallback) {
             
@@ -144,7 +142,7 @@ private class JAsyncAdapter<T> : JAsyncInterface {
     
     func doTask(task: JAsyncHandlerTask) {
         
-        assert(task.rawValue <= JAsyncHandlerTask.Cancel.rawValue)
+        assert(task.unsubscribedOrCanceled)
         if task == .Cancel {
             operation?.cancel()
             operation = nil
@@ -156,14 +154,14 @@ private class JAsyncAdapter<T> : JAsyncInterface {
     }
 }
 
-private func asyncWithSyncOperationWithProgressBlockAndQueue<T>(
-    progressLoadDataBlock: JAsyncTypes<T>.JSyncOperationWithProgress,
+private func asyncWithSyncOperationWithProgressBlockAndQueue<Value, Error: ErrorType>(
+    progressLoadDataBlock: JAsyncTypes<Value, Error>.JSyncOperationWithProgress,
     queueName: String,
     barrier: Bool,
     currentQueue: dispatch_queue_t,
-    queueAttributes: dispatch_queue_attr_t) -> JAsyncTypes<T>.JAsync {
+    queueAttributes: dispatch_queue_attr_t) -> JAsyncTypes<Value, Error>.JAsync {
     
-    let factory = { () -> JAsyncAdapter<T> in
+    let factory = { () -> JAsyncAdapter<Value, Error> in
         
         let asyncObject = JAsyncAdapter(
             loadDataBlock  : progressLoadDataBlock,
@@ -177,14 +175,14 @@ private func asyncWithSyncOperationWithProgressBlockAndQueue<T>(
     return JAsyncBuilder.buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: currentQueue)
 }
 
-private func generalAsyncWithSyncOperationAndQueue<T>(
-    loadDataBlock: JAsyncTypes<T>.JSyncOperation,
+private func generalAsyncWithSyncOperationAndQueue<Value, Error: ErrorType>(
+    loadDataBlock: JAsyncTypes<Value, Error>.JSyncOperation,
     queueName: String,
     barrier: Bool,
     currentQueue: dispatch_queue_t,
-    attr: dispatch_queue_attr_t) -> JAsyncTypes<T>.JAsync
+    attr: dispatch_queue_attr_t) -> JAsyncTypes<Value, Error>.JAsync
 {
-    let progressLoadDataBlock = { (progressCallback: JAsyncProgressCallback?) -> Result<T, NSError> in
+    let progressLoadDataBlock = { (progressCallback: JAsyncProgressCallback?) -> AsyncResult<Value, Error> in
         
         return loadDataBlock()
     }
@@ -197,12 +195,12 @@ private func generalAsyncWithSyncOperationAndQueue<T>(
         attr)
 }
 
-public func asyncWithSyncOperation<T>(loadDataBlock: JAsyncTypes<T>.JSyncOperation) -> JAsyncTypes<T>.JAsync {
+public func asyncWithSyncOperation<Value, Error>(loadDataBlock: JAsyncTypes<Value, Error>.JSyncOperation) -> JAsyncTypes<Value, Error>.JAsync {
     
     return asyncWithSyncOperationAndQueue(loadDataBlock, defaultQueueName)
 }
 
-public func asyncWithSyncOperationAndQueue<T>(loadDataBlock: JAsyncTypes<T>.JSyncOperation, queueName: String) -> JAsyncTypes<T>.JAsync {
+public func asyncWithSyncOperationAndQueue<Value, Error: ErrorType>(loadDataBlock: JAsyncTypes<Value, Error>.JSyncOperation, queueName: String) -> JAsyncTypes<Value, Error>.JAsync {
     
     assert(NSThread.isMainThread())
     return generalAsyncWithSyncOperationAndQueue(
@@ -213,7 +211,7 @@ public func asyncWithSyncOperationAndQueue<T>(loadDataBlock: JAsyncTypes<T>.JSyn
         DISPATCH_QUEUE_CONCURRENT)
 }
 
-func asyncWithSyncOperationAndConfigurableQueue<T>(loadDataBlock: JAsyncTypes<T>.JSyncOperation, queueName: String, isSerialQueue: Bool) -> JAsyncTypes<T>.JAsync {
+func asyncWithSyncOperationAndConfigurableQueue<Value, Error: ErrorType>(loadDataBlock: JAsyncTypes<Value, Error>.JSyncOperation, queueName: String, isSerialQueue: Bool) -> JAsyncTypes<Value, Error>.JAsync {
     
     assert(NSThread.isMainThread())
     let attr: dispatch_queue_attr_t = isSerialQueue
@@ -228,7 +226,7 @@ func asyncWithSyncOperationAndConfigurableQueue<T>(loadDataBlock: JAsyncTypes<T>
         attr)
 }
 
-func barrierAsyncWithSyncOperationAndQueue<T>(loadDataBlock: JAsyncTypes<T>.JSyncOperation, queueName: String) -> JAsyncTypes<T>.JAsync {
+func barrierAsyncWithSyncOperationAndQueue<Value, Error: ErrorType>(loadDataBlock: JAsyncTypes<Value, Error>.JSyncOperation, queueName: String) -> JAsyncTypes<Value, Error>.JAsync {
     
     assert(NSThread.isMainThread())
     return generalAsyncWithSyncOperationAndQueue(
@@ -239,7 +237,7 @@ func barrierAsyncWithSyncOperationAndQueue<T>(loadDataBlock: JAsyncTypes<T>.JSyn
         DISPATCH_QUEUE_CONCURRENT)
 }
 
-public func asyncWithSyncOperationWithProgressBlock<T>(progressLoadDataBlock: JAsyncTypes<T>.JSyncOperationWithProgress) -> JAsyncTypes<T>.JAsync {
+public func asyncWithSyncOperationWithProgressBlock<Value, Error: ErrorType>(progressLoadDataBlock: JAsyncTypes<Value, Error>.JSyncOperationWithProgress) -> JAsyncTypes<Value, Error>.JAsync {
     
     assert(NSThread.isMainThread())
     return asyncWithSyncOperationWithProgressBlockAndQueue(
