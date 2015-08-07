@@ -12,12 +12,12 @@ import iAsync_utils
 
 public enum JAsyncTypesTransform<Value1, Value2, Error: ErrorType> {
     
-    private typealias Async1 = JAsyncTypes<Value1, Error>.JAsync
-    private typealias Async2 = JAsyncTypes<Value2, Error>.JAsync
+    public typealias Async1 = JAsyncTypes<Value1, Error>.JAsync
+    public typealias Async2 = JAsyncTypes<Value2, Error>.JAsync
     
     public typealias PackedType = (Value1?, Value2?)
     
-    private typealias PackedAsync = JAsyncTypes<PackedType, Error>.JAsync
+    public typealias PackedAsync = JAsyncTypes<PackedType, Error>.JAsync
     
     public typealias AsyncTransformer = (PackedAsync) -> PackedAsync
     

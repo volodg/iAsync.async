@@ -192,7 +192,7 @@ private func async<Value, Error: ErrorType>(
         queueAttributes: attributes)
 }
 
-public func async<T>(job job: JAsyncTypes<T>.JSyncOperation) -> JAsyncTypes<T>.JAsync {
+public func async<Value, Error: ErrorType>(job job: JAsyncTypes<Value, Error>.JSyncOperation) -> JAsyncTypes<Value, Error>.JAsync {
     
     return async(job: job, queueName: defaultQueueName)
 }
