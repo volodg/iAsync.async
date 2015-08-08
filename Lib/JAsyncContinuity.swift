@@ -418,7 +418,7 @@ public func groupOfAsyncs<Value1, Value2, Value3, Error: ErrorType>(
         
         return bindSequenceOfAsyncs(thirdLoader, { r3  -> JAsyncTypes<(Value1, Value2, Value3), Error>.JAsync in
             
-            return async(result: (r1, r2, r3))
+            return async(value: (r1, r2, r3))
         })
     })
 }
@@ -426,14 +426,14 @@ public func groupOfAsyncs<Value1, Value2, Value3, Error: ErrorType>(
 public func groupOfAsyncsArray<Value, Error: ErrorType>(loaders: [JAsyncTypes<Value, Error>.JAsync]) -> JAsyncTypes<[Value], Error>.JAsync {
     
     if loaders.count == 0 {
-        return async(result: [])
+        return async(value: [])
     }
     
     func resultToArrayForLoader(loader: JAsyncTypes<Value, Error>.JAsync) -> JAsyncTypes<[Value], Error>.JAsync {
         
         return bindSequenceOfAsyncs(loader, { (value: Value) -> JAsyncTypes<[Value], Error>.JAsync in
             
-            return async(result: [value])
+            return async(value: [value])
         })
     }
     
@@ -441,7 +441,7 @@ public func groupOfAsyncsArray<Value, Error: ErrorType>(loaders: [JAsyncTypes<Va
         
         return bindSequenceOfAsyncs(loader, { (value: ([Value], Value)) -> JAsyncTypes<[Value], Error>.JAsync in
             
-            return async(result: value.0 + [value.1])
+            return async(value: value.0 + [value.1])
         })
     }
     

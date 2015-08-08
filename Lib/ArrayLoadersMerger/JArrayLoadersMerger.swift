@@ -49,7 +49,7 @@ public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
                 
                 let loader = bindSequenceOfAsyncs(currentLoader.nativeLoader!, { (result: [Value]) -> JAsyncTypes<Value, Error>.JAsync in
                     //TODO check length of result
-                    return async(result: result[resultIndex])
+                    return async(value: result[resultIndex])
                 })
                 
                 return loader(

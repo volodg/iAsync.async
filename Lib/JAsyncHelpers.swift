@@ -10,8 +10,7 @@ import Foundation
 
 import iAsync_utils
 
-//TODO !!! rename to asyncWithResult
-public func async<Value, Error>(resultOrError result: AsyncResult<Value, Error>) -> JAsyncTypes<Value, Error>.JAsync {
+public func async<Value, Error>(result result: AsyncResult<Value, Error>) -> JAsyncTypes<Value, Error>.JAsync {
     
     return { (progressCallback: JAsyncProgressCallback?,
               stateCallback   : JAsyncChangeStateCallback?,
@@ -22,19 +21,17 @@ public func async<Value, Error>(resultOrError result: AsyncResult<Value, Error>)
     }
 }
 
-//TODO !!! rename to asyncWithValue
-public func async<Value, Error>(result result: Value) -> JAsyncTypes<Value, Error>.JAsync {
+public func async<Value, Error>(value value: Value) -> JAsyncTypes<Value, Error>.JAsync {
     
     return { (progressCallback: JAsyncProgressCallback?,
               stateCallback   : JAsyncChangeStateCallback?,
               doneCallback    : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
-        doneCallback?(result: AsyncResult.success(result))
+        doneCallback?(result: AsyncResult.success(value))
         return jStubHandlerAsyncBlock
     }
 }
 
-//TODO remove ?
 public func async<Value, Error: ErrorType>(error error: Error) -> JAsyncTypes<Value, Error>.JAsync {
     
     return { (progressCallback: JAsyncProgressCallback?,
