@@ -1,6 +1,6 @@
 //
 //  ArrayLoadersMerger.swift
-//  JAsync
+//  Async
 //
 //  Created by Vladimir Gorbenko on 11.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -12,7 +12,7 @@ import iAsync_utils
 
 public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
     
-    private typealias JAsyncOpAr = JAsyncTypes<[Value], Error>.JAsync
+    private typealias JAsyncOpAr = AsyncTypes<[Value], Error>.Async
     
     public typealias JArrayOfObjectsLoader = (keys: [Arg]) -> JAsyncOpAr
     
@@ -37,17 +37,17 @@ public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
         _arrayLoader = arrayLoader
     }
     
-    public func oneObjectLoader(key: Arg) -> JAsyncTypes<Value, Error>.JAsync {
+    public func oneObjectLoader(key: Arg) -> AsyncTypes<Value, Error>.Async {
         
-        let loader = { (progressCallback: JAsyncProgressCallback?,
-                        stateCallback   : JAsyncChangeStateCallback?,
-                        finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+        let loader = { (progressCallback: AsyncProgressCallback?,
+                        stateCallback   : AsyncChangeStateCallback?,
+                        finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
             
             if let currentLoader = self.activeLoaderForKey(key) {
                 
                 let resultIndex = currentLoader.indexOfKey(key)
                 
-                let loader = bindSequenceOfAsyncs(currentLoader.nativeLoader!, { (result: [Value]) -> JAsyncTypes<Value, Error>.JAsync in
+                let loader = bindSequenceOfAsyncs(currentLoader.nativeLoader!, { (result: [Value]) -> AsyncTypes<Value, Error>.Async in
                     //TODO check length of result
                     return asyncWithResult(result[resultIndex])
                 })
@@ -137,16 +137,16 @@ public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
 
 private class JLoadersCallbacksData<Value, Error: ErrorType> {
     
-    var progressCallback: JAsyncProgressCallback?
-    var stateCallback   : JAsyncChangeStateCallback?
-    var doneCallback    : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?
+    var progressCallback: AsyncProgressCallback?
+    var stateCallback   : AsyncChangeStateCallback?
+    var doneCallback    : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?
     
     var suspended = false
     
     init(
-        progressCallback: JAsyncProgressCallback?,
-        stateCallback   : JAsyncChangeStateCallback?,
-        doneCallback    : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?)
+        progressCallback: AsyncProgressCallback?,
+        stateCallback   : AsyncChangeStateCallback?,
+        doneCallback    : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?)
     {
         self.progressCallback = progressCallback
         self.stateCallback    = stateCallback
@@ -183,7 +183,7 @@ private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
         return -1
     }
     
-    var nativeLoader : JAsyncTypes<[Value], Error>.JAsync? //Should be strong
+    var nativeLoader : AsyncTypes<[Value], Error>.Async? //Should be strong
     
     private var _nativeHandler: JAsyncHandler?
     
@@ -237,9 +237,9 @@ private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
         let arrayLoader = owner!._arrayLoader(keys: Array(keys))
         
         let loader = { [weak self] (
-            progressCallback: JAsyncProgressCallback?,
-            stateCallback   : JAsyncChangeStateCallback?,
-            finishCallback  : JAsyncTypes<[Value], Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+            progressCallback: AsyncProgressCallback?,
+            stateCallback   : AsyncChangeStateCallback?,
+            finishCallback  : AsyncTypes<[Value], Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
             
             let progressCallbackWrapper = { (progressInfo: AnyObject) -> () in
                 
@@ -298,7 +298,7 @@ private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
         let setter: CachedAsyncTypes<[Value], Error>.JResultSetter? = nil
         let getter: CachedAsyncTypes<[Value], Error>.JResultGetter? = nil
         
-        let nativeLoader: JAsyncTypes<[Value], Error>.JAsync = _cachedAsyncOp.asyncOpWithPropertySetter(
+        let nativeLoader: AsyncTypes<[Value], Error>.Async = _cachedAsyncOp.asyncOpWithPropertySetter(
             setter,
             getter: getter,
             uniqueKey: keys,

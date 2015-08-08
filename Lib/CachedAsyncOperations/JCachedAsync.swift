@@ -1,6 +1,6 @@
 //
 //  JCachedAsync.swift
-//  JAsync
+//  Async
 //
 //  Created by Vladimir Gorbenko on 12.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -87,7 +87,7 @@ public class JCachedAsync<Key: Hashable, Value, Error: ErrorType> {
         }
     }
     
-    private func doneCallbackBlock(propertyExtractor: PropertyExtractorType) -> JAsyncTypes<Value, Error>.JDidFinishAsyncCallback {
+    private func doneCallbackBlock(propertyExtractor: PropertyExtractorType) -> AsyncTypes<Value, Error>.JDidFinishAsyncCallback {
         
         return { (result: AsyncResult<Value, Error>) -> () in
             
@@ -158,7 +158,7 @@ public class JCachedAsync<Key: Hashable, Value, Error: ErrorType> {
         return delegatesByKey.count != 0
     }
     
-    public func asyncOpMerger(loader: JAsyncTypes<Value, Error>.JAsync, uniqueKey: Key) -> JAsyncTypes<Value, Error>.JAsync {
+    public func asyncOpMerger(loader: AsyncTypes<Value, Error>.Async, uniqueKey: Key) -> AsyncTypes<Value, Error>.Async {
         
         return asyncOpWithPropertySetter(nil, getter: nil, uniqueKey: uniqueKey, loader: loader)
     }
@@ -167,12 +167,12 @@ public class JCachedAsync<Key: Hashable, Value, Error: ErrorType> {
         setter: CachedAsyncTypes<Value, Error>.JResultSetter?,
         getter: CachedAsyncTypes<Value, Error>.JResultGetter?,
         uniqueKey: Key,
-        loader: JAsyncTypes<Value, Error>.JAsync) -> JAsyncTypes<Value, Error>.JAsync
+        loader: AsyncTypes<Value, Error>.Async) -> AsyncTypes<Value, Error>.Async
     {
         return { (
-            progressCallback: JAsyncProgressCallback?,
-            stateCallback   : JAsyncChangeStateCallback?,
-            finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+            progressCallback: AsyncProgressCallback?,
+            stateCallback   : AsyncChangeStateCallback?,
+            finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
             
             let propertyExtractor = PropertyExtractorType(
                 setter     : setter,
@@ -209,7 +209,7 @@ private class ObjectRelatedPropertyData<Value, Error: ErrorType>
     
     var loaderHandler: JAsyncHandler?
     //var asyncLoader  : Async[T] = null
-    var asyncLoader  : JAsyncTypes<Value, Error>.JAsync?
+    var asyncLoader  : AsyncTypes<Value, Error>.Async?
     
     func copyDelegates() -> [CallbacksBlocksHolder<Value, Error>] {
         
@@ -257,13 +257,14 @@ private class ObjectRelatedPropertyData<Value, Error: ErrorType>
 
 private class CallbacksBlocksHolder<Value, Error: ErrorType>
 {
-    var progressCallback: JAsyncProgressCallback?
-    var stateCallback   : JAsyncChangeStateCallback?
-    var finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?
+    var progressCallback: AsyncProgressCallback?
+    var stateCallback   : AsyncChangeStateCallback?
+    var finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?
     
-    init(progressCallback: JAsyncProgressCallback?,
-        stateCallback   : JAsyncChangeStateCallback?,
-        finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?)
+    init(
+        progressCallback: AsyncProgressCallback?,
+        stateCallback   : AsyncChangeStateCallback?,
+        finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?)
     {
         self.progressCallback = progressCallback
         self.stateCallback    = stateCallback
@@ -292,7 +293,7 @@ private class PropertyExtractor<KeyT: Hashable, ValueT, ErrorT: ErrorType> {
         getter     : CachedAsyncTypes<ValueT, ErrorT>.JResultGetter?,
         cacheObject: JCachedAsync<KeyT, ValueT, ErrorT>,
         uniqueKey  : KeyT,
-        loader     : JAsyncTypes<ValueT, ErrorT>.JAsync)
+        loader     : AsyncTypes<ValueT, ErrorT>.Async)
     {
         self.setterOption = setter
         self.getterOption = getter
@@ -349,12 +350,12 @@ private class PropertyExtractor<KeyT: Hashable, ValueT, ErrorT: ErrorType> {
     }
     
     //def getAsyncLoader: Async[ValueT] =
-    func getAsyncLoader() -> JAsyncTypes<ValueT, ErrorT>.JAsync? {
+    func getAsyncLoader() -> AsyncTypes<ValueT, ErrorT>.Async? {
         return getObjectRelatedPropertyData().asyncLoader
     }
     
     //def setAsyncLoader(loader: Async[ValueT])
-    func setAsyncLoader(loader: JAsyncTypes<ValueT, ErrorT>.JAsync?) {
+    func setAsyncLoader(loader: AsyncTypes<ValueT, ErrorT>.Async?) {
         getObjectRelatedPropertyData().asyncLoader = loader
     }
     

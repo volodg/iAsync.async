@@ -1,6 +1,6 @@
 //
-//  JAsyncTypesTransform.swift
-//  JAsync
+//  AsyncTypesTransform.swift
+//  Async
 //
 //  Created by Vladimir Gorbenko on 04.10.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -10,14 +10,14 @@ import Foundation
 
 import iAsync_utils
 
-public enum JAsyncTypesTransform<Value1, Value2, Error: ErrorType> {
+public enum AsyncTypesTransform<Value1, Value2, Error: ErrorType> {
     
-    private typealias Async1 = JAsyncTypes<Value1, Error>.JAsync
-    private typealias Async2 = JAsyncTypes<Value2, Error>.JAsync
+    private typealias Async1 = AsyncTypes<Value1, Error>.Async
+    private typealias Async2 = AsyncTypes<Value2, Error>.Async
     
     public typealias PackedType = (Value1?, Value2?)
     
-    private typealias PackedAsync = JAsyncTypes<PackedType, Error>.JAsync
+    private typealias PackedAsync = AsyncTypes<PackedType, Error>.Async
     
     public typealias AsyncTransformer = (PackedAsync) -> PackedAsync
     

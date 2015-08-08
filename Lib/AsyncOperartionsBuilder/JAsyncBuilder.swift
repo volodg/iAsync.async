@@ -1,6 +1,6 @@
 //
 //  JAsyncBuilder.swift
-//  JAsync
+//  Async
 //
 //  Created by Vladimir Gorbenko on 25.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -18,9 +18,9 @@ public protocol JAsyncInterface {
     typealias ErrorT : ErrorType
     
     func asyncWithResultCallback(
-        finishCallback  : JAsyncTypes<ValueT, ErrorT>.JDidFinishAsyncCallback,
-        stateCallback   : JAsyncChangeStateCallback,
-        progressCallback: JAsyncProgressCallback)
+        finishCallback  : AsyncTypes<ValueT, ErrorT>.JDidFinishAsyncCallback,
+        stateCallback   : AsyncChangeStateCallback,
+        progressCallback: AsyncProgressCallback)
     
     func doTask(task: JAsyncHandlerTask)
     
@@ -31,7 +31,7 @@ public class JAsyncBuilder<T: JAsyncInterface> {
     
     public typealias JAsyncInstanceBuilder = () -> T
     
-    public class func buildWithAdapterFactory(factory: JAsyncInstanceBuilder) -> JAsyncTypes<T.ValueT, T.ErrorT>.JAsync {
+    public class func buildWithAdapterFactory(factory: JAsyncInstanceBuilder) -> AsyncTypes<T.ValueT, T.ErrorT>.Async {
         
         assert(NSThread.isMainThread(), "main thread expected")
         return buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: dispatch_get_main_queue())
@@ -39,12 +39,12 @@ public class JAsyncBuilder<T: JAsyncInterface> {
     
     public class func buildWithAdapterFactoryWithDispatchQueue(
         factory: JAsyncInstanceBuilder,
-        callbacksQueue: dispatch_queue_t) -> JAsyncTypes<T.ValueT, T.ErrorT>.JAsync {
+        callbacksQueue: dispatch_queue_t) -> AsyncTypes<T.ValueT, T.ErrorT>.Async {
             
         return { (
-            progressCallback: JAsyncProgressCallback?,
-            stateCallback   : JAsyncChangeStateCallback?,
-            finishCallback  : JAsyncTypes<T.ValueT, T.ErrorT>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+            progressCallback: AsyncProgressCallback?,
+            stateCallback   : AsyncChangeStateCallback?,
+            finishCallback  : AsyncTypes<T.ValueT, T.ErrorT>.JDidFinishAsyncCallback?) -> JAsyncHandler in
             
             var asyncObject: T? = factory()
             

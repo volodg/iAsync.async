@@ -1,6 +1,6 @@
 //
 //  JAsyncHelpers.swift
-//  JAsync
+//  Async
 //
 //  Created by Vladimir Gorbenko on 11.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -11,11 +11,11 @@ import Foundation
 import iAsync_utils
 
 //TODO rename to asyncWithResult
-public func asyncWithJResult<Value, Error>(result: AsyncResult<Value, Error>) -> JAsyncTypes<Value, Error>.JAsync {
+public func asyncWithJResult<Value, Error>(result: AsyncResult<Value, Error>) -> AsyncTypes<Value, Error>.Async {
     
-    return { (progressCallback: JAsyncProgressCallback?,
-              stateCallback   : JAsyncChangeStateCallback?,
-              doneCallback    : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+    return { (progressCallback: AsyncProgressCallback?,
+              stateCallback   : AsyncChangeStateCallback?,
+              doneCallback    : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         doneCallback?(result: result)
         return jStubHandlerAsyncBlock
@@ -23,11 +23,11 @@ public func asyncWithJResult<Value, Error>(result: AsyncResult<Value, Error>) ->
 }
 
 //TODO rename to asyncWithValue
-public func asyncWithResult<Value, Error>(result: Value) -> JAsyncTypes<Value, Error>.JAsync {
+public func asyncWithResult<Value, Error>(result: Value) -> AsyncTypes<Value, Error>.Async {
     
-    return { (progressCallback: JAsyncProgressCallback?,
-              stateCallback   : JAsyncChangeStateCallback?,
-              doneCallback    : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+    return { (progressCallback: AsyncProgressCallback?,
+              stateCallback   : AsyncChangeStateCallback?,
+              doneCallback    : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         doneCallback?(result: AsyncResult.success(result))
         return jStubHandlerAsyncBlock
@@ -35,11 +35,11 @@ public func asyncWithResult<Value, Error>(result: Value) -> JAsyncTypes<Value, E
 }
 
 //TODO remove ?
-public func asyncWithError<Value, Error: ErrorType>(error: Error) -> JAsyncTypes<Value, Error>.JAsync {
+public func asyncWithError<Value, Error: ErrorType>(error: Error) -> AsyncTypes<Value, Error>.Async {
     
-    return { (progressCallback: JAsyncProgressCallback?,
-              stateCallback   : JAsyncChangeStateCallback?,
-              doneCallback    : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+    return { (progressCallback: AsyncProgressCallback?,
+              stateCallback   : AsyncChangeStateCallback?,
+              doneCallback    : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         doneCallback?(result: AsyncResult.failure(error))
         return jStubHandlerAsyncBlock
@@ -62,11 +62,11 @@ extension JAsyncHandlerTask {
 }
 
 
-public func asyncWithHandlerFlag<Value, Error: ErrorType>(task: JAsyncHandlerTask) -> JAsyncTypes<Value, Error>.JAsync {
+public func asyncWithHandlerFlag<Value, Error: ErrorType>(task: JAsyncHandlerTask) -> AsyncTypes<Value, Error>.Async {
     
-    return { (progressCallback: JAsyncProgressCallback?,
-              stateCallback   : JAsyncChangeStateCallback?,
-              doneCallback    : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+    return { (progressCallback: AsyncProgressCallback?,
+              stateCallback   : AsyncChangeStateCallback?,
+              doneCallback    : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         processHandlerFlag(task, stateCallback, doneCallback)
         return jStubHandlerAsyncBlock
@@ -75,8 +75,8 @@ public func asyncWithHandlerFlag<Value, Error: ErrorType>(task: JAsyncHandlerTas
 
 public func processHandlerFlag<Value, Error: ErrorType>(
     task         : JAsyncHandlerTask,
-    stateCallback: JAsyncChangeStateCallback?,
-    doneCallback : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) {
+    stateCallback: AsyncChangeStateCallback?,
+    doneCallback : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) {
         
     let errorOption: AsyncResult<Value, Error>? = task.buildFinishError()
     
@@ -93,11 +93,11 @@ public func processHandlerFlag<Value, Error: ErrorType>(
     }
 }
 
-func neverFinishAsync() -> JAsyncTypes<AnyObject, NSError>.JAsync {
+func neverFinishAsync() -> AsyncTypes<AnyObject, NSError>.Async {
     
-    return { (progressCallback: JAsyncProgressCallback?,
-              stateCallback   : JAsyncChangeStateCallback?,
-              doneCallback    : JAsyncTypes<AnyObject, NSError>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+    return { (progressCallback: AsyncProgressCallback?,
+              stateCallback   : AsyncChangeStateCallback?,
+              doneCallback    : AsyncTypes<AnyObject, NSError>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         var wasCanceled = false
         
@@ -115,11 +115,11 @@ func neverFinishAsync() -> JAsyncTypes<AnyObject, NSError>.JAsync {
     }
 }
 
-public func asyncWithSyncOperationInCurrentQueue<Value, Error>(block: JAsyncTypes<Value, Error>.JSyncOperation) -> JAsyncTypes<Value, Error>.JAsync
+public func asyncWithSyncOperationInCurrentQueue<Value, Error>(block: AsyncTypes<Value, Error>.JSyncOperation) -> AsyncTypes<Value, Error>.Async
 {
-    return { (progressCallback: JAsyncProgressCallback?,
-              stateCallback   : JAsyncChangeStateCallback?,
-              doneCallback    : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+    return { (progressCallback: AsyncProgressCallback?,
+              stateCallback   : AsyncChangeStateCallback?,
+              doneCallback    : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         doneCallback?(result: block())
         return jStubHandlerAsyncBlock
@@ -127,12 +127,12 @@ public func asyncWithSyncOperationInCurrentQueue<Value, Error>(block: JAsyncType
 }
 
 public func asyncWithFinishCallbackBlock<Value, Error>(
-    loader: JAsyncTypes<Value, Error>.JAsync,
-    finishCallbackBlock: JAsyncTypes<Value, Error>.JDidFinishAsyncCallback) -> JAsyncTypes<Value, Error>.JAsync
+    loader: AsyncTypes<Value, Error>.Async,
+    finishCallbackBlock: AsyncTypes<Value, Error>.JDidFinishAsyncCallback) -> AsyncTypes<Value, Error>.Async
 {
-    return { (progressCallback: JAsyncProgressCallback?,
-              stateCallback   : JAsyncChangeStateCallback?,
-              doneCallback    : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+    return { (progressCallback: AsyncProgressCallback?,
+              stateCallback   : AsyncChangeStateCallback?,
+              doneCallback    : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         return loader(
             progressCallback: progressCallback,
@@ -145,11 +145,11 @@ public func asyncWithFinishCallbackBlock<Value, Error>(
     }
 }
 
-public func asyncWithFinishHookBlock<Value1, Value2, Error>(loader: JAsyncTypes<Value1, Error>.JAsync, finishCallbackHook: JAsyncTypes2<Value1, Value2, Error>.JDidFinishAsyncHook) -> JAsyncTypes<Value2, Error>.JAsync
+public func asyncWithFinishHookBlock<Value1, Value2, Error>(loader: AsyncTypes<Value1, Error>.Async, finishCallbackHook: AsyncTypes2<Value1, Value2, Error>.JDidFinishAsyncHook) -> AsyncTypes<Value2, Error>.Async
 {
-    return { (progressCallback: JAsyncProgressCallback?,
-              stateCallback   : JAsyncChangeStateCallback?,
-              finishCallback  : JAsyncTypes<Value2, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+    return { (progressCallback: AsyncProgressCallback?,
+              stateCallback   : AsyncChangeStateCallback?,
+              finishCallback  : AsyncTypes<Value2, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         return loader(
             progressCallback: progressCallback,
@@ -162,13 +162,13 @@ public func asyncWithFinishHookBlock<Value1, Value2, Error>(loader: JAsyncTypes<
 }
 
 func asyncWithStartAndFinishBlocks<Value, Error>(
-    loader          : JAsyncTypes<Value, Error>.JAsync,
+    loader          : AsyncTypes<Value, Error>.Async,
     startBlockOption: SimpleBlock?,
-    finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncTypes<Value, Error>.JAsync
+    finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> AsyncTypes<Value, Error>.Async
 {
-    return { (progressCallback: JAsyncProgressCallback?,
-              stateCallback   : JAsyncChangeStateCallback?,
-              doneCallback    : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+    return { (progressCallback: AsyncProgressCallback?,
+              stateCallback   : AsyncChangeStateCallback?,
+              doneCallback    : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         startBlockOption?()
         
@@ -185,13 +185,13 @@ func asyncWithStartAndFinishBlocks<Value, Error>(
 }
 
 func asyncWithOptionalStartAndFinishBlocks<Value, Error>(
-    loader        : JAsyncTypes<Value, Error>.JAsync,
+    loader        : AsyncTypes<Value, Error>.Async,
     startBlock    : SimpleBlock?,
-    finishCallback: JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncTypes<Value, Error>.JAsync
+    finishCallback: AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> AsyncTypes<Value, Error>.Async
 {
-    return { (progressCallback  : JAsyncProgressCallback?,
-              stateCallback     : JAsyncChangeStateCallback?,
-              doneCallbackOption: JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+    return { (progressCallback  : AsyncProgressCallback?,
+              stateCallback     : AsyncChangeStateCallback?,
+              doneCallbackOption: AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         var loading = true
         
@@ -219,27 +219,27 @@ func asyncWithOptionalStartAndFinishBlocks<Value, Error>(
 }
 
 public func asyncWithAnalyzer<Value, Result, Error: ErrorType>(
-    data: Value, analyzer: UtilsBlockDefinitions2<Value, Result, Error>.JAnalyzer) -> JAsyncTypes<Result, Error>.JAsync {
+    data: Value, analyzer: UtilsBlockDefinitions2<Value, Result, Error>.JAnalyzer) -> AsyncTypes<Result, Error>.Async {
     
-    return { (progressCallback: JAsyncProgressCallback?,
-              stateCallback   : JAsyncChangeStateCallback?,
-              finishCallback  : JAsyncTypes<Result, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+    return { (progressCallback: AsyncProgressCallback?,
+              stateCallback   : AsyncChangeStateCallback?,
+              finishCallback  : AsyncTypes<Result, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         finishCallback?(result: analyzer(object: data))
         return jStubHandlerAsyncBlock
     }
 }
 
-public func asyncBinderWithAnalyzer<Value, Result, Error: ErrorType>(analyzer: UtilsBlockDefinitions2<Value, Result, Error>.JAnalyzer) -> JAsyncTypes2<Value, Result, Error>.JAsyncBinder {
+public func asyncBinderWithAnalyzer<Value, Result, Error: ErrorType>(analyzer: UtilsBlockDefinitions2<Value, Result, Error>.JAnalyzer) -> AsyncTypes2<Value, Result, Error>.JAsyncBinder {
     
-    return { (result: Value) -> JAsyncTypes<Result, Error>.JAsync in
+    return { (result: Value) -> AsyncTypes<Result, Error>.Async in
         return asyncWithAnalyzer(result, analyzer)
     }
 }
 
 public func asyncWithChangedResult<Value, Result, Error: ErrorType>(
-    loader: JAsyncTypes<Value, Error>.JAsync,
-    resultBuilder: UtilsBlockDefinitions2<Value, Result, Error>.JMappingBlock) -> JAsyncTypes<Result, Error>.JAsync
+    loader: AsyncTypes<Value, Error>.Async,
+    resultBuilder: UtilsBlockDefinitions2<Value, Result, Error>.JMappingBlock) -> AsyncTypes<Result, Error>.Async
 {
     let secondLoaderBinder = asyncBinderWithAnalyzer({ (result: Value) -> AsyncResult<Result, Error> in
         
@@ -251,12 +251,12 @@ public func asyncWithChangedResult<Value, Result, Error: ErrorType>(
 }
 
 func asyncWithChangedProgress<Value, Error: ErrorType>(
-    loader: JAsyncTypes<Value, Error>.JAsync,
-    resultBuilder: UtilsBlockDefinitions2<AnyObject, AnyObject, Error>.JMappingBlock) -> JAsyncTypes<Value, Error>.JAsync
+    loader: AsyncTypes<Value, Error>.Async,
+    resultBuilder: UtilsBlockDefinitions2<AnyObject, AnyObject, Error>.JMappingBlock) -> AsyncTypes<Value, Error>.Async
 {
-    return { (progressCallback: JAsyncProgressCallback?,
-              stateCallback   : JAsyncChangeStateCallback?,
-              finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+    return { (progressCallback: AsyncProgressCallback?,
+              stateCallback   : AsyncChangeStateCallback?,
+              finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         let progressCallbackWrapper = { (info: AnyObject) -> () in
             
@@ -272,13 +272,13 @@ func asyncWithChangedProgress<Value, Error: ErrorType>(
 }
 
 func loaderWithAdditionalParalelLoaders<Result, Value, Error: ErrorType>(
-    original: JAsyncTypes<Result, Error>.JAsync,
-    additionalLoaders: JAsyncTypes<Value, Error>.JAsync...) -> JAsyncTypes<Result, Error>.JAsync
+    original: AsyncTypes<Result, Error>.Async,
+    additionalLoaders: AsyncTypes<Value, Error>.Async...) -> AsyncTypes<Result, Error>.Async
 {
     let groupLoader = groupOfAsyncsArray(additionalLoaders)
     let allLoaders  = groupOfAsyncs(original, groupLoader)
     
-    let getResult = { (result: (Result, [Value])) -> JAsyncTypes<Result, Error>.JAsync in
+    let getResult = { (result: (Result, [Value])) -> AsyncTypes<Result, Error>.Async in
         
         return asyncWithResult(result.0)
     }
@@ -286,12 +286,12 @@ func loaderWithAdditionalParalelLoaders<Result, Value, Error: ErrorType>(
     return bindSequenceOfAsyncs(allLoaders, getResult)
 }
 
-public func logErrorForLoader<Value, Error: ErrorType>(loader: JAsyncTypes<Value, Error>.JAsync) -> JAsyncTypes<Value, Error>.JAsync
+public func logErrorForLoader<Value, Error: ErrorType>(loader: AsyncTypes<Value, Error>.Async) -> AsyncTypes<Value, Error>.Async
 {
     return { (
-        progressCallback: JAsyncProgressCallback?,
-        stateCallback   : JAsyncChangeStateCallback?,
-        finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+        progressCallback: AsyncProgressCallback?,
+        stateCallback   : AsyncChangeStateCallback?,
+        finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         let wrappedDoneCallback = { (result: AsyncResult<Value, Error>) -> () in
             
@@ -308,12 +308,12 @@ public func logErrorForLoader<Value, Error: ErrorType>(loader: JAsyncTypes<Value
     }
 }
 
-public func ignoreProgressLoader<Value, Error: ErrorType>(loader: JAsyncTypes<Value, Error>.JAsync) -> JAsyncTypes<Value, Error>.JAsync
+public func ignoreProgressLoader<Value, Error: ErrorType>(loader: AsyncTypes<Value, Error>.Async) -> AsyncTypes<Value, Error>.Async
 {
     return { (
-        progressCallback: JAsyncProgressCallback?,
-        stateCallback   : JAsyncChangeStateCallback?,
-        finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+        progressCallback: AsyncProgressCallback?,
+        stateCallback   : AsyncChangeStateCallback?,
+        finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
         return loader(
             progressCallback: progressCallback,

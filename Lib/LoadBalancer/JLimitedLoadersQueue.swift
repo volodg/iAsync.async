@@ -1,6 +1,6 @@
 //
 //  JLimitedLoadersQueue.swift
-//  JAsync
+//  Async
 //
 //  Created by Vladimir Gorbenko on 09.07.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -82,11 +82,11 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
         }
     }
     
-    public func balancedLoaderWithLoader(loader: JAsyncTypes<Strategy.ValueT, Strategy.ErrorT>.JAsync, barrier: Bool) -> JAsyncTypes<Strategy.ValueT, Strategy.ErrorT>.JAsync {
+    public func balancedLoaderWithLoader(loader: AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.Async, barrier: Bool) -> AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.Async {
         
-        return { (progressCallback: JAsyncProgressCallback?,
-                  stateCallback   : JAsyncChangeStateCallback?,
-                  finishCallback  : JAsyncTypes<Strategy.ValueT, Strategy.ErrorT>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+        return { (progressCallback: AsyncProgressCallback?,
+                  stateCallback   : AsyncChangeStateCallback?,
+                  finishCallback  : AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.JDidFinishAsyncCallback?) -> JAsyncHandler in
             
             let loaderHolder = JBaseLoaderOwner(loader:loader, didFinishActiveLoaderCallback: { (loader: JBaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) -> () in
                 
@@ -142,7 +142,7 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
         }
     }
     
-    public func barrierBalancedLoaderWithLoader(loader: JAsyncTypes<Strategy.ValueT, Strategy.ErrorT>.JAsync) -> JAsyncTypes<Strategy.ValueT, Strategy.ErrorT>.JAsync {
+    public func barrierBalancedLoaderWithLoader(loader: AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.Async) -> AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.Async {
         
         return balancedLoaderWithLoader(loader, barrier:true)
     }
