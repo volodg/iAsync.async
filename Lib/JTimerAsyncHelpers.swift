@@ -119,7 +119,7 @@ func asyncAfterDelayWithDispatchQueue(
 {
     let timerLoader = asyncWithDelayWithDispatchQueue(delay, leeway, callbacksQueue)
     let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: JAsyncTimerResult) -> AsyncTypes<JAsyncTimerResult, NSError>.Async in
-        return asyncWithResult(result)
+        return asyncWithValue(result)
     })
     
     return sequenceOfAsyncs(delayedLoader, loader)
@@ -261,7 +261,7 @@ public func repeatAsync<Value>(
             let timerLoader = asyncWithDelay(delay, leeway)
             let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: JAsyncTimerResult) -> AsyncTypes<JAsyncTimerResult, NSError>.Async in
                 
-                return asyncWithResult(result)
+                return asyncWithValue(result)
             })
             
             return sequenceOfAsyncs(delayedLoader, loader)

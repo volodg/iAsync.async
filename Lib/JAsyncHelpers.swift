@@ -10,8 +10,8 @@ import Foundation
 
 import iAsync_utils
 
-//TODO rename to asyncWithResult
-public func asyncWithJResult<Value, Error>(result: AsyncResult<Value, Error>) -> AsyncTypes<Value, Error>.Async {
+//TODO rename to asyncWithValue
+public func asyncWithResult<Value, Error>(result: AsyncResult<Value, Error>) -> AsyncTypes<Value, Error>.Async {
     
     return { (progressCallback: AsyncProgressCallback?,
               stateCallback   : AsyncChangeStateCallback?,
@@ -23,18 +23,17 @@ public func asyncWithJResult<Value, Error>(result: AsyncResult<Value, Error>) ->
 }
 
 //TODO rename to asyncWithValue
-public func asyncWithResult<Value, Error>(result: Value) -> AsyncTypes<Value, Error>.Async {
+public func asyncWithValue<Value, Error>(value: Value) -> AsyncTypes<Value, Error>.Async {
     
     return { (progressCallback: AsyncProgressCallback?,
               stateCallback   : AsyncChangeStateCallback?,
               doneCallback    : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
-        doneCallback?(result: AsyncResult.success(result))
+        doneCallback?(result: AsyncResult.success(value))
         return jStubHandlerAsyncBlock
     }
 }
 
-//TODO remove ?
 public func asyncWithError<Value, Error: ErrorType>(error: Error) -> AsyncTypes<Value, Error>.Async {
     
     return { (progressCallback: AsyncProgressCallback?,
@@ -60,7 +59,6 @@ extension JAsyncHandlerTask {
         }
     }
 }
-
 
 public func asyncWithHandlerFlag<Value, Error: ErrorType>(task: JAsyncHandlerTask) -> AsyncTypes<Value, Error>.Async {
     
@@ -280,7 +278,7 @@ func loaderWithAdditionalParalelLoaders<Result, Value, Error: ErrorType>(
     
     let getResult = { (result: (Result, [Value])) -> AsyncTypes<Result, Error>.Async in
         
-        return asyncWithResult(result.0)
+        return asyncWithValue(result.0)
     }
     
     return bindSequenceOfAsyncs(allLoaders, getResult)

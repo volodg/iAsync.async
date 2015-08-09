@@ -414,7 +414,7 @@ public func groupOfAsyncs<Value1, Value2, Value3, Error: ErrorType>(
         
         return bindSequenceOfAsyncs(thirdLoader, { r3  -> AsyncTypes<(Value1, Value2, Value3), Error>.Async in
             
-            return asyncWithResult((r1, r2, r3))
+            return asyncWithValue((r1, r2, r3))
         })
     })
 }
@@ -422,14 +422,14 @@ public func groupOfAsyncs<Value1, Value2, Value3, Error: ErrorType>(
 public func groupOfAsyncsArray<Value, Error: ErrorType>(loaders: [AsyncTypes<Value, Error>.Async]) -> AsyncTypes<[Value], Error>.Async {
     
     if loaders.count == 0 {
-        return asyncWithResult([])
+        return asyncWithValue([])
     }
     
     func resultToArrayForLoader(async: AsyncTypes<Value, Error>.Async) -> AsyncTypes<[Value], Error>.Async {
         
         return bindSequenceOfAsyncs(async, { (value: Value) -> AsyncTypes<[Value], Error>.Async in
             
-            return asyncWithResult([value])
+            return asyncWithValue([value])
         })
     }
     
@@ -437,7 +437,7 @@ public func groupOfAsyncsArray<Value, Error: ErrorType>(loaders: [AsyncTypes<Val
         
         return bindSequenceOfAsyncs(async, { (value: ([Value], Value)) -> AsyncTypes<[Value], Error>.Async in
             
-            return asyncWithResult(value.0 + [value.1])
+            return asyncWithValue(value.0 + [value.1])
         })
     }
     
