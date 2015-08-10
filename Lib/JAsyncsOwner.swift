@@ -1,6 +1,6 @@
 //
 //  JAsyncsOwner.swift
-//  JAsync
+//  iAsync
 //
 //  Created by Vladimir Gorbenko on 19.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -29,12 +29,12 @@ public class JAsyncsOwner {
         self.task = task
     }
     
-    public func ownedAsync<Value, Error: ErrorType>(loader: JAsyncTypes<Value, Error>.JAsync) -> JAsyncTypes<Value, Error>.JAsync {
+    public func ownedAsync<Value, Error: ErrorType>(loader: AsyncTypes<Value, Error>.Async) -> AsyncTypes<Value, Error>.Async {
         
         return { [weak self] (
-            progressCallback: JAsyncProgressCallback?,
-            stateCallback   : JAsyncChangeStateCallback?,
-            finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+            progressCallback: AsyncProgressCallback?,
+            stateCallback   : AsyncChangeStateCallback?,
+            finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
             
             if let self_ = self {
                 

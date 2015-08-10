@@ -1,6 +1,6 @@
 //
 //  JAsyncBlockDefinitions.swift
-//  JAsync
+//  iAsync
 //
 //  Created by Vladimir Gorbenko on 11.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -10,42 +10,57 @@ import Foundation
 
 import iAsync_utils
 
-public typealias JAsyncProgressCallback = (progressInfo: AnyObject) -> ()
+public typealias AsyncProgressCallback = (progressInfo: AnyObject) -> ()
 
-public typealias JAsyncChangeStateCallback = (state: JAsyncState) -> ()
+public typealias AsyncChangeStateCallback = (state: JAsyncState) -> ()
 
 public typealias JAsyncHandler = (task: JAsyncHandlerTask) -> ()
 
-public enum JAsyncTypes<Value, Error: ErrorType> {
+public struct Async<Value, Error: ErrorType> {
+    
+    public let async: AsyncTypes<Value, Error>.Async
+    
+    public init(_ async: AsyncTypes<Value, Error>.Async) {
+        self.async = async
+    }
+    
+    public func next<Result>(async: AsyncTypes<Result, Error>.Async) -> Async<Result, Error> {
+        
+        let loader = sequenceOfAsyncs(self.async, async)
+        return Async<Result, Error>(loader)
+    }
+}
+
+public enum AsyncTypes<Value, Error: ErrorType> {
     
     public typealias JDidFinishAsyncCallback = (result: AsyncResult<Value, Error>) -> ()
     
-    public typealias JAsync = (
-        progressCallback: JAsyncProgressCallback?,
-        stateCallback   : JAsyncChangeStateCallback?,
+    public typealias Async = (
+        progressCallback: AsyncProgressCallback?,
+        stateCallback   : AsyncChangeStateCallback?,
         finishCallback  : JDidFinishAsyncCallback?) -> JAsyncHandler
     
     //Synchronous block which can take a lot of time
     public typealias JSyncOperation = () -> AsyncResult<Value, Error>
     
     //This block should call progress_callback_ block only from own thread
-    public typealias JSyncOperationWithProgress = (progressCallback: JAsyncProgressCallback?) -> AsyncResult<Value, Error>
+    public typealias JSyncOperationWithProgress = (progressCallback: AsyncProgressCallback?) -> AsyncResult<Value, Error>
 }
 
-public enum JAsyncTypes2<Value1, Value2, Error: ErrorType> {
+public enum AsyncTypes2<Value1, Value2, Error: ErrorType> {
     
     public typealias BinderType = Value1
     public typealias ErrorT = NSError
     public typealias ValueT = Value2
     
-    public typealias JAsyncBinder = (Value1) -> JAsyncTypes<Value2, Error>.JAsync
+    public typealias JAsyncBinder = (Value1) -> AsyncTypes<Value2, Error>.Async
     
     public typealias JDidFinishAsyncHook = (
         result        : AsyncResult<Value1, Error>,
-        finishCallback: JAsyncTypes<Value2, Error>.JDidFinishAsyncCallback?) -> ()
+        finishCallback: AsyncTypes<Value2, Error>.JDidFinishAsyncCallback?) -> ()
 }
 
-public func runAsync<Value, Error: ErrorType>(loader: JAsyncTypes<Value, Error>.JAsync, onFinish: JAsyncTypes<Value, Error>.JDidFinishAsyncCallback? = nil)
+public func runAsync<Value, Error: ErrorType>(loader: AsyncTypes<Value, Error>.Async, onFinish: AsyncTypes<Value, Error>.JDidFinishAsyncCallback? = nil)
 {
     if let onFinish = onFinish {
         

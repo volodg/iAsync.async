@@ -1,6 +1,6 @@
 //
 //  JAsyncUtils.swift
-//  JAsync
+//  iAsync
 //
 //  Created by Vladimir Gorbenko on 27.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -20,9 +20,9 @@ private class JBlockOperation<Value, Error: ErrorType> {
     
     init(
         queueName         : String?,
-        jobWithProgress   : JAsyncTypes<Value, Error>.JSyncOperationWithProgress,
-        didLoadDataBlock  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?,
-        progressBlock     : JAsyncProgressCallback?,
+        jobWithProgress   : AsyncTypes<Value, Error>.JSyncOperationWithProgress,
+        didLoadDataBlock  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?,
+        progressBlock     : AsyncProgressCallback?,
         barrier           : Bool,
         currentQueue      : dispatch_queue_t = dispatch_get_main_queue(),
         serialOrConcurrent: dispatch_queue_attr_t = DISPATCH_QUEUE_CONCURRENT)
@@ -58,9 +58,9 @@ private class JBlockOperation<Value, Error: ErrorType> {
         queue           : dispatch_queue_t,
         barrier         : Bool,
         currentQueue    : dispatch_queue_t,
-        jobWithProgress : JAsyncTypes<Value, Error>.JSyncOperationWithProgress,
-        didLoadDataBlock: JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?,
-        progressBlock   : JAsyncProgressCallback?) {
+        jobWithProgress : AsyncTypes<Value, Error>.JSyncOperationWithProgress,
+        didLoadDataBlock: AsyncTypes<Value, Error>.JDidFinishAsyncCallback?,
+        progressBlock   : AsyncProgressCallback?) {
         
         let dispatchAsyncMethod = barrier
             ?{(dispatch_queue_t queue, dispatch_block_t block) -> () in dispatch_barrier_async(queue, block) }
@@ -102,13 +102,13 @@ private class JBlockOperation<Value, Error: ErrorType> {
 
 private class JAsyncAdapter<Value, Error: ErrorType> : JAsyncInterface {
     
-    let jobWithProgress: JAsyncTypes<Value, Error>.JSyncOperationWithProgress
+    let jobWithProgress: AsyncTypes<Value, Error>.JSyncOperationWithProgress
     let queueName      : String?
     let barrier        : Bool
     let currentQueue   : dispatch_queue_t
     let queueAttributes: dispatch_queue_attr_t
     
-    init(jobWithProgress: JAsyncTypes<Value, Error>.JSyncOperationWithProgress,
+    init(jobWithProgress: AsyncTypes<Value, Error>.JSyncOperationWithProgress,
          queueName      : String?,
          barrier        : Bool,
          currentQueue   : dispatch_queue_t,
@@ -124,9 +124,9 @@ private class JAsyncAdapter<Value, Error: ErrorType> : JAsyncInterface {
     var operation: JBlockOperation<Value, Error>? = nil
     
     func asyncWithResultCallback(
-        finishCallback  : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback,
-        stateCallback   : JAsyncChangeStateCallback,
-        progressCallback: JAsyncProgressCallback) {
+        finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback,
+        stateCallback   : AsyncChangeStateCallback,
+        progressCallback: AsyncProgressCallback) {
             
         operation = JBlockOperation(
             queueName         : queueName,
@@ -153,11 +153,11 @@ private class JAsyncAdapter<Value, Error: ErrorType> : JAsyncInterface {
 }
 
 private func async<Value, Error: ErrorType>(
-    jobWithProgress jobWithProgress: JAsyncTypes<Value, Error>.JSyncOperationWithProgress,
+    jobWithProgress jobWithProgress: AsyncTypes<Value, Error>.JSyncOperationWithProgress,
     queueName      : String,
     barrier        : Bool,
     currentQueue   : dispatch_queue_t,
-    queueAttributes: dispatch_queue_attr_t) -> JAsyncTypes<Value, Error>.JAsync {
+    queueAttributes: dispatch_queue_attr_t) -> AsyncTypes<Value, Error>.Async {
     
     let factory = { () -> JAsyncAdapter<Value, Error> in
         
@@ -174,13 +174,13 @@ private func async<Value, Error: ErrorType>(
 }
 
 private func async<Value, Error: ErrorType>(
-    job job     : JAsyncTypes<Value, Error>.JSyncOperation,
+    job job     : AsyncTypes<Value, Error>.JSyncOperation,
     queueName   : String,
     barrier     : Bool,
     currentQueue: dispatch_queue_t,
-    attributes  : dispatch_queue_attr_t) -> JAsyncTypes<Value, Error>.JAsync
+    attributes  : dispatch_queue_attr_t) -> AsyncTypes<Value, Error>.Async
 {
-    let jobWithProgress = { (progressCallback: JAsyncProgressCallback?) -> AsyncResult<Value, Error> in
+    let jobWithProgress = { (progressCallback: AsyncProgressCallback?) -> AsyncResult<Value, Error> in
         return job()
     }
     
@@ -192,12 +192,12 @@ private func async<Value, Error: ErrorType>(
         queueAttributes: attributes)
 }
 
-public func async<Value, Error: ErrorType>(job job: JAsyncTypes<Value, Error>.JSyncOperation) -> JAsyncTypes<Value, Error>.JAsync {
+public func async<Value, Error: ErrorType>(job job: AsyncTypes<Value, Error>.JSyncOperation) -> AsyncTypes<Value, Error>.Async {
     
     return async(job: job, queueName: defaultQueueName)
 }
 
-public func async<Value, Error: ErrorType>(job job: JAsyncTypes<Value, Error>.JSyncOperation, queueName: String) -> JAsyncTypes<Value, Error>.JAsync {
+public func async<Value, Error: ErrorType>(job job: AsyncTypes<Value, Error>.JSyncOperation, queueName: String) -> AsyncTypes<Value, Error>.Async {
     
     assert(NSThread.isMainThread())
     return async(
@@ -208,7 +208,7 @@ public func async<Value, Error: ErrorType>(job job: JAsyncTypes<Value, Error>.JS
         attributes  : DISPATCH_QUEUE_CONCURRENT)
 }
 
-func async<Value, Error: ErrorType>(jobWithProgress: JAsyncTypes<Value, Error>.JSyncOperation, queueName: String, isSerialQueue: Bool) -> JAsyncTypes<Value, Error>.JAsync {
+func async<Value, Error: ErrorType>(jobWithProgress: AsyncTypes<Value, Error>.JSyncOperation, queueName: String, isSerialQueue: Bool) -> AsyncTypes<Value, Error>.Async {
     
     assert(NSThread.isMainThread())
     let attr: dispatch_queue_attr_t = isSerialQueue
@@ -223,7 +223,7 @@ func async<Value, Error: ErrorType>(jobWithProgress: JAsyncTypes<Value, Error>.J
         attributes  : attr)
 }
 
-func barrierAsync<Value, Error: ErrorType>(jobWithProgress: JAsyncTypes<Value, Error>.JSyncOperation, queueName: String) -> JAsyncTypes<Value, Error>.JAsync {
+func barrierAsync<Value, Error: ErrorType>(jobWithProgress: AsyncTypes<Value, Error>.JSyncOperation, queueName: String) -> AsyncTypes<Value, Error>.Async {
     
     assert(NSThread.isMainThread())
     return async(
@@ -234,7 +234,7 @@ func barrierAsync<Value, Error: ErrorType>(jobWithProgress: JAsyncTypes<Value, E
         attributes  : DISPATCH_QUEUE_CONCURRENT)
 }
 
-public func async<Value, Error: ErrorType>(jobWithProgress: JAsyncTypes<Value, Error>.JSyncOperationWithProgress) -> JAsyncTypes<Value, Error>.JAsync {
+public func async<Value, Error: ErrorType>(jobWithProgress: AsyncTypes<Value, Error>.JSyncOperationWithProgress) -> AsyncTypes<Value, Error>.Async {
     
     assert(NSThread.isMainThread())
     return async(

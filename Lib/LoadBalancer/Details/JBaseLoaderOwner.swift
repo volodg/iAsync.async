@@ -1,6 +1,6 @@
 //
 //  JBaseLoaderOwner.swift
-//  JAsync
+//  iAsync
 //
 //  Created by Vladimir Gorbenko on 09.07.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -14,17 +14,17 @@ public class JBaseLoaderOwner<Value, Error: ErrorType> {
     
     var barrier = false
     
-    var loader: JAsyncTypes<Value, Error>.JAsync!
+    var loader: AsyncTypes<Value, Error>.Async!
     
     var loadersHandler  : JAsyncHandler?
-    var progressCallback: JAsyncProgressCallback?
-    var stateCallback   : JAsyncChangeStateCallback?
-    var doneCallback    : JAsyncTypes<Value, Error>.JDidFinishAsyncCallback?
+    var progressCallback: AsyncProgressCallback?
+    var stateCallback   : AsyncChangeStateCallback?
+    var doneCallback    : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?
     
     typealias FinishCallback = (JBaseLoaderOwner<Value, Error>) -> ()
     private var didFinishActiveLoaderCallback: FinishCallback?
     
-    init(loader: JAsyncTypes<Value, Error>.JAsync, didFinishActiveLoaderCallback: FinishCallback) {
+    init(loader: AsyncTypes<Value, Error>.Async, didFinishActiveLoaderCallback: FinishCallback) {
         
         self.loader = loader
         self.didFinishActiveLoaderCallback = didFinishActiveLoaderCallback
