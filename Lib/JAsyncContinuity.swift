@@ -412,14 +412,27 @@ public func groupOfAsyncs<Value1, Value2, Value3, Error: ErrorType>(
     _ secondLoader: AsyncTypes<Value2, Error>.Async,
     _ thirdLoader : AsyncTypes<Value3, Error>.Async) -> AsyncTypes<(Value1, Value2, Value3), Error>.Async
 {
-    let loader = groupOfAsyncsPair(firstLoader, secondLoader)
+    let loader12 = groupOfAsyncsPair(firstLoader, secondLoader)
+    let loader   = groupOfAsyncsPair(loader12   , thirdLoader )
     
-    return bindSequenceOfAsyncs(loader, { (r1, r2)  -> AsyncTypes<(Value1, Value2, Value3), Error>.Async in
+    return bindSequenceOfAsyncs(loader, { (r12_3: ((Value1, Value2), Value3))  -> AsyncTypes<(Value1, Value2, Value3), Error>.Async in
         
-        return bindSequenceOfAsyncs(thirdLoader, { r3  -> AsyncTypes<(Value1, Value2, Value3), Error>.Async in
-            
-            return async(value: (r1, r2, r3))
-        })
+        return async(value: (r12_3.0.0, r12_3.0.1, r12_3.1))
+    })
+}
+
+public func groupOfAsyncs<Value1, Value2, Value3, Value4, Error: ErrorType>(
+    firstLoader : AsyncTypes<Value1, Error>.Async,
+    _ secondLoader: AsyncTypes<Value2, Error>.Async,
+    _ thirdLoader : AsyncTypes<Value3, Error>.Async,
+    _ fourthLoader: AsyncTypes<Value4, Error>.Async) -> AsyncTypes<(Value1, Value2, Value3, Value4), Error>.Async
+{
+    let loader123 = groupOfAsyncs(firstLoader, secondLoader, thirdLoader)
+    let loader    = groupOfAsyncs(loader123  , fourthLoader)
+    
+    return bindSequenceOfAsyncs(loader, { (r123_4: ((Value1, Value2, Value3), Value4))  -> AsyncTypes<(Value1, Value2, Value3, Value4), Error>.Async in
+        
+        return async(value: (r123_4.0.0, r123_4.0.1, r123_4.0.2, r123_4.1))
     })
 }
 
