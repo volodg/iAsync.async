@@ -97,11 +97,12 @@ public class JCachedAsync<Key: Hashable, Value, Error: ErrorType> {
                 return
             }
             
-            propertyExtractor.setterOption?(value: result)
+            let setter = propertyExtractor.setterOption
             
             let copyDelegates = propertyExtractor.copyDelegates()
-            
             self.clearDataForPropertyExtractor(propertyExtractor)
+            
+            setter?(value: result)
             
             for callbacks in copyDelegates {
                 callbacks.finishCallback?(result: result)
