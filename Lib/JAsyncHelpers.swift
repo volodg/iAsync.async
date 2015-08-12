@@ -235,7 +235,7 @@ func asyncWithChangedProgress<Value, Error: ErrorType>(
     }
 }
 
-public func logErrorForLoader<Value, Error: ErrorType>(loader: AsyncTypes<Value, Error>.Async) -> AsyncTypes<Value, Error>.Async
+public func logErrorForLoader<Value>(loader: AsyncTypes<Value, NSError>.Async) -> AsyncTypes<Value, NSError>.Async
 {
     return { (
         progressCallback: AsyncProgressCallback?,

@@ -120,6 +120,7 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
                         } else {
                             
                             //TODO self owning here fix?
+                            //TODO review why doneCallback not used, compare with old version of async
                             let doneCallback = loaderHolder.doneCallback
                             
                             var objectIndex = Int.max

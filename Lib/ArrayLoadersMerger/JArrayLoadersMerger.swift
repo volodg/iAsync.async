@@ -128,10 +128,13 @@ public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
     
     private func activeLoaderForKey(key: Arg) -> ActiveArrayLoader<Arg, Value, Error>? {
         
-        let result: ActiveArrayLoader<Arg, Value, Error>? = activeArrayLoaders.firstMatch { (activeLoader: ActiveArrayLoader<Arg, Value, Error>) -> Bool in
+        let index = activeArrayLoaders.indexOf( { (activeLoader: ActiveArrayLoader<Arg, Value, Error>) -> Bool in
             return activeLoader.loadersCallbacksByKey[key] != nil
+        })
+        if let index = index {
+            return activeArrayLoaders[index]
         }
-        return result
+        return nil
     }
 }
 
