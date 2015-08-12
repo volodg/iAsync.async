@@ -270,8 +270,8 @@ func asyncWithChangedProgress<Value, Error: ErrorType>(
 }
 
 func loaderWithAdditionalParalelLoaders<Result, Value, Error: ErrorType>(
-    original: AsyncTypes<Result, Error>.Async,
-    additionalLoaders: AsyncTypes<Value, Error>.Async...) -> AsyncTypes<Result, Error>.Async
+    original         : AsyncTypes<Result, Error>.Async,
+    additionalLoaders: AsyncTypes<Value , Error>.Async...) -> AsyncTypes<Result, Error>.Async
 {
     let groupLoader = groupOfAsyncsArray(additionalLoaders)
     let allLoaders  = groupOfAsyncs(original, groupLoader)
@@ -284,16 +284,16 @@ func loaderWithAdditionalParalelLoaders<Result, Value, Error: ErrorType>(
     return bindSequenceOfAsyncs(allLoaders, getResult)
 }
 
-public func logErrorForLoader<Value, Error: ErrorType>(loader: AsyncTypes<Value, Error>.Async) -> AsyncTypes<Value, Error>.Async
+public func logErrorForLoader<Value>(loader: AsyncTypes<Value, NSError>.Async) -> AsyncTypes<Value, NSError>.Async
 {
     return { (
         progressCallback: AsyncProgressCallback?,
         stateCallback   : AsyncChangeStateCallback?,
-        finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+        finishCallback  : AsyncTypes<Value, NSError>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
-        let wrappedDoneCallback = { (result: AsyncResult<Value, Error>) -> () in
+        let wrappedDoneCallback = { (result: AsyncResult<Value, NSError>) -> () in
             
-            //TODO !!! result.error?.writeErrorWithJLogger()
+            result.error?.writeErrorWithJLogger()
             finishCallback?(result: result)
         }
         
