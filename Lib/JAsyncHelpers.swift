@@ -240,11 +240,11 @@ public func logErrorForLoader<Value, Error: ErrorType>(loader: AsyncTypes<Value,
     return { (
         progressCallback: AsyncProgressCallback?,
         stateCallback   : AsyncChangeStateCallback?,
-        finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+        finishCallback  : AsyncTypes<Value, NSError>.JDidFinishAsyncCallback?) -> JAsyncHandler in
         
-        let wrappedDoneCallback = { (result: AsyncResult<Value, Error>) -> () in
+        let wrappedDoneCallback = { (result: AsyncResult<Value, NSError>) -> () in
             
-            //TODO !!! result.error?.writeErrorWithJLogger()
+            result.error?.writeErrorWithJLogger()
             finishCallback?(result: result)
         }
         
