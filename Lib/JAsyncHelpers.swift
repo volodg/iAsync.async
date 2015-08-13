@@ -284,6 +284,7 @@ func loaderWithAdditionalParalelLoaders<Result, Value, Error: ErrorType>(
     return bindSequenceOfAsyncs(allLoaders, getResult)
 }
 
+//TODO fix error type
 public func logErrorForLoader<Value>(loader: AsyncTypes<Value, NSError>.Async) -> AsyncTypes<Value, NSError>.Async
 {
     return { (
