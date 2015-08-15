@@ -130,7 +130,7 @@ public enum JRepeatAsyncTypes<Value, Error: ErrorType> {
     public typealias JContinueLoaderWithResult = (result: AsyncResult<Value, Error>) -> AsyncTypes<Value, Error>.Async?
 }
 
-public func repeatAsyncWithDelayLoader<Value, Error: ErrorType>(
+public func repeatAsync<Value, Error: ErrorType>(
     nativeLoader: AsyncTypes<Value, Error>.Async,
     continueLoaderBuilder: JRepeatAsyncTypes<Value, Error>.JContinueLoaderWithResult,
     maxRepeatCount: Int/*remove redundent parameter*/) -> AsyncTypes<Value, Error>.Async
@@ -246,11 +246,11 @@ public func repeatAsyncWithDelayLoader<Value, Error: ErrorType>(
 }
 
 //TODO add Error template arg
-public func repeatAsync<Value>(
-    nativeLoader: AsyncTypes<Value, NSError>.Async,
+public func repeatAsyncWithDelayLoader<Value>(
+    nativeLoader         : AsyncTypes<Value, NSError>.Async,
     continueLoaderBuilder: JRepeatAsyncTypes<Value, NSError>.JContinueLoaderWithResult,
-    delay : NSTimeInterval,
-    leeway: NSTimeInterval,
+    delay                : NSTimeInterval,
+    leeway               : NSTimeInterval,
     maxRepeatCount: Int) -> AsyncTypes<Value, NSError>.Async
 {
     let continueLoaderBuilderWrapper = { (result: AsyncResult<Value, NSError>) -> AsyncTypes<Value, NSError>.Async? in
@@ -269,5 +269,5 @@ public func repeatAsync<Value>(
         return nil
     }
     
-    return repeatAsyncWithDelayLoader(nativeLoader, continueLoaderBuilder: continueLoaderBuilderWrapper, maxRepeatCount: maxRepeatCount)
+    return repeatAsync(nativeLoader, continueLoaderBuilder: continueLoaderBuilderWrapper, maxRepeatCount: maxRepeatCount)
 }
