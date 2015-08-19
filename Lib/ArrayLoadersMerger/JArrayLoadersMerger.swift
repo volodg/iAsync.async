@@ -41,7 +41,7 @@ public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
         
         let loader = { (progressCallback: AsyncProgressCallback?,
                         stateCallback   : AsyncChangeStateCallback?,
-                        finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+                        finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
             
             if let currentLoader = self.activeLoaderForKey(key) {
                 
@@ -139,14 +139,14 @@ private class JLoadersCallbacksData<Value, Error: ErrorType> {
     
     var progressCallback: AsyncProgressCallback?
     var stateCallback   : AsyncChangeStateCallback?
-    var doneCallback    : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?
+    var doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?
     
     var suspended = false
     
     init(
         progressCallback: AsyncProgressCallback?,
         stateCallback   : AsyncChangeStateCallback?,
-        doneCallback    : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?)
+        doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?)
     {
         self.progressCallback = progressCallback
         self.stateCallback    = stateCallback
@@ -239,7 +239,7 @@ private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
         let loader = { [weak self] (
             progressCallback: AsyncProgressCallback?,
             stateCallback   : AsyncChangeStateCallback?,
-            finishCallback  : AsyncTypes<[Value], Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+            finishCallback  : AsyncTypes<[Value], Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
             
             let progressCallbackWrapper = { (progressInfo: AnyObject) -> () in
                 

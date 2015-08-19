@@ -87,7 +87,7 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
         return { (
             progressCallback: AsyncProgressCallback?,
             stateCallback   : AsyncChangeStateCallback?,
-            finishCallback  : AsyncTypes<Result2, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+            finishCallback  : AsyncTypes<Result2, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
             
             var handlerBlockHolder: JAsyncHandler?
             
@@ -288,7 +288,7 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
             
             return { (progressCallback: AsyncProgressCallback?,
                       stateCallback   : AsyncChangeStateCallback?,
-                      finishCallback  : AsyncTypes<Result, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+                      finishCallback  : AsyncTypes<Result, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
                 
                 var handlerBlockHolder: JAsyncHandler?
                 
@@ -479,11 +479,11 @@ private class ResultHandlerData<Value1, Value2, Error: ErrorType> {
     
     var progressCallbackHolder: AsyncProgressCallback?
     var stateCallbackHolder   : AsyncChangeStateCallback?
-    var finishCallbackHolder  : AsyncTypes<(Value1, Value2), Error>.JDidFinishAsyncCallback?
+    var finishCallbackHolder  : AsyncTypes<(Value1, Value2), Error>.DidFinishAsyncCallback?
     
     init(progressCallback: AsyncProgressCallback?,
          stateCallback   : AsyncChangeStateCallback?,
-         finishCallback  : AsyncTypes<(Value1, Value2), Error>.JDidFinishAsyncCallback?)
+         finishCallback  : AsyncTypes<(Value1, Value2), Error>.DidFinishAsyncCallback?)
     {
         progressCallbackHolder = progressCallback
         stateCallbackHolder    = stateCallback
@@ -495,7 +495,7 @@ private func makeResultHandler<Value, Value1, Value2, Error: ErrorType>(
     index: Int,
     resultSetter: (v: Value, fields: ResultHandlerData<Value1, Value2, Error>) -> (),
     fields: ResultHandlerData<Value1, Value2, Error>
-    ) -> AsyncTypes<Value, Error>.JDidFinishAsyncCallback
+    ) -> AsyncTypes<Value, Error>.DidFinishAsyncCallback
 {
     return { (result: AsyncResult<Value, Error>) -> () in
         
@@ -571,7 +571,7 @@ private func groupOfAsyncsPair<Value1, Value2, Error: ErrorType>(firstLoader: As
 {
     return { (progressCallback: AsyncProgressCallback?,
               stateCallback   : AsyncChangeStateCallback?,
-              finishCallback  : AsyncTypes<(Value1, Value2), Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+              finishCallback  : AsyncTypes<(Value1, Value2), Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
         
         let fields = ResultHandlerData(
             progressCallback: progressCallback,
@@ -663,7 +663,7 @@ public func asyncWithDoneBlock<Value, Error: ErrorType>(loader: AsyncTypes<Value
         return { (
             progressCallback: AsyncProgressCallback?,
             stateCallback   : AsyncChangeStateCallback?,
-            finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+            finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
             
             let wrappedDoneCallback = { (result: AsyncResult<Value, Error>) -> () in
                 

@@ -34,10 +34,10 @@ private class JAsyncScheduler : NSObject, JAsyncInterface {
             self.callbacksQueue = callbacksQueue
     }
     
-    private var _finishCallback: AsyncTypes<ValueT, ErrorT>.JDidFinishAsyncCallback?
+    private var _finishCallback: AsyncTypes<ValueT, ErrorT>.DidFinishAsyncCallback?
     
     func asyncWithResultCallback(
-        finishCallback  : AsyncTypes<ValueT, ErrorT>.JDidFinishAsyncCallback,
+        finishCallback  : AsyncTypes<ValueT, ErrorT>.DidFinishAsyncCallback,
         stateCallback   : AsyncChangeStateCallback,
         progressCallback: AsyncProgressCallback) {
             
@@ -138,7 +138,7 @@ public func repeatAsync<Value, Error: ErrorType>(
     return { (
         progressCallback: AsyncProgressCallback?,
         stateCallback   : AsyncChangeStateCallback?,
-        finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+        finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
         
         var currentLoaderHandlerHolder: JAsyncHandler?
         
@@ -174,7 +174,7 @@ public func repeatAsync<Value, Error: ErrorType>(
         
         var finishHookHolder: AsyncTypes2<Value, Value, Error>.JDidFinishAsyncHook?
         
-        let finishCallbackHook = { (result: AsyncResult<Value, Error>, _: AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> () in
+        let finishCallbackHook = { (result: AsyncResult<Value, Error>, _: AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> () in
             
             let finish = { () -> () in
                 

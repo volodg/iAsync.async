@@ -86,7 +86,7 @@ public class JLimitedLoadersQueue<Strategy: JQueueStrategy> {
         
         return { (progressCallback: AsyncProgressCallback?,
                   stateCallback   : AsyncChangeStateCallback?,
-                  finishCallback  : AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+                  finishCallback  : AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.DidFinishAsyncCallback?) -> JAsyncHandler in
             
             let loaderHolder = JBaseLoaderOwner(loader:loader, didFinishActiveLoaderCallback: { (loader: JBaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) -> () in
                 
