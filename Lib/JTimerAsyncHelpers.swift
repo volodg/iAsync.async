@@ -98,10 +98,10 @@ func asyncWithDelayWithDispatchQueue(
     return JAsyncBuilder.buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: callbacksQueue)
 }
 
-public func asyncAfterDelay<Value, Error: ErrorType>(
+public func asyncAfterDelay<Value>(
     delay : NSTimeInterval,
     leeway: NSTimeInterval,
-    loader: AsyncTypes<JAsyncTimerResult, NSError>.Async) -> AsyncTypes<JAsyncTimerResult, NSError>.Async
+    loader: AsyncTypes<Value, NSError>.Async) -> AsyncTypes<Value, NSError>.Async
 {
     assert(NSThread.isMainThread())
     return asyncAfterDelayWithDispatchQueue(
@@ -111,11 +111,11 @@ public func asyncAfterDelay<Value, Error: ErrorType>(
         dispatch_get_main_queue())
 }
 
-func asyncAfterDelayWithDispatchQueue(
+func asyncAfterDelayWithDispatchQueue<Value>(
     delay : NSTimeInterval,
     leeway: NSTimeInterval,
-    loader: AsyncTypes<JAsyncTimerResult, NSError>.Async,
-    callbacksQueue: dispatch_queue_t) -> AsyncTypes<JAsyncTimerResult, NSError>.Async
+    loader: AsyncTypes<Value, NSError>.Async,
+    callbacksQueue: dispatch_queue_t) -> AsyncTypes<Value, NSError>.Async
 {
     let timerLoader = asyncWithDelayWithDispatchQueue(delay, leeway, callbacksQueue)
     let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: JAsyncTimerResult) -> AsyncTypes<JAsyncTimerResult, NSError>.Async in
