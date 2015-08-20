@@ -136,7 +136,7 @@ public func asyncWithFinishCallbackBlock<Value, Error>(
             progressCallback: progressCallback,
             stateCallback   : stateCallback,
             finishCallback  : { (result: AsyncResult<Value, Error>) -> () in
-                
+            
             finishCallbackBlock(result: result)
             doneCallback?(result: result)
         })
