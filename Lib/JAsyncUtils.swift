@@ -114,8 +114,8 @@ private class JAsyncAdapter<Value, Error: ErrorType> : JAsyncInterface {
          queueName      : String?,
          barrier        : Bool,
          currentQueue   : dispatch_queue_t,
-         queueAttributes: dispatch_queue_attr_t) {
-        
+         queueAttributes: dispatch_queue_attr_t)
+    {
         self.loadDataBlock   = loadDataBlock
         self.queueName       = queueName
         self.barrier         = barrier
@@ -128,8 +128,8 @@ private class JAsyncAdapter<Value, Error: ErrorType> : JAsyncInterface {
     func asyncWithResultCallback(
         finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback,
         stateCallback   : AsyncChangeStateCallback,
-        progressCallback: AsyncProgressCallback) {
-            
+        progressCallback: AsyncProgressCallback)
+    {
         operation = JBlockOperation(
             queueName         : queueName,
             loadDataBlock     : loadDataBlock,

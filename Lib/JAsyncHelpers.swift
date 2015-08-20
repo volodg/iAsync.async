@@ -228,7 +228,7 @@ public func asyncWithAnalyzer<Value, Result, Error: ErrorType>(
     }
 }
 
-public func asyncBinderWithAnalyzer<Value, Result, Error: ErrorType>(analyzer: UtilsBlockDefinitions2<Value, Result, Error>.JAnalyzer) -> AsyncTypes2<Value, Result, Error>.JAsyncBinder {
+public func asyncBinderWithAnalyzer<Value, Result, Error: ErrorType>(analyzer: UtilsBlockDefinitions2<Value, Result, Error>.JAnalyzer) -> AsyncTypes2<Value, Result, Error>.AsyncBinder {
     
     return { (result: Value) -> AsyncTypes<Result, Error>.Async in
         return asyncWithAnalyzer(result, analyzer)
