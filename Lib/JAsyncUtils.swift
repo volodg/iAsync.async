@@ -127,7 +127,7 @@ private class JAsyncAdapter<Value, Error: ErrorType> : JAsyncInterface {
         finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback,
         stateCallback   : AsyncChangeStateCallback,
         progressCallback: AsyncProgressCallback) {
-            
+        
         operation = JBlockOperation(
             queueName         : queueName,
             jobWithProgress   : jobWithProgress,

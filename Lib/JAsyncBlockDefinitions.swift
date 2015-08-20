@@ -53,7 +53,7 @@ public enum AsyncTypes2<Value1, Value2, Error: ErrorType> {
     public typealias ErrorT = NSError
     public typealias ValueT = Value2
     
-    public typealias JAsyncBinder = (Value1) -> AsyncTypes<Value2, Error>.Async
+    public typealias AsyncBinder = (Value1) -> AsyncTypes<Value2, Error>.Async
     
     public typealias JDidFinishAsyncHook = (
         result        : AsyncResult<Value1, Error>,
