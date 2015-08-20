@@ -33,12 +33,12 @@ public struct Async<Value, Error: ErrorType> {
 
 public enum AsyncTypes<Value, Error: ErrorType> {
     
-    public typealias JDidFinishAsyncCallback = (result: AsyncResult<Value, Error>) -> ()
+    public typealias DidFinishAsyncCallback = (result: AsyncResult<Value, Error>) -> ()
     
     public typealias Async = (
         progressCallback: AsyncProgressCallback?,
         stateCallback   : AsyncChangeStateCallback?,
-        finishCallback  : JDidFinishAsyncCallback?) -> JAsyncHandler
+        finishCallback  : DidFinishAsyncCallback?) -> JAsyncHandler
     
     //Synchronous block which can take a lot of time
     public typealias JSyncOperation = () -> AsyncResult<Value, Error>
@@ -57,10 +57,10 @@ public enum AsyncTypes2<Value1, Value2, Error: ErrorType> {
     
     public typealias JDidFinishAsyncHook = (
         result        : AsyncResult<Value1, Error>,
-        finishCallback: AsyncTypes<Value2, Error>.JDidFinishAsyncCallback?) -> ()
+        finishCallback: AsyncTypes<Value2, Error>.DidFinishAsyncCallback?) -> ()
 }
 
-public func runAsync<Value, Error: ErrorType>(loader: AsyncTypes<Value, Error>.Async, onFinish: AsyncTypes<Value, Error>.JDidFinishAsyncCallback? = nil)
+public func runAsync<Value, Error: ErrorType>(loader: AsyncTypes<Value, Error>.Async, onFinish: AsyncTypes<Value, Error>.DidFinishAsyncCallback? = nil)
 {
     if let onFinish = onFinish {
         

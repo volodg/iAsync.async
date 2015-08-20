@@ -21,7 +21,7 @@ private class JBlockOperation<Value, Error: ErrorType> {
     init(
         queueName         : String?,
         jobWithProgress   : AsyncTypes<Value, Error>.JSyncOperationWithProgress,
-        didLoadDataBlock  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?,
+        didLoadDataBlock  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?,
         progressBlock     : AsyncProgressCallback?,
         barrier           : Bool,
         currentQueue      : dispatch_queue_t = dispatch_get_main_queue(),
@@ -59,7 +59,7 @@ private class JBlockOperation<Value, Error: ErrorType> {
         barrier         : Bool,
         currentQueue    : dispatch_queue_t,
         jobWithProgress : AsyncTypes<Value, Error>.JSyncOperationWithProgress,
-        didLoadDataBlock: AsyncTypes<Value, Error>.JDidFinishAsyncCallback?,
+        didLoadDataBlock: AsyncTypes<Value, Error>.DidFinishAsyncCallback?,
         progressBlock   : AsyncProgressCallback?) {
         
         let dispatchAsyncMethod = barrier
@@ -124,7 +124,7 @@ private class JAsyncAdapter<Value, Error: ErrorType> : JAsyncInterface {
     var operation: JBlockOperation<Value, Error>? = nil
     
     func asyncWithResultCallback(
-        finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback,
+        finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback,
         stateCallback   : AsyncChangeStateCallback,
         progressCallback: AsyncProgressCallback) {
             

@@ -19,7 +19,7 @@ public class JBaseLoaderOwner<Value, Error: ErrorType> {
     var loadersHandler  : JAsyncHandler?
     var progressCallback: AsyncProgressCallback?
     var stateCallback   : AsyncChangeStateCallback?
-    var doneCallback    : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?
+    var doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?
     
     typealias FinishCallback = (JBaseLoaderOwner<Value, Error>) -> ()
     private var didFinishActiveLoaderCallback: FinishCallback?

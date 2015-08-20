@@ -18,7 +18,7 @@ public protocol JAsyncInterface {
     typealias ErrorT : ErrorType
     
     func asyncWithResultCallback(
-        finishCallback  : AsyncTypes<ValueT, ErrorT>.JDidFinishAsyncCallback,
+        finishCallback  : AsyncTypes<ValueT, ErrorT>.DidFinishAsyncCallback,
         stateCallback   : AsyncChangeStateCallback,
         progressCallback: AsyncProgressCallback)
     
@@ -44,7 +44,7 @@ public class JAsyncBuilder<T: JAsyncInterface> {
         return { (
             progressCallback: AsyncProgressCallback?,
             stateCallback   : AsyncChangeStateCallback?,
-            finishCallback  : AsyncTypes<T.ValueT, T.ErrorT>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+            finishCallback  : AsyncTypes<T.ValueT, T.ErrorT>.DidFinishAsyncCallback?) -> JAsyncHandler in
             
             var asyncObject: T? = factory()
             

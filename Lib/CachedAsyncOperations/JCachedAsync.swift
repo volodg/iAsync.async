@@ -87,7 +87,7 @@ public class JCachedAsync<Key: Hashable, Value, Error: ErrorType> {
         }
     }
     
-    private func doneCallbackBlock(propertyExtractor: PropertyExtractorType) -> AsyncTypes<Value, Error>.JDidFinishAsyncCallback {
+    private func doneCallbackBlock(propertyExtractor: PropertyExtractorType) -> AsyncTypes<Value, Error>.DidFinishAsyncCallback {
         
         return { (result: AsyncResult<Value, Error>) -> () in
             
@@ -173,7 +173,7 @@ public class JCachedAsync<Key: Hashable, Value, Error: ErrorType> {
         return { (
             progressCallback: AsyncProgressCallback?,
             stateCallback   : AsyncChangeStateCallback?,
-            finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?) -> JAsyncHandler in
+            finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
             
             let propertyExtractor = PropertyExtractorType(
                 setter     : setter,
@@ -260,12 +260,12 @@ private class CallbacksBlocksHolder<Value, Error: ErrorType>
 {
     var progressCallback: AsyncProgressCallback?
     var stateCallback   : AsyncChangeStateCallback?
-    var finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?
+    var finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?
     
     init(
         progressCallback: AsyncProgressCallback?,
         stateCallback   : AsyncChangeStateCallback?,
-        finishCallback  : AsyncTypes<Value, Error>.JDidFinishAsyncCallback?)
+        finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?)
     {
         self.progressCallback = progressCallback
         self.stateCallback    = stateCallback
