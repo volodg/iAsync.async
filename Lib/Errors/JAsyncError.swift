@@ -12,7 +12,7 @@ import iAsync_utils
 
 public class JAsyncError: Error {
     
-    public override class func jffErrorsDomain() -> String {
+    public override class func iAsyncErrorsDomain() -> String {
         
         return "com.just_for_fun.jff_async_operations.library"
     }
