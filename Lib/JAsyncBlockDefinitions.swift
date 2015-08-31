@@ -33,7 +33,7 @@ public struct Async<Value, Error: ErrorType> {
 
 public enum AsyncTypes<Value, Error: ErrorType> {
     
-    public typealias DidFinishAsyncCallback = (result: AsyncResult<Value, Error>) -> ()
+    public typealias DidFinishAsyncCallback = (result: AsyncResult<Value, Error>) -> Void
     
     public typealias Async = (
         progressCallback: AsyncProgressCallback?,
@@ -41,10 +41,10 @@ public enum AsyncTypes<Value, Error: ErrorType> {
         finishCallback  : DidFinishAsyncCallback?) -> JAsyncHandler
     
     //Synchronous block which can take a lot of time
-    public typealias JSyncOperation = () -> AsyncResult<Value, Error>
+    public typealias SyncOperation = () -> AsyncResult<Value, Error>
     
     //This block should call progress_callback_ block only from own thread
-    public typealias JSyncOperationWithProgress = (progressCallback: AsyncProgressCallback?) -> AsyncResult<Value, Error>
+    public typealias SyncOperationWithProgress = (progressCallback: AsyncProgressCallback?) -> AsyncResult<Value, Error>
 }
 
 public enum AsyncTypes2<Value1, Value2, Error: ErrorType> {

@@ -124,7 +124,7 @@ func neverFinishAsync() -> AsyncTypes<AnyObject, NSError>.Async {
     }
 }
 
-public func asyncWithSyncOperationInCurrentQueue<Value, Error>(block: AsyncTypes<Value, Error>.JSyncOperation) -> AsyncTypes<Value, Error>.Async
+public func asyncWithSyncOperationInCurrentQueue<Value, Error>(block: AsyncTypes<Value, Error>.SyncOperation) -> AsyncTypes<Value, Error>.Async
 {
     return { (progressCallback: AsyncProgressCallback?,
               stateCallback   : AsyncChangeStateCallback?,
