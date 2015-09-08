@@ -121,13 +121,13 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
             let fistLoaderDoneCallback = { (result: AsyncResult<Result1, Error>) -> () in
                 
                 switch result {
-                case let .Success(v):
+                case .Success(let v):
                     let secondLoader = secondBinder(v.value)
                     handlerBlockHolder = secondLoader(
                         progressCallback: progressCallbackWrapper,
                         stateCallback   : stateCallbackWrapper,
                         finishCallback  : doneCallbackWrapper)
-                case let .Failure(error):
+                case .Failure(let error):
                     finished = true
                     doneCallbackWrapper(AsyncResult.failure(error.value))
                 case .Interrupted:
@@ -324,9 +324,9 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
                     finishCallback  : { (result: AsyncResult<Result, Error>) -> () in
                         
                         switch result {
-                        case let .Success(v):
+                        case .Success(let v):
                             doneCallbackWrapper(AsyncResult.success(v.value))
-                        case let .Failure(error):
+                        case .Failure(let error):
                             let secondLoader = secondBinder(error.value)
                             handlerBlockHolder = secondLoader(
                                 progressCallback: progressCallbackWrapper,
@@ -510,7 +510,7 @@ private func makeResultHandler<Value, Value1, Value2, Error: ErrorType>(
         }
         
         switch result {
-        case let .Success(v):
+        case .Success(let v):
             
             resultSetter(v: v.value, fields: fields)
             
@@ -533,7 +533,7 @@ private func makeResultHandler<Value, Value1, Value2, Error: ErrorType>(
                 
                 fields.loaded = true
             }
-        case let .Failure(error):
+        case .Failure(let error):
             fields.finished = true
             
             fields.progressCallbackHolder = nil
