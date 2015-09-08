@@ -305,7 +305,7 @@ public func logErrorForLoader<Value>(loader: AsyncTypes<Value, NSError>.Async) -
         
         let wrappedDoneCallback = { (result: AsyncResult<Value, NSError>) -> () in
             
-            result.error?.writeErrorWithJLogger()
+            result.error?.writeErrorWithLogger()
             finishCallback?(result: result)
         }
         
