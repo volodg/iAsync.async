@@ -56,22 +56,7 @@ public func async<Value, Error: ErrorType>(error error: Error) -> AsyncTypes<Val
     }
 }
 
-extension JAsyncHandlerTask {
-    
-    func buildFinishError<Value, Error: ErrorType>() -> AsyncResult<Value, Error>? {
-        
-        switch self {
-        case UnSubscribe:
-            return .Interrupted
-        case Cancel:
-            return .Unsubscribed
-        default:
-            return nil
-        }
-    }
-}
-
-public func async<Value, Error: ErrorType>(task task: JAsyncHandlerTask) -> AsyncTypes<Value, Error>.Async {
+public func async<Value, Error: ErrorType>(task task: AsyncHandlerTask) -> AsyncTypes<Value, Error>.Async {
     
     return { (progressCallback: AsyncProgressCallback?,
               stateCallback   : AsyncChangeStateCallback?,
@@ -83,22 +68,19 @@ public func async<Value, Error: ErrorType>(task task: JAsyncHandlerTask) -> Asyn
 }
 
 public func processHandlerTast<Value, Error: ErrorType>(
-    task         : JAsyncHandlerTask,
+    task         : AsyncHandlerTask,
     stateCallback: AsyncChangeStateCallback?,
-    doneCallback : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) {
-        
-    let errorOption: AsyncResult<Value, Error>? = task.buildFinishError()
-    
-    if let error = errorOption {
-        
-        doneCallback?(result: error)
-    } else {
-        
-        assert(task != JAsyncHandlerTask.Undefined)
-        
-        stateCallback?(state: task == .Suspend
-            ?JAsyncState.Suspended
-            :JAsyncState.Resumed)
+    doneCallback : AsyncTypes<Value, Error>.DidFinishAsyncCallback?)
+{
+    switch task {
+    case .UnSubscribe:
+        doneCallback?(result: .Unsubscribed)
+    case .Cancel:
+        doneCallback?(result: .Interrupted)
+    case .Resume:
+        stateCallback?(state: .Resumed)
+    case .Suspend:
+        stateCallback?(state: .Suspended)
     }
 }
 
@@ -110,7 +92,7 @@ func neverFinishAsync() -> AsyncTypes<AnyObject, NSError>.Async {
         
         var wasCanceled = false
         
-        return { (task: JAsyncHandlerTask) -> () in
+        return { (task: AsyncHandlerTask) -> () in
             
             if wasCanceled {
                 return

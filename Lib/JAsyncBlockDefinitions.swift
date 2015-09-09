@@ -14,7 +14,7 @@ public typealias AsyncProgressCallback = (progressInfo: AnyObject) -> ()
 
 public typealias AsyncChangeStateCallback = (state: JAsyncState) -> ()
 
-public typealias JAsyncHandler = (task: JAsyncHandlerTask) -> ()
+public typealias JAsyncHandler = (task: AsyncHandlerTask) -> ()
 
 public struct Async<Value, Error: ErrorType> {
     

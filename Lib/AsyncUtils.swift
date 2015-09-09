@@ -138,7 +138,7 @@ private class JAsyncAdapter<Value, Error: ErrorType> : JAsyncInterface {
             serialOrConcurrent: queueAttributes)
     }
     
-    func doTask(task: JAsyncHandlerTask) {
+    func doTask(task: AsyncHandlerTask) {
         
         assert(task.unsubscribedOrCanceled)
         if task == .Cancel {

@@ -69,7 +69,7 @@ public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
                 self?.runLoadingOfPendingKeys()
             })
             
-            return { (task: JAsyncHandlerTask) -> () in
+            return { (task: AsyncHandlerTask) -> () in
                 
                 switch task {
                 case .UnSubscribe:
@@ -98,12 +98,8 @@ public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
                     } else {
                         self.activeLoaderForKey(key)?.cancelLoader()
                     }
-                case .Resume:
-                    assert(false, "unsupported parameter: JFFAsyncHandlerTaskResume")
-                case .Suspend:
-                    assert(false, "unsupported parameter: JFFAsyncHandlerTaskSuspend")
-                default:
-                    assert(false, "invalid parameter")
+                case .Resume, .Suspend:
+                    fatalError("unsupported parameter: \(task)")
                 }
             }
         }

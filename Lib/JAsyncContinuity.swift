@@ -153,7 +153,7 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
                 handlerBlockHolder = firstCancel
             }
             
-            return { (task: JAsyncHandlerTask) -> () in
+            return { (task: AsyncHandlerTask) -> () in
                 
                 if let currentHandler = handlerBlockHolder {
                     
@@ -345,7 +345,7 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
                     handlerBlockHolder = firstHandler
                 }
                 
-                return { (task: JAsyncHandlerTask) -> () in
+                return { (task: AsyncHandlerTask) -> () in
                     
                     if handlerBlockHolder == nil {
                         return
@@ -629,7 +629,7 @@ private func groupOfAsyncsPair<Value1, Value2, Error: ErrorType>(
         
         fields.handlerHolder2 = loaderHandler2
         
-        return { (task: JAsyncHandlerTask) -> () in
+        return { (task: AsyncHandlerTask) -> () in
             
             let cancelOrUnSubscribe = task.unsubscribedOrCanceled
             

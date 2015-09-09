@@ -49,7 +49,7 @@ public class JCachedAsync<Key: Hashable, Value, Error: ErrorType> {
     
     private func cancelBlock(propertyExtractor: PropertyExtractorType, callbacks: CallbacksBlocksHolder<Value, Error>) -> JAsyncHandler {
         
-        return { (task: JAsyncHandlerTask) -> () in
+        return { (task: AsyncHandlerTask) -> () in
             
             if propertyExtractor.cleared {
                 return
@@ -80,8 +80,6 @@ public class JCachedAsync<Key: Hashable, Value, Error: ErrorType> {
                             onState(state: state)
                         }
                     })
-                default:
-                    fatalError("unsupported type")
                 }
             }
         }
