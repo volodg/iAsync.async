@@ -22,7 +22,7 @@ public protocol JAsyncInterface {
         stateCallback   : AsyncChangeStateCallback,
         progressCallback: AsyncProgressCallback)
     
-    func doTask(task: JAsyncHandlerTask)
+    func doTask(task: AsyncHandlerTask)
     
     var isForeignThreadResultCallback: Bool { get }
 }
@@ -113,29 +113,23 @@ public class JAsyncBuilder<T: JAsyncInterface> {
                 stateCallback   : handlerCallbackWrapper,
                 progressCallback: progressHandlerWrapper)
             
-            return { (task: JAsyncHandlerTask) -> () in
+            return { (task: AsyncHandlerTask) -> () in
                 
                 if let asyncObject = asyncObject {
                     
                     stateCallbackCalled = false
                     asyncObject.doTask(task)
                     
-                    let errorOption: AsyncResult<T.ValueT, T.ErrorT>? = task.buildFinishError()
-                    
-                    if let error = errorOption {
+                    let stateCallbackWrapper = { (state: JAsyncState) -> () in
                         
-                        completionHandler(error)
-                    } else if !stateCallbackCalled {
-                        
-                        if let stateCallback = stateCallbackHolder {
-                            
-                            let state = (task == .Resume)
-                                ?JAsyncState.Resumed
-                                :JAsyncState.Suspended
-                            stateCallback(state: state)
-                        }
+                        stateCallback?(state: state)
                         stateCallbackCalled = false
                     }
+                    
+                    processHandlerFlag(
+                        task,
+                        stateCallbackCalled ? nil : stateCallbackWrapper,
+                        completionHandler)
                 }
             }
         }

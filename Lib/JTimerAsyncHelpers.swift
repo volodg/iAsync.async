@@ -46,7 +46,7 @@ private class JAsyncScheduler : NSObject, JAsyncInterface {
         startIfNeeds()
     }
     
-    func doTask(task: JAsyncHandlerTask) {
+    func doTask(task: AsyncHandlerTask) {
         
         switch (task) {
             
@@ -54,8 +54,6 @@ private class JAsyncScheduler : NSObject, JAsyncInterface {
             _timer = nil
         case .Resume:
             startIfNeeds()
-        default:
-            assert(false)
         }
     }
     
@@ -188,7 +186,7 @@ public func repeatAsync<Value, Error: ErrorType>(
             case .Interrupted:
                 finish()
                 return
-            default:
+            default://TODO !!!
                 break
             }
             
@@ -221,7 +219,7 @@ public func repeatAsync<Value, Error: ErrorType>(
             stateCallback   : stateCallbackWrapper,
             finishCallback  : doneCallbackkWrapper)
         
-        return { (task: JAsyncHandlerTask) -> () in
+        return { (task: AsyncHandlerTask) -> () in
             
             if task == .Cancel {
                 finishHookHolder = nil

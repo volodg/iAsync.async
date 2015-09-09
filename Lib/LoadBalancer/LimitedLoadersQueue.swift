@@ -104,7 +104,7 @@ public class LimitedLoadersQueue<Strategy: JQueueStrategy> {
             
             weak var weakLoaderHolder = loaderHolder
             
-            return { (task: JAsyncHandlerTask) -> () in
+            return { (task: AsyncHandlerTask) -> () in
                 
                 if let loaderHolder = weakLoaderHolder {
                     switch (task) {
@@ -134,8 +134,8 @@ public class LimitedLoadersQueue<Strategy: JQueueStrategy> {
                             }
                             finishCallback?(result: .Interrupted)
                         }
-                    default:
-                        assert(false) // "Unsupported type of task: %lu", (unsigned long)task)
+                    case .Resume, .Suspend:
+                        fatalError("Unsupported type of task: \(task)")
                     }
                 }
             }

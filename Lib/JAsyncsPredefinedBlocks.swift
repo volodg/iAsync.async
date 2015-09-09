@@ -8,4 +8,4 @@
 
 import Foundation
 
-public let jStubHandlerAsyncBlock = { (task: JAsyncHandlerTask) -> () in  }
+public let jStubHandlerAsyncBlock = { (task: AsyncHandlerTask) -> () in  }

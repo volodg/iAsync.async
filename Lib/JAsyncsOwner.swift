@@ -23,9 +23,9 @@ public class JAsyncsOwner {
     
     private var loaders = [ActiveLoaderData]()
     
-    let task: JAsyncHandlerTask
+    let task: AsyncHandlerTask
     
-    public init(task: JAsyncHandlerTask) {
+    public init(task: AsyncHandlerTask) {
         self.task = task
     }
     
@@ -62,7 +62,7 @@ public class JAsyncsOwner {
                     stateCallback   : stateCallback,
                     finishCallback  : finishCallbackWrapper)
                 
-                return { (task: JAsyncHandlerTask) -> () in
+                return { (task: AsyncHandlerTask) -> () in
                     
                     if let self_ = self {
                         
@@ -92,7 +92,7 @@ public class JAsyncsOwner {
         }
     }
     
-    public func handleAll(task: JAsyncHandlerTask) {
+    public func handleAll(task: AsyncHandlerTask) {
         
         let tmpLoaders = loaders
         loaders.removeAll(keepCapacity: false)
