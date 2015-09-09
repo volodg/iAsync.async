@@ -16,20 +16,20 @@ public class LimitedLoadersQueue<Strategy: JQueueStrategy> {
     
     private let orderStrategy: Strategy
     
-    private var _limitCount = 10
     public var limitCount: Int {
-        get {
-            return _limitCount
-        }
-        set (newValue) {
-            
-            _limitCount = newValue
+        didSet {
             performPendingLoaders()
         }
     }
     
-    public init() {
+    public convenience init() {
         
+        self.init(limitCount: 10)
+    }
+    
+    public init(limitCount: Int) {
+        
+        self.limitCount = limitCount
         orderStrategy = Strategy(queueState: state)
     }
     
@@ -120,6 +120,7 @@ public class LimitedLoadersQueue<Strategy: JQueueStrategy> {
                         } else {
                             
                             //TODO self owning here fix?
+                            //TODO review why doneCallback not used, compare with old version of async
                             let doneCallback = loaderHolder.doneCallback
                             
                             var objectIndex = Int.max
