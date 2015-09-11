@@ -1,6 +1,6 @@
 //
 //  JAsyncContinuity.swift
-//  Async
+//  iAsync
 //
 //  Created by Vladimir Gorbenko on 12.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -184,7 +184,7 @@ public func bindSequenceOfAsyncs<R1, R2, Error: ErrorType>(
     firstLoader: AsyncTypes<R1, Error>.Async,
     firstBinder: AsyncTypes2<R1, R2, Error>.AsyncBinder) -> AsyncTypes<R2, Error>.Async
 {
-    var firstBlock = { (result: JWaterwallFirstObject) -> AsyncTypes<R1, Error>.Async in
+    let firstBlock = { (result: JWaterwallFirstObject) -> AsyncTypes<R1, Error>.Async in
         return firstLoader
     }
     
@@ -249,7 +249,9 @@ public func binderAsSequenceOfBinders<T, Error: ErrorType>(binders: AsyncTypes2<
 /////////////////////////////////// TRY SEQUENCE ///////////////////////////////////
 
 //calls loaders untill success
-public func trySequenceOfAsyncs<Value, Error: ErrorType>(firstLoader: AsyncTypes<Value, Error>.Async, nextLoaders: AsyncTypes<Value, Error>.Async...) -> AsyncTypes<Value, Error>.Async
+public func trySequenceOfAsyncs<Value, Error: ErrorType>(
+    firstLoader: AsyncTypes<Value, Error>.Async,
+    nextLoaders: AsyncTypes<Value, Error>.Async...) -> AsyncTypes<Value, Error>.Async
 {
     var allLoaders = [firstLoader]
     allLoaders += nextLoaders
@@ -379,7 +381,9 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
 
 //calls loaders while success
 //@@ next binder will receive an error if previous operation fails
-public func bindTrySequenceOfAsyncs<Value, Error: ErrorType>(firstLoader: AsyncTypes<Value, Error>.Async, nextBinders: AsyncTypes2<Error, Value, Error>.AsyncBinder...) -> AsyncTypes<Value, Error>.Async {
+public func bindTrySequenceOfAsyncs<Value, Error: ErrorType>(
+    firstLoader: AsyncTypes<Value, Error>.Async,
+    nextBinders: AsyncTypes2<Error, Value, Error>.AsyncBinder...) -> AsyncTypes<Value, Error>.Async {
     
     var firstBlock = { (data: JWaterwallFirstObject) -> AsyncTypes<Value, Error>.Async in
         return firstLoader
@@ -567,7 +571,9 @@ private func makeResultHandler<Value, Value1, Value2, Error: ErrorType>(
     }
 }
 
-private func groupOfAsyncsPair<Value1, Value2, Error: ErrorType>(firstLoader: AsyncTypes<Value1, Error>.Async, secondLoader: AsyncTypes<Value2, Error>.Async) -> AsyncTypes<(Value1, Value2), Error>.Async
+private func groupOfAsyncsPair<Value1, Value2, Error: ErrorType>(
+    firstLoader: AsyncTypes<Value1, Error>.Async,
+    secondLoader: AsyncTypes<Value2, Error>.Async) -> AsyncTypes<(Value1, Value2), Error>.Async
 {
     return { (progressCallback: AsyncProgressCallback?,
               stateCallback   : AsyncChangeStateCallback?,

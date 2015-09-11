@@ -1,6 +1,6 @@
 //
 //  JAsyncHelpers.swift
-//  Async
+//  iAsync
 //
 //  Created by Vladimir Gorbenko on 11.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -62,12 +62,12 @@ public func asyncWithHandlerFlag<Value, Error: ErrorType>(task: AsyncHandlerTask
               stateCallback   : AsyncChangeStateCallback?,
               doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
         
-        processHandlerFlag(task, stateCallback, doneCallback)
+        processHandlerTast(task, stateCallback, doneCallback)
         return jStubHandlerAsyncBlock
     }
 }
 
-public func processHandlerFlag<Value, Error: ErrorType>(
+public func processHandlerTast<Value, Error: ErrorType>(
     task         : AsyncHandlerTask,
     stateCallback: AsyncChangeStateCallback?,
     doneCallback : AsyncTypes<Value, Error>.DidFinishAsyncCallback?)
@@ -101,7 +101,7 @@ func neverFinishAsync() -> AsyncTypes<AnyObject, NSError>.Async {
             wasCanceled = (task == .Cancel
                 || task == .UnSubscribe)
             
-            processHandlerFlag(task, stateCallback, doneCallback)
+            processHandlerTast(task, stateCallback, doneCallback)
         }
     }
 }

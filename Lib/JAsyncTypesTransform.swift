@@ -12,12 +12,12 @@ import iAsync_utils
 
 public enum AsyncTypesTransform<Value1, Value2, Error: ErrorType> {
     
-    private typealias Async1 = AsyncTypes<Value1, Error>.Async
-    private typealias Async2 = AsyncTypes<Value2, Error>.Async
+    public typealias Async1 = AsyncTypes<Value1, Error>.Async
+    public typealias Async2 = AsyncTypes<Value2, Error>.Async
     
     public typealias PackedType = (Value1?, Value2?)
     
-    private typealias PackedAsync = AsyncTypes<PackedType, Error>.Async
+    public typealias PackedAsync = AsyncTypes<PackedType, Error>.Async
     
     public typealias AsyncTransformer = (PackedAsync) -> PackedAsync
     

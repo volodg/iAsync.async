@@ -1,6 +1,6 @@
 //
 //  AsyncUtils.swift
-//  Async
+//  iAsync
 //
 //  Created by Vladimir Gorbenko on 27.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -102,7 +102,7 @@ private class BlockOperation<Value, Error: ErrorType> {
     }
 }
 
-private class JAsyncAdapter<Value, Error: ErrorType> : JAsyncInterface {
+private class JAsyncAdapter<Value, Error: ErrorType> : AsyncInterface {
     
     let loadDataBlock  : AsyncTypes<Value, Error>.SyncOperationWithProgress
     let queueName      : String?
@@ -172,7 +172,7 @@ private func asyncWithSyncOperationWithProgressBlockAndQueue<Value, Error: Error
         
         return asyncObject
     }
-    return JAsyncBuilder.buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: currentQueue)
+    return AsyncBuilder.buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: currentQueue)
 }
 
 private func generalAsyncWithSyncOperationAndQueue<Value, Error: ErrorType>(
