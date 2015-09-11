@@ -100,7 +100,7 @@ private class BlockOperation<Value, Error: ErrorType> {
     }
 }
 
-private class JAsyncAdapter<Value, Error: ErrorType> : JAsyncInterface {
+private class JAsyncAdapter<Value, Error: ErrorType> : AsyncInterface {
     
     let jobWithProgress: AsyncTypes<Value, Error>.SyncOperationWithProgress
     let queueName      : String?
@@ -170,7 +170,7 @@ private func async<Value, Error: ErrorType>(
         
         return asyncObject
     }
-    return JAsyncBuilder.buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: currentQueue)
+    return AsyncBuilder.buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: currentQueue)
 }
 
 private func async<Value, Error: ErrorType>(

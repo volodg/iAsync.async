@@ -1,5 +1,5 @@
 //
-//  JAsyncBuilder.swift
+//  AsyncBuilder.swift
 //  iAsync
 //
 //  Created by Vladimir Gorbenko on 25.06.14.
@@ -12,7 +12,7 @@ import iAsync_utils
 
 import Dispatch
 
-public protocol JAsyncInterface {
+public protocol AsyncInterface {
     
     typealias ValueT : Any
     typealias ErrorT : ErrorType
@@ -27,18 +27,18 @@ public protocol JAsyncInterface {
     var isForeignThreadResultCallback: Bool { get }
 }
 
-public class JAsyncBuilder<T: JAsyncInterface> {
+public class AsyncBuilder<T: AsyncInterface> {
     
-    public typealias JAsyncInstanceBuilder = () -> T
+    public typealias AsyncInstanceBuilder = () -> T
     
-    public class func buildWithAdapterFactory(factory: JAsyncInstanceBuilder) -> AsyncTypes<T.ValueT, T.ErrorT>.Async {
+    public class func buildWithAdapterFactory(factory: AsyncInstanceBuilder) -> AsyncTypes<T.ValueT, T.ErrorT>.Async {
         
         assert(NSThread.isMainThread(), "main thread expected")
         return buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: dispatch_get_main_queue())
     }
     
     public class func buildWithAdapterFactoryWithDispatchQueue(
-        factory: JAsyncInstanceBuilder,
+        factory: AsyncInstanceBuilder,
         callbacksQueue: dispatch_queue_t) -> AsyncTypes<T.ValueT, T.ErrorT>.Async {
             
         return { (

@@ -1,5 +1,5 @@
 //
-//  JTimerAsyncHelpers.swift
+//  TimerAsyncHelpers.swift
 //  iAsync
 //
 //  Created by Vladimir Gorbenko on 27.06.14.
@@ -10,14 +10,12 @@ import Foundation
 
 import iAsync_utils
 
-//TODO remove inheritence from NSObject
-public class JAsyncTimerResult : NSObject {}
+public final class AsyncTimerResult {}
 
-//TODO remove inheritence from NSObject
-private class JAsyncScheduler : NSObject, JAsyncInterface {
+private final class AsyncScheduler : AsyncInterface {
     
     typealias ErrorT = NSError //TODO use NoError
-    typealias ValueT = JAsyncTimerResult
+    typealias ValueT = AsyncTimerResult
     
     private var _timer: Timer?
     
@@ -72,12 +70,12 @@ private class JAsyncScheduler : NSObject, JAsyncInterface {
         let _ = timer.addBlock( { [weak self] (cancel: JCancelScheduledBlock) in
             
             cancel()
-            self?._finishCallback?(result: .Success(JAsyncTimerResult()))
+            self?._finishCallback?(result: .Success(AsyncTimerResult()))
         }, duration:duration, leeway:leeway, dispatchQueue:callbacksQueue)
     }
 }
 
-public func asyncWithDelay(delay: NSTimeInterval, leeway: NSTimeInterval) -> AsyncTypes<JAsyncTimerResult, NSError>.Async {
+public func asyncWithDelay(delay: NSTimeInterval, leeway: NSTimeInterval) -> AsyncTypes<AsyncTimerResult, NSError>.Async {
     
     assert(NSThread.isMainThread(), "main thread expected")
     return asyncWithDelayWithDispatchQueue(delay, leeway: leeway, callbacksQueue: dispatch_get_main_queue())
@@ -86,14 +84,14 @@ public func asyncWithDelay(delay: NSTimeInterval, leeway: NSTimeInterval) -> Asy
 func asyncWithDelayWithDispatchQueue(
     delay         : NSTimeInterval,
     leeway        : NSTimeInterval,
-    callbacksQueue: dispatch_queue_t) -> AsyncTypes<JAsyncTimerResult, NSError>.Async
+    callbacksQueue: dispatch_queue_t) -> AsyncTypes<AsyncTimerResult, NSError>.Async
 {
-    let factory = { () -> JAsyncScheduler in
+    let factory = { () -> AsyncScheduler in
         
-        let asyncObject = JAsyncScheduler(duration: delay, leeway: leeway, callbacksQueue: callbacksQueue)
+        let asyncObject = AsyncScheduler(duration: delay, leeway: leeway, callbacksQueue: callbacksQueue)
         return asyncObject
     }
-    return JAsyncBuilder.buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: callbacksQueue)
+    return AsyncBuilder.buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: callbacksQueue)
 }
 
 public func asyncAfterDelay<Value>(
@@ -116,7 +114,7 @@ func asyncAfterDelayWithDispatchQueue<Value>(
     callbacksQueue: dispatch_queue_t) -> AsyncTypes<Value, NSError>.Async
 {
     let timerLoader = asyncWithDelayWithDispatchQueue(delay, leeway: leeway, callbacksQueue: callbacksQueue)
-    let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: JAsyncTimerResult) -> AsyncTypes<JAsyncTimerResult, NSError>.Async in
+    let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: AsyncTimerResult) -> AsyncTypes<AsyncTimerResult, NSError>.Async in
         return async(value: result)
     })
     
@@ -257,7 +255,7 @@ public func repeatAsyncWithDelayLoader<Value>(
         
         if let loader = loaderOption {
             let timerLoader = asyncWithDelay(delay, leeway: leeway)
-            let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: JAsyncTimerResult) -> AsyncTypes<JAsyncTimerResult, NSError>.Async in
+            let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: AsyncTimerResult) -> AsyncTypes<AsyncTimerResult, NSError>.Async in
                 return async(value: result)
             })
             
