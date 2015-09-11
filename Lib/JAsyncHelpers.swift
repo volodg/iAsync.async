@@ -27,7 +27,7 @@ public func async<Value, Error>(value value: Value) -> AsyncTypes<Value, Error>.
               stateCallback   : AsyncChangeStateCallback?,
               doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
         
-        doneCallback?(result: AsyncResult.success(value))
+        doneCallback?(result: .Success(value))
         return jStubHandlerAsyncBlock
     }
 }
@@ -40,7 +40,7 @@ public func async<Value, Error>(value: Value, progress: AnyObject) -> AsyncTypes
         doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
         
         progressCallback?(progressInfo: progress)
-        doneCallback?(result: AsyncResult.success(value))
+        doneCallback?(result: .Success(value))
         return jStubHandlerAsyncBlock
     }
 }
@@ -51,7 +51,7 @@ public func async<Value, Error: ErrorType>(error error: Error) -> AsyncTypes<Val
               stateCallback   : AsyncChangeStateCallback?,
               doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
         
-        doneCallback?(result: AsyncResult.failure(error))
+        doneCallback?(result: .Failure(error))
         return jStubHandlerAsyncBlock
     }
 }

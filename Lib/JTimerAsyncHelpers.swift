@@ -72,7 +72,7 @@ private class JAsyncScheduler : NSObject, JAsyncInterface {
         let _ = timer.addBlock( { [weak self] (cancel: JCancelScheduledBlock) in
             
             cancel()
-            self?._finishCallback?(result: AsyncResult.success(JAsyncTimerResult()))
+            self?._finishCallback?(result: .Success(JAsyncTimerResult()))
         }, duration:duration, leeway:leeway, dispatchQueue:callbacksQueue)
     }
 }

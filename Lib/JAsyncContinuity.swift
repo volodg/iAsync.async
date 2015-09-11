@@ -129,7 +129,7 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
                         finishCallback  : doneCallbackWrapper)
                 case .Failure(let error):
                     finished = true
-                    doneCallbackWrapper(AsyncResult.failure(error))
+                    doneCallbackWrapper(.Failure(error))
                 case .Interrupted:
                     finished = true
                     doneCallbackWrapper(.Interrupted)
@@ -327,7 +327,7 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
                         
                         switch result {
                         case .Success(let value):
-                            doneCallbackWrapper(AsyncResult.success(value))
+                            doneCallbackWrapper(.Success(value))
                         case .Failure(let error):
                             let secondLoader = secondBinder(error)
                             handlerBlockHolder = secondLoader(
@@ -531,7 +531,7 @@ private func makeResultHandler<Value, Value1, Value2, Error: ErrorType>(
                 if let finish = fields.finishCallbackHolder {
                     fields.finishCallbackHolder   = nil
                     let completeResult = (fields.completeResult1!, fields.completeResult2!)
-                    finish(result: AsyncResult.success(completeResult))
+                    finish(result: .Success(completeResult))
                 }
             } else {
                 
@@ -545,7 +545,7 @@ private func makeResultHandler<Value, Value1, Value2, Error: ErrorType>(
             
             if let finish = fields.finishCallbackHolder {
                 fields.finishCallbackHolder = nil
-                finish(result: AsyncResult.failure(error))
+                finish(result: .Failure(error))
             }
         case .Interrupted:
             fields.finished = true
