@@ -10,7 +10,7 @@ import Foundation
 
 import iAsync_utils
 
-public class JAsyncError: Error {
+final public class JAsyncError: Error {
     
     public override class func iAsyncErrorsDomain() -> String {
         

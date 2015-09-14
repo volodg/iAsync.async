@@ -19,7 +19,7 @@ public enum CachedAsyncTypes<Value, Error: ErrorType>
 //TODO20 test immediately cancel
 //TODO20 test cancel calback for each observer
 
-public class JCachedAsync<Key: Hashable, Value, Error: ErrorType> {
+final public class JCachedAsync<Key: Hashable, Value, Error: ErrorType> {
     
     public init() {}
     
@@ -201,7 +201,7 @@ public class JCachedAsync<Key: Hashable, Value, Error: ErrorType> {
     }
 }
 
-private class ObjectRelatedPropertyData<Value, Error: ErrorType>
+final private class ObjectRelatedPropertyData<Value, Error: ErrorType>
 {
     //var delegates    : mutable.ArrayBuffer[CallbacksBlocksHolder[T]] = null
     var delegates = [CallbacksBlocksHolder<Value, Error>]()
@@ -254,7 +254,7 @@ private class ObjectRelatedPropertyData<Value, Error: ErrorType>
     }
 }
 
-private class CallbacksBlocksHolder<Value, Error: ErrorType>
+final private class CallbacksBlocksHolder<Value, Error: ErrorType>
 {
     var progressCallback: AsyncProgressCallback?
     var stateCallback   : AsyncChangeStateCallback?
@@ -278,7 +278,7 @@ private class CallbacksBlocksHolder<Value, Error: ErrorType>
     }
 }
 
-private class PropertyExtractor<KeyT: Hashable, ValueT, ErrorT: ErrorType> {
+final private class PropertyExtractor<KeyT: Hashable, ValueT, ErrorT: ErrorType> {
     
     var cleared = false
     

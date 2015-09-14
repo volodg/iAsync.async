@@ -10,7 +10,7 @@ import Foundation
 
 import iAsync_utils
 
-public class JStrategyFifo<Value, Error: ErrorType> : JBaseStrategy<Value, Error>, JQueueStrategy {
+final public class JStrategyFifo<Value, Error: ErrorType> : JBaseStrategy<Value, Error>, JQueueStrategy {
     
     required override public init(queueState: JQueueState<Value, Error>) {
         super.init(queueState: queueState)

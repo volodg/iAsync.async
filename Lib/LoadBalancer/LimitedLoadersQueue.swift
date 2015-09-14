@@ -10,7 +10,7 @@ import Foundation
 
 import iAsync_utils
 
-public class LimitedLoadersQueue<Strategy: JQueueStrategy> {
+final public class LimitedLoadersQueue<Strategy: JQueueStrategy> {
     
     private let state = JQueueState<Strategy.ValueT, Strategy.ErrorT>()//TODO remove
     

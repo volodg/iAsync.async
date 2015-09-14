@@ -13,7 +13,7 @@ import iAsync_utils
 private let defaultQueueName = "com.jff.async_operations_library.general_queue"
 
 //TODO remove this class
-private class BlockOperation<Value, Error: ErrorType> {
+final private class BlockOperation<Value, Error: ErrorType> {
     
     //TODO make atomic
     private var finishedOrCanceled = false
@@ -100,7 +100,7 @@ private class BlockOperation<Value, Error: ErrorType> {
     }
 }
 
-private class JAsyncAdapter<Value, Error: ErrorType> : AsyncInterface {
+final private class JAsyncAdapter<Value, Error: ErrorType> : AsyncInterface {
     
     let jobWithProgress: AsyncTypes<Value, Error>.SyncOperationWithProgress
     let queueName      : String?

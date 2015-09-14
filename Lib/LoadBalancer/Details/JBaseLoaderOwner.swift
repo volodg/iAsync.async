@@ -10,7 +10,7 @@ import Foundation
 
 import iAsync_utils
 
-public class JBaseLoaderOwner<Value, Error: ErrorType> {
+final public class JBaseLoaderOwner<Value, Error: ErrorType> {
     
     var barrier = false
     

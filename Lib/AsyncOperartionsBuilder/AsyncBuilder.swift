@@ -27,17 +27,17 @@ public protocol AsyncInterface {
     var isForeignThreadResultCallback: Bool { get }
 }
 
-public class AsyncBuilder<T: AsyncInterface> {
+final public class AsyncBuilder<T: AsyncInterface> {
     
     public typealias AsyncInstanceBuilder = () -> T
     
-    public class func buildWithAdapterFactory(factory: AsyncInstanceBuilder) -> AsyncTypes<T.ValueT, T.ErrorT>.Async {
+    public static func buildWithAdapterFactory(factory: AsyncInstanceBuilder) -> AsyncTypes<T.ValueT, T.ErrorT>.Async {
         
         assert(NSThread.isMainThread(), "main thread expected")
         return buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: dispatch_get_main_queue())
     }
     
-    public class func buildWithAdapterFactoryWithDispatchQueue(
+    public static func buildWithAdapterFactoryWithDispatchQueue(
         factory: AsyncInstanceBuilder,
         callbacksQueue: dispatch_queue_t) -> AsyncTypes<T.ValueT, T.ErrorT>.Async {
             

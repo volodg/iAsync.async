@@ -10,7 +10,7 @@ import Foundation
 
 import iAsync_utils
 
-public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
+final public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
     
     public typealias JAsyncOpAr = AsyncTypes<[Value], Error>.Async
     
@@ -134,7 +134,7 @@ public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
     }
 }
 
-private class JLoadersCallbacksData<Value, Error: ErrorType> {
+final private class JLoadersCallbacksData<Value, Error: ErrorType> {
     
     var progressCallback: AsyncProgressCallback?
     var stateCallback   : AsyncChangeStateCallback?
@@ -166,7 +166,7 @@ private class JLoadersCallbacksData<Value, Error: ErrorType> {
     }
 }
 
-private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
+final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
     
     var loadersCallbacksByKey: [Arg:JLoadersCallbacksData<Value, Error>]
     weak var owner: JArrayLoadersMerger<Arg, Value, Error>?

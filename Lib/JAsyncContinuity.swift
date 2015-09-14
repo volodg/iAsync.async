@@ -12,9 +12,9 @@ import iAsync_utils
 
 private var waterfallFirstObjectInstance: JWaterwallFirstObject? = nil
 
-private class JWaterwallFirstObject {
+final private class JWaterwallFirstObject {
     
-    class func sharedWaterwallFirstObject() -> JWaterwallFirstObject {
+    static func sharedWaterwallFirstObject() -> JWaterwallFirstObject {
         
         if let instance = waterfallFirstObjectInstance {
             return instance
@@ -470,7 +470,7 @@ public func groupOfAsyncsArray<Value, Error: ErrorType>(loaders: [AsyncTypes<Val
     return arrayFirstBlock
 }
 
-private class ResultHandlerData<Value1, Value2, Error: ErrorType> {
+final private class ResultHandlerData<Value1, Value2, Error: ErrorType> {
     
     var finished = false
     var loaded   = false

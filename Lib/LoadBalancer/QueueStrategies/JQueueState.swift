@@ -10,7 +10,7 @@ import Foundation
 
 import iAsync_utils
 
-public class JQueueState<Value, Error: ErrorType>  {
+final public class JQueueState<Value, Error: ErrorType>  {
     var activeLoaders  = [JBaseLoaderOwner<Value, Error>]()
     var pendingLoaders = [JBaseLoaderOwner<Value, Error>]()
 }

@@ -10,9 +10,9 @@ import Foundation
 
 import iAsync_utils
 
-public class JAsyncsOwner {
+final public class JAsyncsOwner {
     
-    private class ActiveLoaderData {
+    private final class ActiveLoaderData {
         
         var handler: JAsyncHandler?
         
