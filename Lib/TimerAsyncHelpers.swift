@@ -12,9 +12,9 @@ import iAsync_utils
 
 public final class AsyncTimerResult {}
 
-private final class AsyncScheduler : AsyncInterface {
+private final class AsyncScheduler<Error: ErrorType> : AsyncInterface {
     
-    typealias ErrorT = NSError //TODO use NoError
+    typealias ErrorT = Error
     typealias ValueT = AsyncTimerResult
     
     private var _timer: Timer?
@@ -75,20 +75,19 @@ private final class AsyncScheduler : AsyncInterface {
     }
 }
 
-public func asyncWithDelay(delay: NSTimeInterval, leeway: NSTimeInterval) -> AsyncTypes<AsyncTimerResult, NSError>.Async {
+public func asyncWithDelay<Error: ErrorType>(delay: NSTimeInterval, leeway: NSTimeInterval) -> AsyncTypes<AsyncTimerResult, Error>.Async {
     
     assert(NSThread.isMainThread(), "main thread expected")
     return asyncWithDelayWithDispatchQueue(delay, leeway: leeway, callbacksQueue: dispatch_get_main_queue())
 }
 
-func asyncWithDelayWithDispatchQueue(
+func asyncWithDelayWithDispatchQueue<Error: ErrorType>(
     delay         : NSTimeInterval,
     leeway        : NSTimeInterval,
-    callbacksQueue: dispatch_queue_t) -> AsyncTypes<AsyncTimerResult, NSError>.Async
+    callbacksQueue: dispatch_queue_t) -> AsyncTypes<AsyncTimerResult, Error>.Async
 {
-    let factory = { () -> AsyncScheduler in
-        
-        let asyncObject = AsyncScheduler(duration: delay, leeway: leeway, callbacksQueue: callbacksQueue)
+    let factory = { () -> AsyncScheduler<Error> in
+        let asyncObject = AsyncScheduler<Error>(duration: delay, leeway: leeway, callbacksQueue: callbacksQueue)
         return asyncObject
     }
     return AsyncBuilder.buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: callbacksQueue)
@@ -107,14 +106,14 @@ public func asyncAfterDelay<Value>(
         callbacksQueue: dispatch_get_main_queue())
 }
 
-func asyncAfterDelayWithDispatchQueue<Value>(
+func asyncAfterDelayWithDispatchQueue<Value, Error: ErrorType>(
     delay : NSTimeInterval,
     leeway: NSTimeInterval,
-    loader: AsyncTypes<Value, NSError>.Async,
-    callbacksQueue: dispatch_queue_t) -> AsyncTypes<Value, NSError>.Async
+    loader: AsyncTypes<Value, Error>.Async,
+    callbacksQueue: dispatch_queue_t) -> AsyncTypes<Value, Error>.Async
 {
-    let timerLoader = asyncWithDelayWithDispatchQueue(delay, leeway: leeway, callbacksQueue: callbacksQueue)
-    let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: AsyncTimerResult) -> AsyncTypes<AsyncTimerResult, NSError>.Async in
+    let timerLoader: AsyncTypes<AsyncTimerResult, Error>.Async = asyncWithDelayWithDispatchQueue(delay, leeway: leeway, callbacksQueue: callbacksQueue)
+    let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: AsyncTimerResult) -> AsyncTypes<AsyncTimerResult, Error>.Async in
         return async(value: result)
     })
     
@@ -241,21 +240,20 @@ public func repeatAsync<Value, Error: ErrorType>(
     }
 }
 
-//TODO add Error template arg
-public func repeatAsyncWithDelayLoader<Value>(
-    nativeLoader         : AsyncTypes<Value, NSError>.Async,
-    continueLoaderBuilder: JRepeatAsyncTypes<Value, NSError>.JContinueLoaderWithResult,
+public func repeatAsyncWithDelayLoader<Value, Error: ErrorType>(
+    nativeLoader         : AsyncTypes<Value, Error>.Async,
+    continueLoaderBuilder: JRepeatAsyncTypes<Value, Error>.JContinueLoaderWithResult,
     delay                : NSTimeInterval,
     leeway               : NSTimeInterval,
-    maxRepeatCount: Int) -> AsyncTypes<Value, NSError>.Async
+    maxRepeatCount: Int) -> AsyncTypes<Value, Error>.Async
 {
-    let continueLoaderBuilderWrapper = { (result: AsyncResult<Value, NSError>) -> AsyncTypes<Value, NSError>.Async? in
+    let continueLoaderBuilderWrapper = { (result: AsyncResult<Value, Error>) -> AsyncTypes<Value, Error>.Async? in
         
         let loaderOption = continueLoaderBuilder(result: result)
         
         if let loader = loaderOption {
-            let timerLoader = asyncWithDelay(delay, leeway: leeway)
-            let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: AsyncTimerResult) -> AsyncTypes<AsyncTimerResult, NSError>.Async in
+            let timerLoader: AsyncTypes<AsyncTimerResult, Error>.Async = asyncWithDelay(delay, leeway: leeway)
+            let delayedLoader = bindSequenceOfAsyncs(timerLoader, { (result: AsyncTimerResult) -> AsyncTypes<AsyncTimerResult, Error>.Async in
                 return async(value: result)
             })
             
