@@ -120,20 +120,13 @@ final public class LimitedLoadersQueue<Strategy: JQueueStrategy> {
                         } else {
                             
                             //TODO self owning here fix?
-                            //TODO review why doneCallback not used, compare with old version of async
                             let doneCallback = loaderHolder.doneCallback
                             
-                            var objectIndex = Int.max
-                            for (index, object) in self.state.pendingLoaders.enumerate() {
-                                if object === loaderHolder {
-                                    objectIndex = index
-                                    break
-                                }
+                            if let index = self.state.pendingLoaders.indexOf( { $0 === loaderHolder } ) {
+                                self.state.pendingLoaders.removeAtIndex(index)
                             }
-                            if objectIndex != Int.max {
-                                self.state.pendingLoaders.removeAtIndex(objectIndex)
-                            }
-                            finishCallback?(result: .Interrupted)
+                            
+                            doneCallback?(result: .Interrupted)
                         }
                     case .Resume, .Suspend:
                         fatalError("Unsupported type of task: \(task)")
