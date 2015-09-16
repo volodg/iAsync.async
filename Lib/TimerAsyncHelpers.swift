@@ -183,7 +183,7 @@ public func repeatAsync<Value, Error: ErrorType>(
             case .Interrupted:
                 finish()
                 return
-            default://TODO !!!
+            default:
                 break
             }
             
