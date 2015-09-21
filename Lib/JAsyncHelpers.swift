@@ -112,7 +112,8 @@ public func async<Value, Error>(sameThreadJob sameThreadJob: AsyncTypes<Value, E
               stateCallback   : AsyncChangeStateCallback?,
               doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
         
-        doneCallback?(result: sameThreadJob())
+        let result = sameThreadJob()
+        doneCallback?(result: result)
         return jStubHandlerAsyncBlock
     }
 }
