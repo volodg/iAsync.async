@@ -193,6 +193,13 @@ public func bindSequenceOfAsyncs<R1, R2, Error: ErrorType>(
     return binder(JWaterwallFirstObject.sharedWaterwallFirstObject())
 }
 
+public func bindSequenceOfAsyncs2<R1, R2, R3, Error: ErrorType>(
+    firstBinder: AsyncTypes2<R1, R2, Error>.AsyncBinder,
+    _ secondBinder: AsyncTypes2<R2, R3, Error>.AsyncBinder) -> AsyncTypes2<R1, R3, Error>.AsyncBinder
+{
+    return bindSequenceOfBindersPair(firstBinder, secondBinder)
+}
+
 public func bindSequenceOfAsyncs<R1, R2, R3, Error: ErrorType>(
     firstLoader : AsyncTypes<R1, Error>.Async,
     _ firstBinder : AsyncTypes2<R1, R2, Error>.AsyncBinder,
