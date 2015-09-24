@@ -15,8 +15,8 @@ private let defaultQueueName = "com.jff.async_operations_library.general_queue"
 //TODO remove this class
 final private class BlockOperation<Value, Error: ErrorType> {
     
-    //TODO make atomic
-    private var finishedOrCanceled = false
+    private var queue = dispatch_queue_create("BlockOperation.finishedOrCanceled", DISPATCH_QUEUE_SERIAL)
+    private var finishedOrCanceled: Bool = false
     
     init(
         queueName         : String?,
@@ -50,11 +50,10 @@ final private class BlockOperation<Value, Error: ErrorType> {
             return
         }
         
-        finishedOrCanceled = true
+        dispatch_sync(queue) { self.finishedOrCanceled = true }
     }
     
-    //TODO make private
-    func performBackgroundOperationInQueue(
+    private func performBackgroundOperationInQueue(
         queue           : dispatch_queue_t,
         barrier         : Bool,
         currentQueue    : dispatch_queue_t,
@@ -92,7 +91,7 @@ final private class BlockOperation<Value, Error: ErrorType> {
                     return
                 }
                 
-                self.finishedOrCanceled = true
+                dispatch_sync(queue) { self.finishedOrCanceled = true }
                 
                 didLoadDataBlock?(result: result)
             })
