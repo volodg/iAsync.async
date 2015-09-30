@@ -48,7 +48,12 @@ final public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
                 let resultIndex = currentLoader.indexOfKey(key)
                 
                 let loader = bindSequenceOfAsyncs(currentLoader.nativeLoader!, { (result: [Value]) -> AsyncTypes<Value, Error>.Async in
-                    //TODO check length of result
+                    
+                    if result.count <= resultIndex {
+                        //TODO fail
+                        return async(result: .Interrupted)
+                    }
+                    
                     return async(value: result[resultIndex])
                 })
                 
