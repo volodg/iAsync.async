@@ -12,7 +12,7 @@ import iAsync_utils
 
 final public class LimitedLoadersQueue<Strategy: JQueueStrategy> {
     
-    private let state = JQueueState<Strategy.ValueT, Strategy.ErrorT>()//TODO remove
+    private let state = JQueueState<Strategy.ValueT, Strategy.ErrorT>()
     
     private let orderStrategy: Strategy
     
