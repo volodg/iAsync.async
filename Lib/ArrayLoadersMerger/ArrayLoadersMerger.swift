@@ -1,6 +1,6 @@
 //
 //  ArrayLoadersMerger.swift
-//  iAsync
+//  iAsync_async
 //
 //  Created by Vladimir Gorbenko on 11.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -10,16 +10,16 @@ import Foundation
 
 import iAsync_utils
 
-final public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
+final public class ArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
     
-    public typealias JAsyncOpAr = AsyncTypes<[Value], Error>.Async
+    public typealias AsyncOpAr = AsyncTypes<[Value], Error>.Async
     
-    public typealias JArrayOfObjectsLoader = (keys: [Arg]) -> JAsyncOpAr
+    public typealias ArrayOfObjectsLoader = (keys: [Arg]) -> AsyncOpAr
     
-    private var _pendingLoadersCallbacksByKey = [Arg:JLoadersCallbacksData<Value, Error>]()
-    private let _cachedAsyncOp = JCachedAsync<Arg, Value, Error>()
+    private var _pendingLoadersCallbacksByKey = [Arg:LoadersCallbacksData<Value, Error>]()
+    private let _cachedAsyncOp = CachedAsync<Arg, Value, Error>()
     
-    private let _arrayLoader: JArrayOfObjectsLoader
+    private let _arrayLoader: ArrayOfObjectsLoader
     
     private var activeArrayLoaders = [ActiveArrayLoader<Arg, Value, Error>]()
     
@@ -33,7 +33,7 @@ final public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
         }
     }
     
-    public init(arrayLoader: JArrayOfObjectsLoader) {
+    public init(arrayLoader: ArrayOfObjectsLoader) {
         _arrayLoader = arrayLoader
     }
     
@@ -41,7 +41,7 @@ final public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
         
         let loader = { (progressCallback: AsyncProgressCallback?,
                         stateCallback   : AsyncChangeStateCallback?,
-                        finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
+                        finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
             
             if let currentLoader = self.activeLoaderForKey(key) {
                 
@@ -63,7 +63,7 @@ final public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
                     finishCallback  : finishCallback)
             }
             
-            let callbacks = JLoadersCallbacksData(
+            let callbacks = LoadersCallbacksData(
                 progressCallback: progressCallback,
                 stateCallback   : stateCallback,
                 doneCallback    : finishCallback)
@@ -139,7 +139,7 @@ final public class JArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
     }
 }
 
-final private class JLoadersCallbacksData<Value, Error: ErrorType> {
+final private class LoadersCallbacksData<Value, Error: ErrorType> {
     
     var progressCallback: AsyncProgressCallback?
     var stateCallback   : AsyncChangeStateCallback?
@@ -163,8 +163,8 @@ final private class JLoadersCallbacksData<Value, Error: ErrorType> {
         doneCallback     = nil
     }
     
-    func copy() -> JLoadersCallbacksData {
-        return JLoadersCallbacksData(
+    func copy() -> LoadersCallbacksData {
+        return LoadersCallbacksData(
             progressCallback: self.progressCallback,
             stateCallback   : self.stateCallback   ,
             doneCallback    : self.doneCallback    )
@@ -173,8 +173,8 @@ final private class JLoadersCallbacksData<Value, Error: ErrorType> {
 
 final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
     
-    var loadersCallbacksByKey: [Arg:JLoadersCallbacksData<Value, Error>]
-    weak var owner: JArrayLoadersMerger<Arg, Value, Error>?
+    var loadersCallbacksByKey: [Arg:LoadersCallbacksData<Value, Error>]
+    weak var owner: ArrayLoadersMerger<Arg, Value, Error>?
     var keys = KeysType()
     
     private func indexOfKey(key: Arg) -> Int {
@@ -189,9 +189,9 @@ final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
     
     var nativeLoader : AsyncTypes<[Value], Error>.Async? //Should be strong
     
-    private var _nativeHandler: JAsyncHandler?
+    private var _nativeHandler: AsyncHandler?
     
-    init(loadersCallbacksByKey: [Arg:JLoadersCallbacksData<Value, Error>], owner: JArrayLoadersMerger<Arg, Value, Error>) {
+    init(loadersCallbacksByKey: [Arg:LoadersCallbacksData<Value, Error>], owner: ArrayLoadersMerger<Arg, Value, Error>) {
         self.loadersCallbacksByKey = loadersCallbacksByKey
         self.owner                 = owner
     }
@@ -227,7 +227,7 @@ final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
     }
     
     typealias KeysType = HashableArray<Arg>
-    let _cachedAsyncOp = JCachedAsync<KeysType,[Value], Error>()
+    let _cachedAsyncOp = CachedAsync<KeysType,[Value], Error>()
     
     func runLoader() {
         
@@ -243,7 +243,7 @@ final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
         let loader = { [weak self] (
             progressCallback: AsyncProgressCallback?,
             stateCallback   : AsyncChangeStateCallback?,
-            finishCallback  : AsyncTypes<[Value], Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
+            finishCallback  : AsyncTypes<[Value], Error>.DidFinishAsyncCallback?) -> AsyncHandler in
             
             let progressCallbackWrapper = { (progressInfo: AnyObject) -> () in
                 
@@ -257,7 +257,7 @@ final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
                 progressCallback?(progressInfo: progressInfo)
             }
             
-            let stateCallbackWrapper = { (state: JAsyncState) -> () in
+            let stateCallbackWrapper = { (state: AsyncState) -> () in
                 
                 if let self_ = self {
                     
@@ -273,7 +273,7 @@ final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
                 
                 if let self_ = self {
                     
-                    var loadersCallbacksByKey = [Arg:JLoadersCallbacksData<Value, Error>]()
+                    var loadersCallbacksByKey = [Arg:LoadersCallbacksData<Value, Error>]()
                     for (key, value) in self_.loadersCallbacksByKey {
                         loadersCallbacksByKey[key] = value.copy()
                     }

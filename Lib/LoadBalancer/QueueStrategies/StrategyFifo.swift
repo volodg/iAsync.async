@@ -1,6 +1,6 @@
 //
-//  JStrategyFifo.swift
-//  iAsync
+//  StrategyFifo.swift
+//  iAsync_async
 //
 //  Created by Vladimir Gorbenko on 09.07.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -10,13 +10,13 @@ import Foundation
 
 import iAsync_utils
 
-final public class JStrategyFifo<Value, Error: ErrorType> : JBaseStrategy<Value, Error>, JQueueStrategy {
+final public class StrategyFifo<Value, Error: ErrorType> : BaseStrategy<Value, Error>, QueueStrategy {
     
-    required override public init(queueState: JQueueState<Value, Error>) {
+    required override public init(queueState: QueueState<Value, Error>) {
         super.init(queueState: queueState)
     }
     
-    public func firstPendingLoader() -> JBaseLoaderOwner<Value, Error>? {
+    public func firstPendingLoader() -> BaseLoaderOwner<Value, Error>? {
         
         let result = queueState.pendingLoaders[0]
         return result

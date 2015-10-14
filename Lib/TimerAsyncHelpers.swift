@@ -1,6 +1,6 @@
 //
 //  TimerAsyncHelpers.swift
-//  iAsync
+//  iAsync_async
 //
 //  Created by Vladimir Gorbenko on 27.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -133,9 +133,9 @@ public func repeatAsync<Value, Error: ErrorType>(
     return { (
         progressCallback: AsyncProgressCallback?,
         stateCallback   : AsyncChangeStateCallback?,
-        finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
+        finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
         
-        var currentLoaderHandlerHolder: JAsyncHandler?
+        var currentLoaderHandlerHolder: AsyncHandler?
         
         var progressCallbackHolder = progressCallback
         var stateCallbackHolder    = stateCallback
@@ -146,7 +146,7 @@ public func repeatAsync<Value, Error: ErrorType>(
             progressCallbackHolder?(progressInfo: progressInfo)
             return
         }
-        let stateCallbackWrapper = { (state: JAsyncState) -> () in
+        let stateCallbackWrapper = { (state: AsyncState) -> () in
             
             stateCallbackHolder?(state: state)
             return

@@ -1,6 +1,6 @@
 //
-//  JAsyncsOwner.swift
-//  iAsync
+//  AsyncsOwner.swift
+//  iAsync_async
 //
 //  Created by Vladimir Gorbenko on 19.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -10,11 +10,11 @@ import Foundation
 
 import iAsync_utils
 
-final public class JAsyncsOwner {
+final public class AsyncsOwner {
     
     private final class ActiveLoaderData {
         
-        var handler: JAsyncHandler?
+        var handler: AsyncHandler?
         
         func clear() {
             handler = nil
@@ -34,7 +34,7 @@ final public class JAsyncsOwner {
         return { [weak self] (
             progressCallback: AsyncProgressCallback?,
             stateCallback   : AsyncChangeStateCallback?,
-            finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
+            finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
             
             if let self_ = self {
                 

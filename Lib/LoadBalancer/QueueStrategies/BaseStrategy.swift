@@ -1,6 +1,6 @@
 //
-//  JBaseStrategy.swift
-//  iAsync
+//  BaseStrategy.swift
+//  iAsync_async
 //
 //  Created by Vladimir Gorbenko on 09.07.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -10,19 +10,19 @@ import Foundation
 
 import iAsync_utils
 
-public class JBaseStrategy<Value, Error: ErrorType> {
+public class BaseStrategy<Value, Error: ErrorType> {
     
     public typealias ValueT = Value
     public typealias ErrorT = Error
     
-    var queueState: JQueueState<ValueT, ErrorT>!
+    var queueState: QueueState<ValueT, ErrorT>!
     
-    init(queueState: JQueueState<ValueT, ErrorT>) {
+    init(queueState: QueueState<ValueT, ErrorT>) {
         
         self.queueState = queueState
     }
     
-    public func executePendingLoader(pendingLoader: JBaseLoaderOwner<ValueT, ErrorT>) {
+    public func executePendingLoader(pendingLoader: BaseLoaderOwner<ValueT, ErrorT>) {
         
         var objectIndex = Int.max
         

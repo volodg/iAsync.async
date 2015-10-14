@@ -1,6 +1,6 @@
 //
 //  JAsyncContinuity.swift
-//  iAsync
+//  iAsync_async
 //
 //  Created by Vladimir Gorbenko on 12.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -87,9 +87,9 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
         return { (
             progressCallback: AsyncProgressCallback?,
             stateCallback   : AsyncChangeStateCallback?,
-            finishCallback  : AsyncTypes<Result2, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
+            finishCallback  : AsyncTypes<Result2, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
             
-            var handlerBlockHolder: JAsyncHandler?
+            var handlerBlockHolder: AsyncHandler?
             
             var progressCallbackHolder = progressCallback
             var stateCallbackHolder    = stateCallback
@@ -99,7 +99,7 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
                 
                 progressCallbackHolder?(progressInfo: progressInfo)
             }
-            let stateCallbackWrapper = { (state: JAsyncState) -> () in
+            let stateCallbackWrapper = { (state: AsyncState) -> () in
                 
                 stateCallbackHolder?(state: state)
             }
@@ -297,9 +297,9 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
             
             return { (progressCallback: AsyncProgressCallback?,
                       stateCallback   : AsyncChangeStateCallback?,
-                      finishCallback  : AsyncTypes<Result, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
+                      finishCallback  : AsyncTypes<Result, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
                 
-                var handlerBlockHolder: JAsyncHandler?
+                var handlerBlockHolder: AsyncHandler?
                 
                 var progressCallbackHolder = progressCallback
                 var stateCallbackHolder    = stateCallback
@@ -310,7 +310,7 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
                     progressCallbackHolder?(progressInfo: progressInfo)
                     return
                 }
-                let stateCallbackWrapper = { (state: JAsyncState) -> () in
+                let stateCallbackWrapper = { (state: AsyncState) -> () in
                     
                     stateCallbackHolder?(state: state)
                     return
@@ -485,8 +485,8 @@ final private class ResultHandlerData<Value1, Value2, Error: ErrorType> {
     var completeResult1: Value1? = nil
     var completeResult2: Value2? = nil
     
-    var handlerHolder1: JAsyncHandler?
-    var handlerHolder2: JAsyncHandler?
+    var handlerHolder1: AsyncHandler?
+    var handlerHolder2: AsyncHandler?
     
     var progressCallbackHolder: AsyncProgressCallback?
     var stateCallbackHolder   : AsyncChangeStateCallback?
@@ -584,7 +584,7 @@ private func groupOfAsyncsPair<Value1, Value2, Error: ErrorType>(
 {
     return { (progressCallback: AsyncProgressCallback?,
               stateCallback   : AsyncChangeStateCallback?,
-              finishCallback  : AsyncTypes<(Value1, Value2), Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
+              finishCallback  : AsyncTypes<(Value1, Value2), Error>.DidFinishAsyncCallback?) -> AsyncHandler in
         
         let fields = ResultHandlerData(
             progressCallback: progressCallback,
@@ -596,7 +596,7 @@ private func groupOfAsyncsPair<Value1, Value2, Error: ErrorType>(
             return
         }
         
-        let stateCallbackWrapper = { (state: JAsyncState) -> () in
+        let stateCallbackWrapper = { (state: AsyncState) -> () in
             stateCallback?(state: state)
             return
         }
@@ -676,7 +676,7 @@ public func asyncWithDoneBlock<Value, Error: ErrorType>(loader: AsyncTypes<Value
         return { (
             progressCallback: AsyncProgressCallback?,
             stateCallback   : AsyncChangeStateCallback?,
-            finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> JAsyncHandler in
+            finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
             
             let wrappedDoneCallback = { (result: AsyncResult<Value, Error>) -> () in
                 

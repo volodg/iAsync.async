@@ -1,6 +1,6 @@
 //
 //  AsyncBuilder.swift
-//  iAsync
+//  iAsync_async
 //
 //  Created by Vladimir Gorbenko on 25.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -44,7 +44,7 @@ final public class AsyncBuilder<T: AsyncInterface> {
         return { (
             progressCallback: AsyncProgressCallback?,
             stateCallback   : AsyncChangeStateCallback?,
-            finishCallback  : AsyncTypes<T.ValueT, T.ErrorT>.DidFinishAsyncCallback?) -> JAsyncHandler in
+            finishCallback  : AsyncTypes<T.ValueT, T.ErrorT>.DidFinishAsyncCallback?) -> AsyncHandler in
             
             var asyncObject: T? = factory()
             
@@ -98,7 +98,7 @@ final public class AsyncBuilder<T: AsyncInterface> {
             
             var stateCallbackCalled = false
             
-            let handlerCallbackWrapper = { (state: JAsyncState) -> () in
+            let handlerCallbackWrapper = { (state: AsyncState) -> () in
                 
                 stateCallbackCalled = true
                 if finishCallbackHolder == nil {
@@ -120,7 +120,7 @@ final public class AsyncBuilder<T: AsyncInterface> {
                     stateCallbackCalled = false
                     asyncObject.doTask(task)
                     
-                    let stateCallbackWrapper = { (state: JAsyncState) -> () in
+                    let stateCallbackWrapper = { (state: AsyncState) -> () in
                         
                         stateCallback?(state: state)
                         stateCallbackCalled = false

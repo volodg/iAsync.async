@@ -1,6 +1,6 @@
 //
-//  JBaseLoaderOwner.swift
-//  iAsync
+//  BaseLoaderOwner.swift
+//  iAsync_async
 //
 //  Created by Vladimir Gorbenko on 09.07.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -10,18 +10,18 @@ import Foundation
 
 import iAsync_utils
 
-final public class JBaseLoaderOwner<Value, Error: ErrorType> {
+final public class BaseLoaderOwner<Value, Error: ErrorType> {
     
     var barrier = false
     
     var loader: AsyncTypes<Value, Error>.Async!
     
-    var loadersHandler  : JAsyncHandler?
+    var loadersHandler  : AsyncHandler?
     var progressCallback: AsyncProgressCallback?
     var stateCallback   : AsyncChangeStateCallback?
     var doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?
     
-    typealias FinishCallback = (JBaseLoaderOwner<Value, Error>) -> ()
+    typealias FinishCallback = (BaseLoaderOwner<Value, Error>) -> ()
     private var didFinishActiveLoaderCallback: FinishCallback?
     
     init(loader: AsyncTypes<Value, Error>.Async, didFinishActiveLoaderCallback: FinishCallback) {
@@ -40,7 +40,7 @@ final public class JBaseLoaderOwner<Value, Error: ErrorType> {
             return
         }
         
-        let stateCallbackWrapper = { (state: JAsyncState) -> () in
+        let stateCallbackWrapper = { (state: AsyncState) -> () in
             
             self.stateCallback?(state: state)
             return

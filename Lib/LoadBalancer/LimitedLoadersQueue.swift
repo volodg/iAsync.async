@@ -1,6 +1,6 @@
 //
 //  LimitedLoadersQueue.swift
-//  iAsync
+//  iAsync_async
 //
 //  Created by Vladimir Gorbenko on 09.07.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -10,9 +10,9 @@ import Foundation
 
 import iAsync_utils
 
-final public class LimitedLoadersQueue<Strategy: JQueueStrategy> {
+final public class LimitedLoadersQueue<Strategy: QueueStrategy> {
     
-    private let state = JQueueState<Strategy.ValueT, Strategy.ErrorT>()
+    private let state = QueueState<Strategy.ValueT, Strategy.ErrorT>()
     
     private let orderStrategy: Strategy
     
@@ -43,7 +43,7 @@ final public class LimitedLoadersQueue<Strategy: JQueueStrategy> {
         }
     }
     
-    private func hasLoadersReadyToStartForPendingLoader(pendingLoader: JBaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) -> Bool {
+    private func hasLoadersReadyToStartForPendingLoader(pendingLoader: BaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) -> Bool {
         
         if pendingLoader.barrier {
             
@@ -54,7 +54,7 @@ final public class LimitedLoadersQueue<Strategy: JQueueStrategy> {
         
         if result {
             
-            return state.activeLoaders.all { (activeLoader: JBaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) -> Bool in
+            return state.activeLoaders.all { (activeLoader: BaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) -> Bool in
                 return !activeLoader.barrier
             }
         }
@@ -62,7 +62,7 @@ final public class LimitedLoadersQueue<Strategy: JQueueStrategy> {
         return result
     }
     
-    private func nextPendingLoader() -> JBaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>? {
+    private func nextPendingLoader() -> BaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>? {
         
         let result = state.pendingLoaders.count > 0
             ?orderStrategy.firstPendingLoader()
@@ -86,9 +86,9 @@ final public class LimitedLoadersQueue<Strategy: JQueueStrategy> {
         
         return { (progressCallback: AsyncProgressCallback?,
                   stateCallback   : AsyncChangeStateCallback?,
-                  finishCallback  : AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.DidFinishAsyncCallback?) -> JAsyncHandler in
+                  finishCallback  : AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.DidFinishAsyncCallback?) -> AsyncHandler in
             
-            let loaderHolder = JBaseLoaderOwner(loader:loader, didFinishActiveLoaderCallback: { (loader: JBaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) -> () in
+            let loaderHolder = BaseLoaderOwner(loader:loader, didFinishActiveLoaderCallback: { (loader: BaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) -> () in
                 
                 self.didFinishActiveLoader(loader)
             })
@@ -141,7 +141,7 @@ final public class LimitedLoadersQueue<Strategy: JQueueStrategy> {
         return balancedLoaderWithLoader(loader, barrier:true)
     }
     
-    private func didFinishActiveLoader(activeLoader: JBaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) {
+    private func didFinishActiveLoader(activeLoader: BaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) {
         
         var objectIndex = Int.max
         for (index, object) in self.state.activeLoaders.enumerate() {
