@@ -139,7 +139,15 @@ final private class JAsyncAdapter<Value, Error: ErrorType> : AsyncInterface {
     
     func doTask(task: AsyncHandlerTask) {
         
-        assert(task.unsubscribedOrCanceled)
+        switch task {
+        case .Resume:
+            fatalError("unsupported Resume")
+        case .Suspend:
+            fatalError("unsupported Suspend")
+        case .UnSubscribe, .Cancel:
+            break
+        }
+        
         if task == .Cancel {
             operation?.cancel()
             operation = nil
