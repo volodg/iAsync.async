@@ -26,6 +26,11 @@ final public class LimitedLoadersQueue<Strategy: QueueStrategy> {
         
         self.init(limitCount: 10)
     }
+
+    public var allLoadersCount: Int {
+
+        return state.activeLoaders.count + state.pendingLoaders.count
+    }
     
     public init(limitCount: Int) {
         
