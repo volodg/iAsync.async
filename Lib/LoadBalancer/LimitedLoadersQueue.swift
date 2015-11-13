@@ -11,33 +11,33 @@ import Foundation
 import iAsync_utils
 
 final public class LimitedLoadersQueue<Strategy: QueueStrategy> {
-
+    
     private let state = QueueState<Strategy.ValueT, Strategy.ErrorT>()
-
+    
     private let orderStrategy: Strategy
-
+    
     public var limitCount: Int {
         didSet {
             performPendingLoaders()
         }
+    }
+    
+    public convenience init() {
+        
+        self.init(limitCount: 10)
     }
 
     public var allLoadersCount: Int {
 
         return state.activeLoaders.count + state.pendingLoaders.count
     }
-
-    public convenience init() {
-
-        self.init(limitCount: 10)
-    }
-
+    
     public init(limitCount: Int) {
-
+        
         self.limitCount = limitCount
         orderStrategy = Strategy(queueState: state)
     }
-
+    
     public func cancelAllActiveLoaders() {
         
         for activeLoader in self.state.activeLoaders {
