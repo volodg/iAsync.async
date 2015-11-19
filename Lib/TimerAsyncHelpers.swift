@@ -37,10 +37,10 @@ private final class AsyncScheduler<Error: ErrorType> : AsyncInterface {
     func asyncWithResultCallback(
         finishCallback  : AsyncTypes<ValueT, ErrorT>.DidFinishAsyncCallback,
         stateCallback   : AsyncChangeStateCallback,
-        progressCallback: AsyncProgressCallback) {
-            
+        progressCallback: AsyncProgressCallback)
+    {
         _finishCallback   = finishCallback
-        
+
         startIfNeeds()
     }
     

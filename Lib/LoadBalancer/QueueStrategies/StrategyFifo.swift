@@ -17,8 +17,7 @@ final public class StrategyFifo<Value, Error: ErrorType> : BaseStrategy<Value, E
     }
     
     public func firstPendingLoader() -> BaseLoaderOwner<Value, Error>? {
-        
-        let result = queueState.pendingLoaders[0]
-        return result
+
+        return queueState.pendingLoaders.first
     }
 }

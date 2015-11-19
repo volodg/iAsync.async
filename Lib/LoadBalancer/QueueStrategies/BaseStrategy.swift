@@ -25,30 +25,30 @@ public class BaseStrategy<Value, Error: ErrorType> {
     public func executePendingLoader(pendingLoader: BaseLoaderOwner<ValueT, ErrorT>) {
         
         var objectIndex = Int.max
-        
+
         for (index, loader) in queueState.pendingLoaders.enumerate() {
             if loader === pendingLoader {
                 objectIndex = index
                 break
             }
         }
-        
+
         if objectIndex != Int.max {
             queueState.pendingLoaders.removeAtIndex(objectIndex)
         }
-        
+
         queueState.activeLoaders.append(pendingLoader)
         
         //    #ifdef DEBUG
-        //    NSUInteger pendingLoadersCount = [_queueState->_pendingLoaders count]
-        //    NSUInteger activeLoadersCount  = [_queueState->_activeLoaders  count]
+        //let pendingLoadersCount = queueState.activeLoaders.count
+        //let activeLoadersCount  = queueState.activeLoaders.count
         //    #endif //DEBUG
-        
+
         pendingLoader.performLoader()
-        
+
         //    #ifdef DEBUG
-        //    NSParameterAssert(pendingLoadersCount >= [_queueState->_pendingLoaders count])
-        //    NSParameterAssert(activeLoadersCount  >= [_queueState->_activeLoaders  count])
+        //assert(pendingLoadersCount >= queueState.activeLoaders.count)
+        //assert(activeLoadersCount  >= queueState.activeLoaders.count)
         //    #endif //DEBUG
     }
 }

@@ -33,7 +33,7 @@ final public class LimitedLoadersQueue<Strategy: QueueStrategy> {
     }
     
     public init(limitCount: Int) {
-        
+
         self.limitCount = limitCount
         orderStrategy = Strategy(queueState: state)
     }
@@ -51,10 +51,10 @@ final public class LimitedLoadersQueue<Strategy: QueueStrategy> {
     private func hasLoadersReadyToStartForPendingLoader(pendingLoader: BaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) -> Bool {
         
         if pendingLoader.barrier {
-            
+
             return state.activeLoaders.count == 0
         }
-        
+
         let result = limitCount > state.activeLoaders.count && state.pendingLoaders.count > 0
         
         if result {
@@ -72,16 +72,16 @@ final public class LimitedLoadersQueue<Strategy: QueueStrategy> {
         let result = state.pendingLoaders.count > 0
             ?orderStrategy.firstPendingLoader()
             :nil
-        
+
         return result
     }
-    
+
     private func performPendingLoaders() {
-        
+
         var pendingLoader = nextPendingLoader()
-        
+
         while pendingLoader != nil && hasLoadersReadyToStartForPendingLoader(pendingLoader!) {
-            
+
             orderStrategy.executePendingLoader(pendingLoader!)
             pendingLoader = nextPendingLoader()
         }
@@ -92,21 +92,21 @@ final public class LimitedLoadersQueue<Strategy: QueueStrategy> {
         return { (progressCallback: AsyncProgressCallback?,
                   stateCallback   : AsyncChangeStateCallback?,
                   finishCallback  : AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.DidFinishAsyncCallback?) -> AsyncHandler in
-            
+
             let loaderHolder = BaseLoaderOwner(loader:loader, didFinishActiveLoaderCallback: { (loader: BaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) -> () in
-                
+
                 self.didFinishActiveLoader(loader)
             })
             loaderHolder.barrier = barrier
-            
+
             loaderHolder.progressCallback = progressCallback
             loaderHolder.stateCallback    = stateCallback
             loaderHolder.doneCallback     = finishCallback
-            
+
             self.state.pendingLoaders.append(loaderHolder)
-            
+
             self.performPendingLoaders()
-            
+
             weak var weakLoaderHolder = loaderHolder
             
             return { (task: AsyncHandlerTask) -> () in
