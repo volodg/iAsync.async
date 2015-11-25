@@ -13,22 +13,22 @@ import iAsync_utils
 final public class AsyncsOwner {
     
     private final class ActiveLoaderData {
-        
+
         var handler: AsyncHandler?
-        
+
         func clear() {
             handler = nil
         }
     }
-    
+
     private var loaders = [ActiveLoaderData]()
-    
+
     let task: AsyncHandlerTask
-    
+
     public init(task: AsyncHandlerTask) {
         self.task = task
     }
-    
+
     public func ownedAsync<Value, Error: ErrorType>(loader: AsyncTypes<Value, Error>.Async) -> AsyncTypes<Value, Error>.Async {
         
         return { [weak self] (
