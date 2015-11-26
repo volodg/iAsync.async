@@ -60,15 +60,15 @@ final public class AsyncBuilder<T: AsyncInterface> {
                 if asyncObject == nil {
                     return
                 }
-                
+
                 if let finishCallback = finishCallbackHolder {
                     finishCallbackHolder = nil
                     finishCallback(result: result)
                 }
-                
+
                 progressCallbackHolder = nil
                 stateCallbackHolder    = nil
-                
+
                 asyncObject = nil
             }
             
