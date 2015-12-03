@@ -391,16 +391,16 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
 public func bindTrySequenceOfAsyncs<Value, Error: ErrorType>(
     firstLoader: AsyncTypes<Value, Error>.Async,
     _ nextBinders: AsyncTypes2<Error, Value, Error>.AsyncBinder...) -> AsyncTypes<Value, Error>.Async {
-    
+
     var firstBlock = { (data: JWaterwallFirstObject) -> AsyncTypes<Value, Error>.Async in
         return firstLoader
     }
-    
+
     for nextBinder in nextBinders {
-        
+
         firstBlock = bindTrySequenceOfBindersPair(firstBlock, nextBinder)
     }
-    
+
     return firstBlock(JWaterwallFirstObject.sharedWaterwallFirstObject())
 }
 
@@ -440,6 +440,22 @@ public func groupOfAsyncs<Value1, Value2, Value3, Value4, Error: ErrorType>(
     return bindSequenceOfAsyncs(loader, { (r123_4: ((Value1, Value2, Value3), Value4))  -> AsyncTypes<(Value1, Value2, Value3, Value4), Error>.Async in
         
         return async(value: (r123_4.0.0, r123_4.0.1, r123_4.0.2, r123_4.1))
+    })
+}
+
+public func groupOfAsyncs<Value1, Value2, Value3, Value4, Value5, Error: ErrorType>(
+    firstLoader : AsyncTypes<Value1, Error>.Async,
+    _ secondLoader: AsyncTypes<Value2, Error>.Async,
+    _ thirdLoader : AsyncTypes<Value3, Error>.Async,
+    _ fourthLoader: AsyncTypes<Value4, Error>.Async,
+    _ fifthLoader : AsyncTypes<Value5, Error>.Async) -> AsyncTypes<(Value1, Value2, Value3, Value4, Value5), Error>.Async
+{
+    let loader1234 = groupOfAsyncs(firstLoader, secondLoader, thirdLoader, fourthLoader)
+    let loader     = groupOfAsyncs(loader1234 , fifthLoader)
+
+    return bindSequenceOfAsyncs(loader, { (r1234_5: ((Value1, Value2, Value3, Value4), Value5))  -> AsyncTypes<(Value1, Value2, Value3, Value4, Value5), Error>.Async in
+
+        return async(value: (r1234_5.0.0, r1234_5.0.1, r1234_5.0.2, r1234_5.0.3, r1234_5.1))
     })
 }
 
