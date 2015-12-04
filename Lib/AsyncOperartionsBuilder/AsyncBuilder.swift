@@ -68,25 +68,25 @@ final public class AsyncBuilder<T: AsyncInterface> {
 
                 progressCallbackHolder = nil
                 stateCallbackHolder    = nil
-
-                asyncObject = nil
             }
             
             let completionHandlerWrapper = { (result: AsyncResult<T.ValueT, T.ErrorT>) -> Void in
                 
-                if let asyncObject = asyncObject {
-                    
-                    if asyncObject.isForeignThreadResultCallback {
-                        
+                if let asyncObject_ = asyncObject {
+
+                    if asyncObject_.isForeignThreadResultCallback {
+
                         dispatch_async(callbacksQueue, { () -> () in
                             completionHandler(result)
                             return
                         })
                     } else {
-                    
+
                         assert(dispatch_get_main_queue() !== callbacksQueue || currentThread === NSThread.currentThread(), "the same thread expected")
                         completionHandler(result)
                     }
+
+                    asyncObject = nil//workaround
                 }
             }
             
