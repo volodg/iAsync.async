@@ -130,13 +130,13 @@ final public class CachedAsync<Key: Hashable, Value, Error: ErrorType> {
                 return
             })
         }
-        
+
         let loader  = propertyExtractor.getAsyncLoader()
         let handler = loader!(
             progressCallback: progressCallback,
             stateCallback   : stateCallback,
             finishCallback  : doneCallback)
-        
+
         if propertyExtractor.cacheObject == nil {
             return jStubHandlerAsyncBlock
         }
