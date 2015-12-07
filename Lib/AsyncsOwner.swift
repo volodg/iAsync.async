@@ -37,10 +37,10 @@ final public class AsyncsOwner {
             finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
             
             if let self_ = self {
-                
+
                 let loaderData = ActiveLoaderData()
                 self_.loaders.append(loaderData)
-                
+
                 let finishCallbackWrapper = { (result: AsyncResult<Value, Error>) -> () in
                     
                     if let self_ = self {
@@ -52,7 +52,7 @@ final public class AsyncsOwner {
                             }
                         }
                     }
-                    
+
                     finishCallback?(result: result)
                     loaderData.clear()
                 }
@@ -63,46 +63,35 @@ final public class AsyncsOwner {
                     finishCallback  : finishCallbackWrapper)
                 
                 return { (task: AsyncHandlerTask) -> () in
-                    
-                    if let self_ = self {
-                        
-                        var loaderIndex = Int.max
-                        
-                        for (index, _) in self_.loaders.enumerate() {
-                            if self_.loaders[index] === loaderData {
-                                loaderIndex = index
-                                break
-                            }
-                        }
-                        
-                        if loaderIndex == Int.max {
-                            return
-                        }
-                        
+
+                    guard let self_ = self else { return }
+
+                    if let loaderIndex = self_.loaders.indexOf( { $0 === loaderData } ) {
+
                         self_.loaders.removeAtIndex(loaderIndex)
                         loaderData.handler?(task: task)
                         loaderData.clear()
                     }
                 }
             } else {
-                
+
                 finishCallback?(result: .Interrupted)
                 return jStubHandlerAsyncBlock
             }
         }
     }
-    
+
     public func handleAll(task: AsyncHandlerTask) {
-        
+
         let tmpLoaders = loaders
         loaders.removeAll(keepCapacity: false)
         for (_, element) in tmpLoaders.enumerate() {
             element.handler?(task: task)
         }
     }
-    
+
     deinit {
-        
+
         handleAll(self.task)
     }
 }

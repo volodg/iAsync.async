@@ -37,7 +37,7 @@ final public class CachedAsync<Key: Hashable, Value, Error: ErrorType> {
     }
     
     private func clearDataForPropertyExtractor(propertyExtractor: PropertyExtractorType) {
-        
+
         if propertyExtractor.cacheObject == nil {
             return
         }
@@ -153,15 +153,15 @@ final public class CachedAsync<Key: Hashable, Value, Error: ErrorType> {
     }
     
     public var hasLoadingData: Bool {
-        
+
         return delegatesByKey.count != 0
     }
-    
+
     public func asyncOpMerger(loader: AsyncTypes<Value, Error>.Async, uniqueKey: Key) -> AsyncTypes<Value, Error>.Async {
-        
+
         return asyncOpWithPropertySetter(nil, getter: nil, uniqueKey: uniqueKey, loader: loader)
     }
-    
+
     public func asyncOpWithPropertySetter(
         setter: CachedAsyncTypes<Value, Error>.JResultSetter?,
         getter: CachedAsyncTypes<Value, Error>.JResultGetter?,
@@ -179,21 +179,21 @@ final public class CachedAsync<Key: Hashable, Value, Error: ErrorType> {
                 cacheObject: self,
                 uniqueKey  : uniqueKey,
                 loader     : loader)
-            
+
             if let result = propertyExtractor.getAsyncResult() {
-                
+
                 finishCallback?(result: result)
-                
+
                 propertyExtractor.clear()
                 return jStubHandlerAsyncBlock
             }
-            
+
             let callbacks = CallbacksBlocksHolder(progressCallback: progressCallback, stateCallback: stateCallback, finishCallback: finishCallback)
-            
+
             let hasDelegates = propertyExtractor.hasDelegates()
-            
+
             propertyExtractor.addDelegate(callbacks)
-            
+
             return hasDelegates
                 ?self.cancelBlock(propertyExtractor, callbacks: callbacks)
                 :self.performNativeLoader(propertyExtractor, callbacks: callbacks)
@@ -228,22 +228,22 @@ final private class ObjectRelatedPropertyData<Value, Error: ErrorType>
         }
         delegates.removeAll(keepCapacity: false)
     }
-    
+
     func eachDelegate(block: (obj: CallbacksBlocksHolder<Value, Error>) -> ()) {
         for element in delegates {
             block(obj: element)
         }
     }
-    
+
     func hasDelegates() -> Bool {
         return delegates.count > 0
     }
-    
+
     //func getDelegates: mutable.ArrayBuffer[CallbacksBlocksHolder[ValueT]] = {
     func addDelegate(delegate: CallbacksBlocksHolder<Value, Error>) {
         delegates.append(delegate)
     }
-    
+
     func removeDelegate(delegate: CallbacksBlocksHolder<Value, Error>) {
         for (index, callbacks) in delegates.enumerate() {
             if delegate === callbacks {
@@ -298,6 +298,10 @@ final private class PropertyExtractor<KeyT: Hashable, ValueT, ErrorT: ErrorType>
         self.getterOption = getter
         self.cacheObject  = cacheObject
         self.uniqueKey    = uniqueKey
+
+        //"clearDataForPropertyExtractor" called here if cancel called of this merged loader on dealloc of previous loader
+        setAsyncLoader(loader)
+        //so set loader again
         setAsyncLoader(loader)
     }
     
