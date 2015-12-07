@@ -64,20 +64,9 @@ final public class AsyncsOwner {
                 
                 return { (task: AsyncHandlerTask) -> () in
                     
-                    if let self_ = self {
+                    guard let self_ = self else { return }
                         
-                        var loaderIndex = Int.max
-                        
-                        for (index, _) in self_.loaders.enumerate() {
-                            if self_.loaders[index] === loaderData {
-                                loaderIndex = index
-                                break
-                            }
-                        }
-                        
-                        if loaderIndex == Int.max {
-                            return
-                        }
+                    if let loaderIndex = self_.loaders.indexOf( { $0 === loaderData } ) {
                         
                         self_.loaders.removeAtIndex(loaderIndex)
                         loaderData.handler?(task: task)

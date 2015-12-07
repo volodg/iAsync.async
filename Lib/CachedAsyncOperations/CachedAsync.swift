@@ -298,6 +298,10 @@ final private class PropertyExtractor<KeyT: Hashable, ValueT, ErrorT: ErrorType>
         self.getterOption = getter
         self.cacheObject  = cacheObject
         self.uniqueKey    = uniqueKey
+
+        //"clearDataForPropertyExtractor" called here if cancel called of this merged loader on dealloc of previous loader
+        setAsyncLoader(loader)
+        //so set loader again
         setAsyncLoader(loader)
     }
     
