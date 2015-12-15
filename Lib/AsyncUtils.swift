@@ -28,13 +28,13 @@ final private class BlockOperation<Value, Error: ErrorType> {
         serialOrConcurrent: dispatch_queue_attr_t = DISPATCH_QUEUE_CONCURRENT)
     {
         let queue: dispatch_queue_t
-        
+
         if let queueName = queueName {
             queue = dispatch_queue_get_or_create(label: queueName, attr: serialOrConcurrent)
         } else {
             queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
         }
-        
+
         performBackgroundOperationInQueue(
             queue,
             barrier         : barrier,
@@ -43,13 +43,11 @@ final private class BlockOperation<Value, Error: ErrorType> {
             didLoadDataBlock: didLoadDataBlock,
             progressBlock   : progressBlock)
     }
-    
+
     func cancel()  {
-        
-        if finishedOrCanceled {
-            return
-        }
-        
+
+        if finishedOrCanceled { return }
+
         dispatch_sync(queue) { self.finishedOrCanceled = true }
     }
     
