@@ -35,48 +35,44 @@ final public class AsyncsOwner {
             progressCallback: AsyncProgressCallback?,
             stateCallback   : AsyncChangeStateCallback?,
             finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
-            
-            if let self_ = self {
-                
-                let loaderData = ActiveLoaderData()
-                self_.loaders.append(loaderData)
-                
-                let finishCallbackWrapper = { (result: AsyncResult<Value, Error>) -> () in
-                    
-                    if let self_ = self {
-                        
-                        for (index, _) in self_.loaders.enumerate() {
-                            if self_.loaders[index] === loaderData {
-                                self_.loaders.removeAtIndex(index)
-                                break
-                            }
-                        }
-                    }
-                    
-                    finishCallback?(result: result)
-                    loaderData.clear()
-                }
-                
-                loaderData.handler = loader(
-                    progressCallback: progressCallback,
-                    stateCallback   : stateCallback,
-                    finishCallback  : finishCallbackWrapper)
-                
-                return { (task: AsyncHandlerTask) -> () in
-                    
-                    guard let self_ = self else { return }
-                        
-                    if let loaderIndex = self_.loaders.indexOf( { $0 === loaderData } ) {
-                        
-                        self_.loaders.removeAtIndex(loaderIndex)
-                        loaderData.handler?(task: task)
-                        loaderData.clear()
-                    }
-                }
-            } else {
-                
+
+            guard let self_ = self else {
+
                 finishCallback?(result: .Interrupted)
                 return jStubHandlerAsyncBlock
+            }
+
+            let loaderData = ActiveLoaderData()
+            self_.loaders.append(loaderData)
+
+            let finishCallbackWrapper = { (result: AsyncResult<Value, Error>) -> () in
+
+                if let self_ = self {
+
+                    for (index, _) in self_.loaders.enumerate() {
+                        if self_.loaders[index] === loaderData {
+                            self_.loaders.removeAtIndex(index)
+                            break
+                        }
+                    }
+                }
+
+                finishCallback?(result: result)
+                loaderData.clear()
+            }
+
+            loaderData.handler = loader(
+                progressCallback: progressCallback,
+                stateCallback   : stateCallback,
+                finishCallback  : finishCallbackWrapper)
+
+            return { (task: AsyncHandlerTask) -> () in
+
+                guard let self_ = self, loaderIndex = self_.loaders.indexOf( { $0 === loaderData } ) else { return }
+
+                self_.loaders.removeAtIndex(loaderIndex)
+                loaderData.handler?(task: task)
+                loaderData.clear()
             }
         }
     }

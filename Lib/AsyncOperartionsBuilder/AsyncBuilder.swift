@@ -73,20 +73,19 @@ final public class AsyncBuilder<T: AsyncInterface> {
             }
             
             let completionHandlerWrapper = { (result: AsyncResult<T.ValueT, T.ErrorT>) -> Void in
-                
-                if let asyncObject = asyncObject {
-                    
-                    if asyncObject.isForeignThreadResultCallback {
-                        
-                        dispatch_async(callbacksQueue, { () -> () in
-                            completionHandler(result)
-                            return
-                        })
-                    } else {
-                    
-                        assert(dispatch_get_main_queue() !== callbacksQueue || currentThread === NSThread.currentThread(), "the same thread expected")
+
+                guard let asyncObject = asyncObject else { return }
+
+                if asyncObject.isForeignThreadResultCallback {
+
+                    dispatch_async(callbacksQueue, { () -> () in
                         completionHandler(result)
-                    }
+                        return
+                    })
+                } else {
+
+                    assert(dispatch_get_main_queue() !== callbacksQueue || currentThread === NSThread.currentThread(), "the same thread expected")
+                    completionHandler(result)
                 }
             }
             
@@ -114,23 +113,22 @@ final public class AsyncBuilder<T: AsyncInterface> {
                 progressCallback: progressHandlerWrapper)
             
             return { (task: AsyncHandlerTask) -> () in
-                
-                if let asyncObject = asyncObject {
-                    
+
+                guard let asyncObject = asyncObject else { return }
+
+                stateCallbackCalled = false
+                asyncObject.doTask(task)
+
+                let stateCallbackWrapper = { (state: AsyncState) -> () in
+
+                    stateCallback?(state: state)
                     stateCallbackCalled = false
-                    asyncObject.doTask(task)
-                    
-                    let stateCallbackWrapper = { (state: AsyncState) -> () in
-                        
-                        stateCallback?(state: state)
-                        stateCallbackCalled = false
-                    }
-                    
-                    processHandlerTast(
-                        task,
-                        stateCallback: stateCallbackCalled ? nil : stateCallbackWrapper,
-                        doneCallback : completionHandler)
                 }
+
+                processHandlerTast(
+                    task,
+                    stateCallback: stateCallbackCalled ? nil : stateCallbackWrapper,
+                    doneCallback : completionHandler)
             }
         }
     }

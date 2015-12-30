@@ -11,19 +11,19 @@ import Foundation
 import iAsync_utils
 
 final public class LimitedLoadersQueue<Strategy: QueueStrategy> {
-    
+
     private let state = QueueState<Strategy.ValueT, Strategy.ErrorT>()
-    
+
     private let orderStrategy: Strategy
-    
+
     public var limitCount: Int {
         didSet {
             performPendingLoaders()
         }
     }
-    
+
     public convenience init() {
-        
+
         self.init(limitCount: 10)
     }
 
@@ -31,44 +31,44 @@ final public class LimitedLoadersQueue<Strategy: QueueStrategy> {
 
         return state.activeLoaders.count + state.pendingLoaders.count
     }
-    
+
     public init(limitCount: Int) {
 
         self.limitCount = limitCount
         orderStrategy = Strategy(queueState: state)
     }
-    
+
     public func cancelAllActiveLoaders() {
-        
+
         for activeLoader in self.state.activeLoaders {
-            
+
             if let handler = activeLoader.loadersHandler {
                 handler(task: .Cancel)
             }
         }
     }
-    
+
     private func hasLoadersReadyToStartForPendingLoader(pendingLoader: BaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) -> Bool {
-        
+
         if pendingLoader.barrier {
 
             return state.activeLoaders.count == 0
         }
 
         let result = limitCount > state.activeLoaders.count && state.pendingLoaders.count > 0
-        
+
         if result {
-            
+
             return state.activeLoaders.all { (activeLoader: BaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) -> Bool in
                 return !activeLoader.barrier
             }
         }
-        
+
         return result
     }
-    
+
     private func nextPendingLoader() -> BaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>? {
-        
+
         let result = state.pendingLoaders.count > 0
             ?orderStrategy.firstPendingLoader()
             :nil
@@ -86,7 +86,7 @@ final public class LimitedLoadersQueue<Strategy: QueueStrategy> {
             pendingLoader = nextPendingLoader()
         }
     }
-    
+
     public func balancedLoaderWithLoader(loader: AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.Async, barrier: Bool) -> AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.Async {
         
         return { (progressCallback: AsyncProgressCallback?,
@@ -110,32 +110,32 @@ final public class LimitedLoadersQueue<Strategy: QueueStrategy> {
             weak var weakLoaderHolder = loaderHolder
             
             return { (task: AsyncHandlerTask) -> () in
-                
-                if let loaderHolder = weakLoaderHolder {
-                    switch (task) {
-                    case .UnSubscribe:
-                        loaderHolder.progressCallback = nil
-                        loaderHolder.stateCallback    = nil
-                        loaderHolder.doneCallback     = nil
-                        break
-                    case .Cancel:
-                        if let handler = loaderHolder.loadersHandler {
-                            
-                            handler(task: .Cancel)
-                        } else {
-                            
-                            //TODO self owning here fix?
-                            let doneCallback = loaderHolder.doneCallback
-                            
-                            if let index = self.state.pendingLoaders.indexOf( { $0 === loaderHolder } ) {
-                                self.state.pendingLoaders.removeAtIndex(index)
-                            }
-                            
-                            doneCallback?(result: .Interrupted)
+
+                guard let loaderHolder = weakLoaderHolder else { return }
+
+                switch (task) {
+                case .UnSubscribe:
+                    loaderHolder.progressCallback = nil
+                    loaderHolder.stateCallback    = nil
+                    loaderHolder.doneCallback     = nil
+                    break
+                case .Cancel:
+                    if let handler = loaderHolder.loadersHandler {
+                        
+                        handler(task: .Cancel)
+                    } else {
+                        
+                        //TODO self owning here fix?
+                        let doneCallback = loaderHolder.doneCallback
+                        
+                        if let index = self.state.pendingLoaders.indexOf( { $0 === loaderHolder } ) {
+                            self.state.pendingLoaders.removeAtIndex(index)
                         }
-                    case .Resume, .Suspend:
-                        fatalError("Unsupported type of task: \(task)")
+                        
+                        doneCallback?(result: .Interrupted)
                     }
+                case .Resume, .Suspend:
+                    fatalError("Unsupported type of task: \(task)")
                 }
             }
         }

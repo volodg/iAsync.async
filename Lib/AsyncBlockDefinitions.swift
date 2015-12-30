@@ -63,13 +63,13 @@ public enum AsyncTypes2<Value1, Value2, Error: ErrorType> {
 public func runAsync<Value, Error: ErrorType>(loader: AsyncTypes<Value, Error>.Async, onFinish: AsyncTypes<Value, Error>.DidFinishAsyncCallback? = nil)
 {
     if let onFinish = onFinish {
-        
+
         let _ = loader(progressCallback: nil, stateCallback: nil, finishCallback: { (result) -> () in
-            
+
             onFinish(result: result)
         })
     } else {
-        
+
         let _ = loader(progressCallback: nil, stateCallback: nil, finishCallback: nil)
     }
 }

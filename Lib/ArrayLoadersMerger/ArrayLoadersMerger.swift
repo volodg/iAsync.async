@@ -128,14 +128,12 @@ final public class ArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
     }
     
     private func activeLoaderForKey(key: Arg) -> ActiveArrayLoader<Arg, Value, Error>? {
-        
+
         let index = activeArrayLoaders.indexOf( { (activeLoader: ActiveArrayLoader<Arg, Value, Error>) -> Bool in
             return activeLoader.loadersCallbacksByKey[key] != nil
         })
-        if let index = index {
-            return activeArrayLoaders[index]
-        }
-        return nil
+
+        return index.flatMap { activeArrayLoaders[$0] }
     }
 }
 
@@ -197,13 +195,12 @@ final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
     }
     
     func cancelLoader() {
-        
-        if let block = _nativeHandler {
-            
-            _nativeHandler = nil
-            block(task: .Cancel)
-            self.clearState()
-        }
+
+        guard let block = _nativeHandler else { return }
+
+        _nativeHandler = nil
+        block(task: .Cancel)
+        self.clearState()
     }
     
     func clearState() {
@@ -217,13 +214,12 @@ final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
     }
     
     func unsubscribe(key: Arg) {
-        let indexOption = loadersCallbacksByKey.indexForKey(key)
-        if let index = indexOption {
-            
-            let callbacks = loadersCallbacksByKey[index]
-            callbacks.1.unsubscribe()
-            loadersCallbacksByKey.removeAtIndex(index)
-        }
+
+        guard let index = loadersCallbacksByKey.indexForKey(key) else { return }
+
+        let callbacks = loadersCallbacksByKey[index]
+        callbacks.1.unsubscribe()
+        loadersCallbacksByKey.removeAtIndex(index)
     }
     
     typealias KeysType = HashableArray<Arg>
@@ -246,50 +242,50 @@ final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
             finishCallback  : AsyncTypes<[Value], Error>.DidFinishAsyncCallback?) -> AsyncHandler in
             
             let progressCallbackWrapper = { (progressInfo: AnyObject) -> () in
-                
+
                 if let self_ = self {
-                    
+
                     for (_, value) in self_.loadersCallbacksByKey {
                         value.progressCallback?(progressInfo: progressInfo)
                     }
                 }
-                
+
                 progressCallback?(progressInfo: progressInfo)
             }
             
             let stateCallbackWrapper = { (state: AsyncState) -> () in
                 
                 if let self_ = self {
-                    
+
                     for (_, value) in self_.loadersCallbacksByKey {
                         value.stateCallback?(state: state)
                     }
                 }
-                
+
                 stateCallback?(state: state)
             }
             
             let doneCallbackWrapper = { (results: AsyncResult<[Value], Error>) -> () in
                 
                 if let self_ = self {
-                    
+
                     var loadersCallbacksByKey = [Arg:LoadersCallbacksData<Value, Error>]()
                     for (key, value) in self_.loadersCallbacksByKey {
                         loadersCallbacksByKey[key] = value.copy()
                     }
                     self_.clearState()
-                    
+
                     for (key, value) in loadersCallbacksByKey {
-                        
+
                         //TODO test not full results array
                         let result = results.map { $0[self_.indexOfKey(key)] }
-                        
+
                         value.doneCallback?(result: result)
-                        
+
                         value.unsubscribe()
                     }
                 }
-                
+
                 finishCallback?(result: results)
             }
             

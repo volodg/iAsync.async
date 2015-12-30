@@ -154,26 +154,25 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
             }
             
             return { (task: AsyncHandlerTask) -> () in
-                
-                if let currentHandler = handlerBlockHolder {
-                    
-                    if task == .Cancel || task == .UnSubscribe {
-                            
-                        handlerBlockHolder = nil
-                    }
-                    
-                    if task == .UnSubscribe {
-                        finishCallbackHolder?(result: .Unsubscribed)
-                    } else {
-                        currentHandler(task: task)
-                    }
-                    
-                    if task == .Cancel || task == .UnSubscribe {
-                            
-                        progressCallbackHolder = nil
-                        stateCallbackHolder    = nil
-                        finishCallbackHolder   = nil
-                    }
+
+                guard let currentHandler = handlerBlockHolder else { return }
+
+                if task == .Cancel || task == .UnSubscribe {
+
+                    handlerBlockHolder = nil
+                }
+
+                if task == .UnSubscribe {
+                    finishCallbackHolder?(result: .Unsubscribed)
+                } else {
+                    currentHandler(task: task)
+                }
+
+                if task == .Cancel || task == .UnSubscribe {
+
+                    progressCallbackHolder = nil
+                    stateCallbackHolder    = nil
+                    finishCallbackHolder   = nil
                 }
             }
         }
@@ -289,99 +288,96 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
     firstBinder: AsyncTypes2<Value, Result, Error>.AsyncBinder,
     _ secondBinder: AsyncTypes2<Error, Result, Error>.AsyncBinder?) -> AsyncTypes2<Value, Result, Error>.AsyncBinder
 {
-    if let secondBinder = secondBinder {
+    guard let secondBinder = secondBinder else { return firstBinder }
+
+    return { (binderResult: Value) -> AsyncTypes<Result, Error>.Async in
         
-        return { (binderResult: Value) -> AsyncTypes<Result, Error>.Async in
+        let firstLoader = firstBinder(binderResult)
+        
+        return { (progressCallback: AsyncProgressCallback?,
+                  stateCallback   : AsyncChangeStateCallback?,
+                  finishCallback  : AsyncTypes<Result, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
             
-            let firstLoader = firstBinder(binderResult)
+            var handlerBlockHolder: AsyncHandler?
             
-            return { (progressCallback: AsyncProgressCallback?,
-                      stateCallback   : AsyncChangeStateCallback?,
-                      finishCallback  : AsyncTypes<Result, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
+            var progressCallbackHolder = progressCallback
+            var stateCallbackHolder    = stateCallback
+            var finishCallbackHolder   = finishCallback
+            
+            let progressCallbackWrapper = { (progressInfo: AnyObject) -> () in
                 
-                var handlerBlockHolder: AsyncHandler?
+                progressCallbackHolder?(progressInfo: progressInfo)
+                return
+            }
+            let stateCallbackWrapper = { (state: AsyncState) -> () in
                 
-                var progressCallbackHolder = progressCallback
-                var stateCallbackHolder    = stateCallback
-                var finishCallbackHolder   = finishCallback
+                stateCallbackHolder?(state: state)
+                return
+            }
+            let doneCallbackWrapper = { (result: AsyncResult<Result, Error>) -> () in
                 
-                let progressCallbackWrapper = { (progressInfo: AnyObject) -> () in
-                    
-                    progressCallbackHolder?(progressInfo: progressInfo)
-                    return
+                if let finish = finishCallbackHolder {
+                    finishCallbackHolder = nil
+                    finish(result: result)
                 }
-                let stateCallbackWrapper = { (state: AsyncState) -> () in
+                
+                progressCallbackHolder = nil
+                stateCallbackHolder    = nil
+                handlerBlockHolder     = nil
+            }
+            
+            let firstHandler = firstLoader(
+                progressCallback: progressCallbackWrapper,
+                stateCallback   : stateCallbackWrapper,
+                finishCallback  : { (result: AsyncResult<Result, Error>) -> () in
                     
-                    stateCallbackHolder?(state: state)
-                    return
-                }
-                let doneCallbackWrapper = { (result: AsyncResult<Result, Error>) -> () in
-                    
-                    if let finish = finishCallbackHolder {
-                        finishCallbackHolder = nil
-                        finish(result: result)
+                    switch result {
+                    case .Success(let value):
+                        doneCallbackWrapper(.Success(value))
+                    case .Failure(let error):
+                        let secondLoader = secondBinder(error)
+                        handlerBlockHolder = secondLoader(
+                            progressCallback: progressCallbackWrapper,
+                            stateCallback   : stateCallbackWrapper,
+                            finishCallback  : doneCallbackWrapper)
+                    case .Interrupted:
+                        doneCallbackWrapper(.Interrupted)
+                    case .Unsubscribed:
+                        doneCallbackWrapper(.Unsubscribed) //TODO review
                     }
-                    
-                    progressCallbackHolder = nil
-                    stateCallbackHolder    = nil
-                    handlerBlockHolder     = nil
-                }
-                
-                let firstHandler = firstLoader(
-                    progressCallback: progressCallbackWrapper,
-                    stateCallback   : stateCallbackWrapper,
-                    finishCallback  : { (result: AsyncResult<Result, Error>) -> () in
-                        
-                        switch result {
-                        case .Success(let value):
-                            doneCallbackWrapper(.Success(value))
-                        case .Failure(let error):
-                            let secondLoader = secondBinder(error)
-                            handlerBlockHolder = secondLoader(
-                                progressCallback: progressCallbackWrapper,
-                                stateCallback   : stateCallbackWrapper,
-                                finishCallback  : doneCallbackWrapper)
-                        case .Interrupted:
-                            doneCallbackWrapper(.Interrupted)
-                        case .Unsubscribed:
-                            doneCallbackWrapper(.Unsubscribed) //TODO review
-                        }
-                })
+            })
+            
+            if handlerBlockHolder == nil {
+                handlerBlockHolder = firstHandler
+            }
+            
+            return { (task: AsyncHandlerTask) -> () in
                 
                 if handlerBlockHolder == nil {
-                    handlerBlockHolder = firstHandler
+                    return
                 }
                 
-                return { (task: AsyncHandlerTask) -> () in
-                    
-                    if handlerBlockHolder == nil {
-                        return
-                    }
-                    
-                    let currentHandler = handlerBlockHolder
-                    
-                    if task.unsubscribedOrCanceled {
-                        handlerBlockHolder = nil
-                    }
-                    
-                    if task == .UnSubscribe {
-                        finishCallbackHolder?(result: .Unsubscribed)
-                    } else {
-                        currentHandler!(task: task)
-                    }
-                    
-                    if task.unsubscribedOrCanceled {
-                        
-                        progressCallbackHolder = nil
-                        stateCallbackHolder    = nil
-                        finishCallbackHolder   = nil
-                    }
+                let currentHandler = handlerBlockHolder
+                
+                if task.unsubscribedOrCanceled {
+                    handlerBlockHolder = nil
+                }
+                
+                if task == .UnSubscribe {
+                    finishCallbackHolder?(result: .Unsubscribed)
+                } else {
+                    currentHandler!(task: task)
+                }
+
+                if task.unsubscribedOrCanceled {
+
+                    progressCallbackHolder = nil
+                    stateCallbackHolder    = nil
+                    finishCallbackHolder   = nil
                 }
             }
         }
     }
-    
-    return firstBinder
 }
 
 /////////////////////////////// TRY SEQUENCE WITH BINDING ///////////////////////////////
@@ -687,24 +683,21 @@ private func groupOfAsyncsPair<Value1, Value2, Error: ErrorType>(
 //doneCallbackHook called an cancel or finish loader's callbacks
 public func asyncWithDoneBlock<Value, Error: ErrorType>(loader: AsyncTypes<Value, Error>.Async, doneCallbackHook: SimpleBlock?) -> AsyncTypes<Value, Error>.Async {
     
-    if let doneCallbackHook = doneCallbackHook {
-        
-        return { (
-            progressCallback: AsyncProgressCallback?,
-            stateCallback   : AsyncChangeStateCallback?,
-            finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
+    guard let doneCallbackHook = doneCallbackHook else { return loader }
+
+    return { (
+        progressCallback: AsyncProgressCallback?,
+        stateCallback   : AsyncChangeStateCallback?,
+        finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
+
+        let wrappedDoneCallback = { (result: AsyncResult<Value, Error>) -> () in
             
-            let wrappedDoneCallback = { (result: AsyncResult<Value, Error>) -> () in
-                
-                doneCallbackHook()
-                finishCallback?(result: result)
-            }
-            return loader(
-                progressCallback: progressCallback,
-                stateCallback   : stateCallback,
-                finishCallback  : wrappedDoneCallback)
+            doneCallbackHook()
+            finishCallback?(result: result)
         }
+        return loader(
+            progressCallback: progressCallback,
+            stateCallback   : stateCallback,
+            finishCallback  : wrappedDoneCallback)
     }
-    
-    return loader
 }

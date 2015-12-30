@@ -57,30 +57,29 @@ final public class CachedAsync<Key: Hashable, Value, Error: ErrorType> {
             
             let handlerOption = propertyExtractor.getLoaderHandler()
             
-            if let handler = handlerOption {
+            guard let handler = handlerOption else { return }
+
+            switch task {
+            case .UnSubscribe:
+                let didLoadDataBlock = callbacks.finishCallback
+                propertyExtractor.removeDelegate(callbacks)
+                callbacks.clearCallbacks()
+
+                didLoadDataBlock?(result: .Unsubscribed)
+            case .Cancel:
+                handler(task: .Cancel)
+                self.clearDataForPropertyExtractor(propertyExtractor)//TODO should be already cleared here in finish callback
+            case .Suspend, .Resume:
                 
-                switch task {
-                case .UnSubscribe:
-                    let didLoadDataBlock = callbacks.finishCallback
-                    propertyExtractor.removeDelegate(callbacks)
-                    callbacks.clearCallbacks()
+                propertyExtractor.eachDelegate({(callback: CallbacksBlocksHolder<Value, Error>) -> () in
                     
-                    didLoadDataBlock?(result: .Unsubscribed)
-                case .Cancel:
-                    handler(task: .Cancel)
-                    self.clearDataForPropertyExtractor(propertyExtractor)//TODO should be already cleared here in finish callback
-                case .Suspend, .Resume:
-                    
-                    propertyExtractor.eachDelegate({(callback: CallbacksBlocksHolder<Value, Error>) -> () in
-                        
-                        if let onState = callback.stateCallback {
-                            let state: AsyncState = task == .Resume
-                                ?.Resumed
-                                :.Suspended
-                            onState(state: state)
-                        }
-                    })
-                }
+                    if let onState = callback.stateCallback {
+                        let state: AsyncState = task == .Resume
+                            ?.Resumed
+                            :.Suspended
+                        onState(state: state)
+                    }
+                })
             }
         }
     }
@@ -94,14 +93,14 @@ final public class CachedAsync<Key: Hashable, Value, Error: ErrorType> {
             if propertyExtractor.cacheObject == nil {
                 return
             }
-            
+
             let setter = propertyExtractor.setterOption
-            
+
             let copyDelegates = propertyExtractor.copyDelegates()
             self.clearDataForPropertyExtractor(propertyExtractor)
-            
+
             setter?(value: result)
-            
+
             for callbacks in copyDelegates {
                 callbacks.finishCallback?(result: result)
                 callbacks.clearCallbacks()
@@ -172,28 +171,28 @@ final public class CachedAsync<Key: Hashable, Value, Error: ErrorType> {
             progressCallback: AsyncProgressCallback?,
             stateCallback   : AsyncChangeStateCallback?,
             finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
-            
+
             let propertyExtractor = PropertyExtractorType(
                 setter     : setter,
                 getter     : getter,
                 cacheObject: self,
                 uniqueKey  : uniqueKey,
                 loader     : loader)
-            
+
             if let result = propertyExtractor.getAsyncResult() {
-                
+
                 finishCallback?(result: result)
-                
+
                 propertyExtractor.clear()
                 return jStubHandlerAsyncBlock
             }
-            
+
             let callbacks = CallbacksBlocksHolder(progressCallback: progressCallback, stateCallback: stateCallback, finishCallback: finishCallback)
-            
+
             let hasDelegates = propertyExtractor.hasDelegates()
-            
+
             propertyExtractor.addDelegate(callbacks)
-            
+
             return hasDelegates
                 ?self.cancelBlock(propertyExtractor, callbacks: callbacks)
                 :self.performNativeLoader(propertyExtractor, callbacks: callbacks)
