@@ -1,6 +1,6 @@
 //
 //  AsyncTypesTransform.swift
-//  iAsync
+//  iAsync_async
 //
 //  Created by Vladimir Gorbenko on 04.10.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -21,25 +21,25 @@ public enum AsyncTypesTransform<Value1, Value2, Error: ErrorType> {
     
     public typealias AsyncTransformer = (PackedAsync) -> PackedAsync
     
-    public static func transformLoadersType1(async: Async1, transformer: AsyncTransformer) -> Async1 {
+    public static func transformLoadersType1(async1: Async1, transformer: AsyncTransformer) -> Async1 {
         
-        let packedLoader = bindSequenceOfAsyncs(async, { result -> PackedAsync in
-            return asyncWithValue((result, nil))
+        let packedLoader = bindSequenceOfAsyncs(async1, { result -> PackedAsync in
+            return async(value: (result, nil))
         })
         let transformedLoader = transformer(packedLoader)
         return bindSequenceOfAsyncs(transformedLoader, { result -> Async1 in
-            return asyncWithValue(result.0!)
+            return async(value: result.0!)
         })
     }
     
-    public static func transformLoadersType2(async: Async2, transformer: AsyncTransformer) -> Async2 {
+    public static func transformLoadersType2(async2: Async2, transformer: AsyncTransformer) -> Async2 {
         
-        let packedLoader = bindSequenceOfAsyncs(async, { result -> PackedAsync in
-            return asyncWithValue((nil, result))
+        let packedLoader = bindSequenceOfAsyncs(async2, { result -> PackedAsync in
+            return async(value: (nil, result))
         })
         let transformedLoader = transformer(packedLoader)
         return bindSequenceOfAsyncs(transformedLoader, { result -> Async2 in
-            return asyncWithValue(result.1!)
+            return async(value: result.1!)
         })
     }
 }

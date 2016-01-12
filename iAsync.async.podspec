@@ -117,10 +117,8 @@ Pod::Spec.new do |s|
 
   # s.requires_arc = true
 
-  s.pod_target_xcconfig = { 'SWIFT_WHOLE_MODULE_OPTIMIZATION' => 'YES' }
-
   # s.xcconfig = { "HEADER_SEARCH_PATHS" => "$(SDKROOT)/usr/include/libxml2" }
   # s.xcconfig = { "SWIFT_OBJC_BRIDGING_HEADER" => "Lib/iAsyncUtils-Bridging-Header.h" }
-  s.dependency "iAsync.utils", "~> 0.0.1"
+  s.dependency "iAsync.utils"#, "~> 0.0.1"
 
 end

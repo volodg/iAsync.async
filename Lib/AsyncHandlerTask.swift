@@ -1,6 +1,6 @@
 //
 //  AsyncHandlerTask.swift
-//  Async
+//  iAsync_async
 //
 //  Created by Vladimir Gorbenko on 11.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -8,7 +8,7 @@
 
 import Foundation
 
-public enum AsyncHandlerTask : Printable {
+public enum AsyncHandlerTask : CustomStringConvertible {
     case UnSubscribe
     case Cancel
     case Resume

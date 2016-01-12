@@ -1,6 +1,6 @@
 //
 //  AsyncUtils.swift
-//  iAsync
+//  iAsync_async
 //
 //  Created by Vladimir Gorbenko on 27.06.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -13,54 +13,49 @@ import iAsync_utils
 private let defaultQueueName = "com.jff.async_operations_library.general_queue"
 
 //TODO remove this class
-private class BlockOperation<Value, Error: ErrorType> {
+final private class BlockOperation<Value, Error: ErrorType> {
     
-    //TODO make atomic
-    private var finishedOrCanceled = false
+    private var queue = dispatch_queue_create("BlockOperation.finishedOrCanceled", DISPATCH_QUEUE_SERIAL)
+    private var finishedOrCanceled: Bool = false
     
     init(
         queueName         : String?,
-        loadDataBlock     : AsyncTypes<Value, Error>.SyncOperationWithProgress,
+        jobWithProgress   : AsyncTypes<Value, Error>.SyncOperationWithProgress,
         didLoadDataBlock  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?,
         progressBlock     : AsyncProgressCallback?,
         barrier           : Bool,
         currentQueue      : dispatch_queue_t = dispatch_get_main_queue(),
-        serialOrConcurrent: dispatch_queue_attr_t = DISPATCH_QUEUE_CONCURRENT) {
-        
-        //TODO use cStringUsingEncoding(NSUTF8StringEncoding) instead
-        let queue: dispatch_queue_t = { () -> dispatch_queue_t in
-            
-            if let queueName = queueName {
-                return dispatch_queue_get_or_create(queueName, serialOrConcurrent)
-            }
-            
-            return dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-        }()
-        
+        serialOrConcurrent: dispatch_queue_attr_t = DISPATCH_QUEUE_CONCURRENT)
+    {
+        let queue: dispatch_queue_t
+
+        if let queueName = queueName {
+            queue = dispatch_queue_get_or_create(label: queueName, attr: serialOrConcurrent)
+        } else {
+            queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+        }
+
         performBackgroundOperationInQueue(
             queue,
             barrier         : barrier,
             currentQueue    : currentQueue,
-            loadDataBlock   : loadDataBlock,
+            jobWithProgress : jobWithProgress,
             didLoadDataBlock: didLoadDataBlock,
             progressBlock   : progressBlock)
     }
-    
+
     func cancel()  {
-        
-        if finishedOrCanceled {
-            return
-        }
-        
-        finishedOrCanceled = true
+
+        if finishedOrCanceled { return }
+
+        dispatch_sync(queue) { self.finishedOrCanceled = true }
     }
     
-    //TODO make private
-    func performBackgroundOperationInQueue(
+    private func performBackgroundOperationInQueue(
         queue           : dispatch_queue_t,
         barrier         : Bool,
         currentQueue    : dispatch_queue_t,
-        loadDataBlock   : AsyncTypes<Value, Error>.SyncOperationWithProgress,
+        jobWithProgress : AsyncTypes<Value, Error>.SyncOperationWithProgress,
         didLoadDataBlock: AsyncTypes<Value, Error>.DidFinishAsyncCallback?,
         progressBlock   : AsyncProgressCallback?) {
         
@@ -68,7 +63,7 @@ private class BlockOperation<Value, Error: ErrorType> {
             ?{(dispatch_queue_t queue, dispatch_block_t block) -> () in dispatch_barrier_async(queue, block) }
             :{(dispatch_queue_t queue, dispatch_block_t block) -> () in dispatch_async(queue, block) }
         
-        dispatchAsyncMethod(queue, { () -> () in
+        dispatchAsyncMethod(dispatch_queue_t: queue, dispatch_block_t: { () -> () in
             
             if self.finishedOrCanceled {
                 return
@@ -86,7 +81,7 @@ private class BlockOperation<Value, Error: ErrorType> {
                 })
             }
             
-            let result = loadDataBlock(progressCallback: progressCallback)
+            let result = jobWithProgress(progressCallback: progressCallback)
             
             dispatch_async(currentQueue, {
                 
@@ -94,7 +89,7 @@ private class BlockOperation<Value, Error: ErrorType> {
                     return
                 }
                 
-                self.finishedOrCanceled = true
+                dispatch_sync(queue) { self.finishedOrCanceled = true }
                 
                 didLoadDataBlock?(result: result)
             })
@@ -102,21 +97,21 @@ private class BlockOperation<Value, Error: ErrorType> {
     }
 }
 
-private class JAsyncAdapter<Value, Error: ErrorType> : AsyncInterface {
+final private class JAsyncAdapter<Value, Error: ErrorType> : AsyncInterface {
     
-    let loadDataBlock  : AsyncTypes<Value, Error>.SyncOperationWithProgress
+    let jobWithProgress: AsyncTypes<Value, Error>.SyncOperationWithProgress
     let queueName      : String?
     let barrier        : Bool
     let currentQueue   : dispatch_queue_t
     let queueAttributes: dispatch_queue_attr_t
     
-    init(loadDataBlock  : AsyncTypes<Value, Error>.SyncOperationWithProgress,
+    init(jobWithProgress: AsyncTypes<Value, Error>.SyncOperationWithProgress,
          queueName      : String?,
          barrier        : Bool,
          currentQueue   : dispatch_queue_t,
-         queueAttributes: dispatch_queue_attr_t)
-    {
-        self.loadDataBlock   = loadDataBlock
+         queueAttributes: dispatch_queue_attr_t) {
+        
+        self.jobWithProgress = jobWithProgress
         self.queueName       = queueName
         self.barrier         = barrier
         self.currentQueue    = currentQueue
@@ -128,11 +123,11 @@ private class JAsyncAdapter<Value, Error: ErrorType> : AsyncInterface {
     func asyncWithResultCallback(
         finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback,
         stateCallback   : AsyncChangeStateCallback,
-        progressCallback: AsyncProgressCallback)
-    {
+        progressCallback: AsyncProgressCallback) {
+        
         operation = BlockOperation(
             queueName         : queueName,
-            loadDataBlock     : loadDataBlock,
+            jobWithProgress   : jobWithProgress,
             didLoadDataBlock  : finishCallback,
             progressBlock     : progressCallback,
             barrier           : barrier,
@@ -142,7 +137,15 @@ private class JAsyncAdapter<Value, Error: ErrorType> : AsyncInterface {
     
     func doTask(task: AsyncHandlerTask) {
         
-        assert(task.unsubscribedOrCanceled)
+        switch task {
+        case .Resume:
+            fatalError("unsupported Resume")
+        case .Suspend:
+            fatalError("unsupported Suspend")
+        case .UnSubscribe, .Cancel:
+            break
+        }
+        
         if task == .Cancel {
             operation?.cancel()
             operation = nil
@@ -154,17 +157,17 @@ private class JAsyncAdapter<Value, Error: ErrorType> : AsyncInterface {
     }
 }
 
-private func asyncWithSyncOperationWithProgressBlockAndQueue<Value, Error: ErrorType>(
-    progressLoadDataBlock: AsyncTypes<Value, Error>.SyncOperationWithProgress,
-    queueName: String,
-    barrier: Bool,
-    currentQueue: dispatch_queue_t,
+private func async<Value, Error: ErrorType>(
+    jobWithProgress jobWithProgress: AsyncTypes<Value, Error>.SyncOperationWithProgress,
+    queueName      : String,
+    barrier        : Bool,
+    currentQueue   : dispatch_queue_t,
     queueAttributes: dispatch_queue_attr_t) -> AsyncTypes<Value, Error>.Async {
     
     let factory = { () -> JAsyncAdapter<Value, Error> in
         
         let asyncObject = JAsyncAdapter(
-            loadDataBlock  : progressLoadDataBlock,
+            jobWithProgress: jobWithProgress,
             queueName      : queueName,
             barrier        : barrier,
             currentQueue   : currentQueue,
@@ -175,75 +178,74 @@ private func asyncWithSyncOperationWithProgressBlockAndQueue<Value, Error: Error
     return AsyncBuilder.buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: currentQueue)
 }
 
-private func generalAsyncWithSyncOperationAndQueue<Value, Error: ErrorType>(
-    loadDataBlock: AsyncTypes<Value, Error>.SyncOperation,
-    queueName: String,
-    barrier: Bool,
+private func async<Value, Error: ErrorType>(
+    job job     : AsyncTypes<Value, Error>.SyncOperation,
+    queueName   : String,
+    barrier     : Bool,
     currentQueue: dispatch_queue_t,
-    attr: dispatch_queue_attr_t) -> AsyncTypes<Value, Error>.Async
+    attributes  : dispatch_queue_attr_t) -> AsyncTypes<Value, Error>.Async
 {
-    let progressLoadDataBlock = { (progressCallback: AsyncProgressCallback?) -> AsyncResult<Value, Error> in
-        
-        return loadDataBlock()
+    let jobWithProgress = { (progressCallback: AsyncProgressCallback?) -> AsyncResult<Value, Error> in
+        return job()
     }
     
-    return asyncWithSyncOperationWithProgressBlockAndQueue(
-        progressLoadDataBlock,
-        queueName,
-        barrier,
-        currentQueue,
-        attr)
+    return async(
+        jobWithProgress: jobWithProgress,
+        queueName      : queueName,
+        barrier        : barrier,
+        currentQueue   : currentQueue,
+        queueAttributes: attributes)
 }
 
-public func asyncWithSyncOperation<Value, Error>(loadDataBlock: AsyncTypes<Value, Error>.SyncOperation) -> AsyncTypes<Value, Error>.Async {
+public func async<Value, Error: ErrorType>(job job: AsyncTypes<Value, Error>.SyncOperation) -> AsyncTypes<Value, Error>.Async {
     
-    return asyncWithSyncOperationAndQueue(loadDataBlock, defaultQueueName)
+    return async(job: job, queueName: defaultQueueName)
 }
 
-public func asyncWithSyncOperationAndQueue<Value, Error: ErrorType>(loadDataBlock: AsyncTypes<Value, Error>.SyncOperation, queueName: String) -> AsyncTypes<Value, Error>.Async {
+public func async<Value, Error: ErrorType>(job job: AsyncTypes<Value, Error>.SyncOperation, queueName: String) -> AsyncTypes<Value, Error>.Async {
     
     assert(NSThread.isMainThread())
-    return generalAsyncWithSyncOperationAndQueue(
-        loadDataBlock,
-        queueName,
-        false,
-        dispatch_get_main_queue(),
-        DISPATCH_QUEUE_CONCURRENT)
+    return async(
+        job         : job,
+        queueName   : queueName,
+        barrier     : false,
+        currentQueue: dispatch_get_main_queue(),
+        attributes  : DISPATCH_QUEUE_CONCURRENT)
 }
 
-func asyncWithSyncOperationAndConfigurableQueue<Value, Error: ErrorType>(loadDataBlock: AsyncTypes<Value, Error>.SyncOperation, queueName: String, isSerialQueue: Bool) -> AsyncTypes<Value, Error>.Async {
+func async<Value, Error: ErrorType>(jobWithProgress: AsyncTypes<Value, Error>.SyncOperation, queueName: String, isSerialQueue: Bool) -> AsyncTypes<Value, Error>.Async {
     
     assert(NSThread.isMainThread())
     let attr: dispatch_queue_attr_t = isSerialQueue
         ?DISPATCH_QUEUE_SERIAL
         :DISPATCH_QUEUE_CONCURRENT
     
-    return generalAsyncWithSyncOperationAndQueue(
-        loadDataBlock,
-        queueName,
-        false,
-        dispatch_get_main_queue(),
-        attr)
+    return async(
+        job         : jobWithProgress,
+        queueName   : queueName,
+        barrier     : false,
+        currentQueue: dispatch_get_main_queue(),
+        attributes  : attr)
 }
 
-func barrierAsyncWithSyncOperationAndQueue<Value, Error: ErrorType>(loadDataBlock: AsyncTypes<Value, Error>.SyncOperation, queueName: String) -> AsyncTypes<Value, Error>.Async {
+func barrierAsync<Value, Error: ErrorType>(jobWithProgress: AsyncTypes<Value, Error>.SyncOperation, queueName: String) -> AsyncTypes<Value, Error>.Async {
     
     assert(NSThread.isMainThread())
-    return generalAsyncWithSyncOperationAndQueue(
-        loadDataBlock,
-        queueName,
-        true,
-        dispatch_get_main_queue(),
-        DISPATCH_QUEUE_CONCURRENT)
+    return async(
+        job         : jobWithProgress,
+        queueName   : queueName,
+        barrier     : true,
+        currentQueue: dispatch_get_main_queue(),
+        attributes  : DISPATCH_QUEUE_CONCURRENT)
 }
 
-public func asyncWithSyncOperationWithProgressBlock<Value, Error: ErrorType>(progressLoadDataBlock: AsyncTypes<Value, Error>.SyncOperationWithProgress) -> AsyncTypes<Value, Error>.Async {
+public func async<Value, Error: ErrorType>(jobWithProgress: AsyncTypes<Value, Error>.SyncOperationWithProgress) -> AsyncTypes<Value, Error>.Async {
     
     assert(NSThread.isMainThread())
-    return asyncWithSyncOperationWithProgressBlockAndQueue(
-        progressLoadDataBlock,
-        defaultQueueName,
-        false,
-        dispatch_get_main_queue(),
-        DISPATCH_QUEUE_CONCURRENT)
+    return async(
+        jobWithProgress: jobWithProgress,
+        queueName      : defaultQueueName,
+        barrier        : false,
+        currentQueue   : dispatch_get_main_queue(),
+        queueAttributes: DISPATCH_QUEUE_CONCURRENT)
 }

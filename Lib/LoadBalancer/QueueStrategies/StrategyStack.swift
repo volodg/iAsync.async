@@ -1,6 +1,6 @@
 //
-//  JStrategyStack.swift
-//  iAsync
+//  StrategyStack.swift
+//  iAsync_async
 //
 //  Created by Vladimir Gorbenko on 09.07.14.
 //  Copyright (c) 2014 EmbeddedSources. All rights reserved.
@@ -10,13 +10,13 @@ import Foundation
 
 import iAsync_utils
 
-internal class JStrategyStack<Value, Error: ErrorType> : JBaseStrategy<Value, Error>, JQueueStrategy {
+final internal class StrategyStack<Value, Error: ErrorType> : BaseStrategy<Value, Error>, QueueStrategy {
     
-    required override init(queueState: JQueueState<Value, Error>) {
+    required override init(queueState: QueueState<Value, Error>) {
         super.init(queueState: queueState)
     }
     
-    func firstPendingLoader() -> JBaseLoaderOwner<Value, Error>? {
+    func firstPendingLoader() -> BaseLoaderOwner<Value, Error>? {
         
         let result = queueState.pendingLoaders.last
         return result
