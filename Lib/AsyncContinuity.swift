@@ -392,8 +392,8 @@ final private class ResultHandlerData<Value1, Value2, Error: ErrorType> {
 
     init(progressCallback: AsyncProgressCallback?,
          stateCallback   : AsyncChangeStateCallback?,
-         finishCallback  : AsyncTypes<(Value1, Value2), Error>.DidFinishAsyncCallback?)
-    {
+         finishCallback  : AsyncTypes<(Value1, Value2), Error>.DidFinishAsyncCallback?) {
+
         progressCallbackHolder = progressCallback
         stateCallbackHolder    = stateCallback
         finishCallbackHolder   = finishCallback

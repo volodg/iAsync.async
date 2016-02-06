@@ -71,18 +71,6 @@ internal func processHandlerTast<Value, Error: ErrorType>(
     }
 }
 
-public func async<Value, Error>(sameThreadJob sameThreadJob: AsyncTypes<Value, Error>.SyncOperation) -> AsyncTypes<Value, Error>.Async {
-
-    return { (progressCallback: AsyncProgressCallback?,
-              stateCallback   : AsyncChangeStateCallback?,
-              doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
-
-        let result = sameThreadJob()
-        doneCallback?(result: result)
-        return jStubHandlerAsyncBlock
-    }
-}
-
 public func asyncWithFinishCallbackBlock<Value, Error>(
     loader: AsyncTypes<Value, Error>.Async,
     finishCallback: AsyncTypes<Value, Error>.DidFinishAsyncCallback) -> AsyncTypes<Value, Error>.Async {

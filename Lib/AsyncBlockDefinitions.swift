@@ -10,6 +10,8 @@ import Foundation
 
 import iAsync_utils
 
+import ReactiveKit
+
 public typealias AsyncProgressCallback = (progressInfo: AnyObject) -> ()
 
 public typealias AsyncChangeStateCallback = (state: AsyncState) -> ()
@@ -26,10 +28,10 @@ public enum AsyncTypes<Value, Error: ErrorType> {
         finishCallback  : DidFinishAsyncCallback?) -> AsyncHandler
 
     //Synchronous block which can take a lot of time
-    public typealias SyncOperation = () -> AsyncResult<Value, Error>
+    public typealias SyncOperation = () -> Result<Value, Error>
 
     //This block should call progress_callback_ block only from own thread
-    public typealias SyncOperationWithProgress = (progressCallback: AsyncProgressCallback?) -> AsyncResult<Value, Error>
+    public typealias SyncOperationWithProgress = (progressCallback: AsyncProgressCallback?) -> Result<Value, Error>
 }
 
 public enum AsyncTypes2<Value1, Value2, Error: ErrorType> {
