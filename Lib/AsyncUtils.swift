@@ -183,8 +183,8 @@ private func async<Value, Error: ErrorType>(
     queueName   : String,
     barrier     : Bool,
     currentQueue: dispatch_queue_t,
-    attributes  : dispatch_queue_attr_t) -> AsyncTypes<Value, Error>.Async
-{
+    attributes  : dispatch_queue_attr_t) -> AsyncTypes<Value, Error>.Async {
+
     let jobWithProgress = { (progressCallback: AsyncProgressCallback?) -> AsyncResult<Value, Error> in
         return job()
     }
@@ -202,6 +202,7 @@ public func async<Value, Error: ErrorType>(job job: AsyncTypes<Value, Error>.Syn
     return async(job: job, queueName: defaultQueueName)
 }
 
+//TODO remove
 public func async<Value, Error: ErrorType>(job job: AsyncTypes<Value, Error>.SyncOperation, queueName: String) -> AsyncTypes<Value, Error>.Async {
 
     assert(NSThread.isMainThread())
@@ -211,41 +212,4 @@ public func async<Value, Error: ErrorType>(job job: AsyncTypes<Value, Error>.Syn
         barrier     : false,
         currentQueue: dispatch_get_main_queue(),
         attributes  : DISPATCH_QUEUE_CONCURRENT)
-}
-
-func async<Value, Error: ErrorType>(jobWithProgress: AsyncTypes<Value, Error>.SyncOperation, queueName: String, isSerialQueue: Bool) -> AsyncTypes<Value, Error>.Async {
-
-    assert(NSThread.isMainThread())
-    let attr = isSerialQueue
-        ?DISPATCH_QUEUE_SERIAL
-        :DISPATCH_QUEUE_CONCURRENT
-
-    return async(
-        job         : jobWithProgress,
-        queueName   : queueName,
-        barrier     : false,
-        currentQueue: dispatch_get_main_queue(),
-        attributes  : attr)
-}
-
-func barrierAsync<Value, Error: ErrorType>(jobWithProgress: AsyncTypes<Value, Error>.SyncOperation, queueName: String) -> AsyncTypes<Value, Error>.Async {
-
-    assert(NSThread.isMainThread())
-    return async(
-        job         : jobWithProgress,
-        queueName   : queueName,
-        barrier     : true,
-        currentQueue: dispatch_get_main_queue(),
-        attributes  : DISPATCH_QUEUE_CONCURRENT)
-}
-
-public func async<Value, Error: ErrorType>(jobWithProgress: AsyncTypes<Value, Error>.SyncOperationWithProgress) -> AsyncTypes<Value, Error>.Async {
-
-    assert(NSThread.isMainThread())
-    return async(
-        jobWithProgress: jobWithProgress,
-        queueName      : defaultQueueName,
-        barrier        : false,
-        currentQueue   : dispatch_get_main_queue(),
-        queueAttributes: DISPATCH_QUEUE_CONCURRENT)
 }

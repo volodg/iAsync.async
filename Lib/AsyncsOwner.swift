@@ -11,7 +11,7 @@ import Foundation
 import iAsync_utils
 
 final public class AsyncsOwner {
-    
+
     private final class ActiveLoaderData {
 
         var handler: AsyncHandler?
@@ -30,7 +30,7 @@ final public class AsyncsOwner {
     }
 
     public func ownedAsync<Value, Error: ErrorType>(loader: AsyncTypes<Value, Error>.Async) -> AsyncTypes<Value, Error>.Async {
-        
+
         return { [weak self] (
             progressCallback: AsyncProgressCallback?,
             stateCallback   : AsyncChangeStateCallback?,
@@ -76,18 +76,18 @@ final public class AsyncsOwner {
             }
         }
     }
-    
+
     public func handleAll(task: AsyncHandlerTask) {
-        
+
         let tmpLoaders = loaders
         loaders.removeAll(keepCapacity: false)
         for (_, element) in tmpLoaders.enumerate() {
             element.handler?(task: task)
         }
     }
-    
+
     deinit {
-        
+
         handleAll(self.task)
     }
 }

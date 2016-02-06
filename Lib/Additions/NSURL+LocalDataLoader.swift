@@ -37,8 +37,8 @@ final private class URLLocalDataLoader : AsyncInterface {
     func asyncWithResultCallback(
         finishCallback  : AsyncTypes<ValueT, ErrorT>.DidFinishAsyncCallback,
         stateCallback   : AsyncChangeStateCallback,
-        progressCallback: AsyncProgressCallback)
-    {
+        progressCallback: AsyncProgressCallback) {
+
         url.localDataWithCallbacks({ (data) -> Void in
 
             finishCallback(result: .Success(data))

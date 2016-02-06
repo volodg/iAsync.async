@@ -13,50 +13,50 @@ import iAsync_utils
 import Dispatch
 
 public protocol AsyncInterface {
-    
+
     typealias ValueT : Any
     typealias ErrorT : ErrorType
-    
+
     func asyncWithResultCallback(
         finishCallback  : AsyncTypes<ValueT, ErrorT>.DidFinishAsyncCallback,
         stateCallback   : AsyncChangeStateCallback,
         progressCallback: AsyncProgressCallback)
-    
+
     func doTask(task: AsyncHandlerTask)
-    
+
     var isForeignThreadResultCallback: Bool { get }
 }
 
 final public class AsyncBuilder<T: AsyncInterface> {
-    
+
     public typealias AsyncInstanceBuilder = () -> T
-    
+
     public static func buildWithAdapterFactory(factory: AsyncInstanceBuilder) -> AsyncTypes<T.ValueT, T.ErrorT>.Async {
-        
+
         assert(NSThread.isMainThread(), "main thread expected")
         return buildWithAdapterFactoryWithDispatchQueue(factory, callbacksQueue: dispatch_get_main_queue())
     }
-    
+
     public static func buildWithAdapterFactoryWithDispatchQueue(
         factory: AsyncInstanceBuilder,
         callbacksQueue: dispatch_queue_t) -> AsyncTypes<T.ValueT, T.ErrorT>.Async {
-            
+
         return { (
             progressCallback: AsyncProgressCallback?,
             stateCallback   : AsyncChangeStateCallback?,
             finishCallback  : AsyncTypes<T.ValueT, T.ErrorT>.DidFinishAsyncCallback?) -> AsyncHandler in
-            
+
             var asyncObject: T? = factory()
-            
+
             var progressCallbackHolder = progressCallback
             var stateCallbackHolder    = stateCallback
-            
+
             let currentThread = NSThread.currentThread()
-            
+
             var finishCallbackHolder = finishCallback
-            
+
             let completionHandler = { (result: AsyncResult<T.ValueT, T.ErrorT>) -> () in
-                
+
                 if asyncObject == nil {
                     return
                 }
@@ -71,7 +71,7 @@ final public class AsyncBuilder<T: AsyncInterface> {
 
                 asyncObject = nil
             }
-            
+
             let completionHandlerWrapper = { (result: AsyncResult<T.ValueT, T.ErrorT>) -> Void in
 
                 guard let asyncObject = asyncObject else { return }
@@ -88,30 +88,30 @@ final public class AsyncBuilder<T: AsyncInterface> {
                     completionHandler(result)
                 }
             }
-            
+
             let progressHandlerWrapper = { (progressInfo: AnyObject) -> () in
-                
+
                 progressCallbackHolder?(progressInfo: progressInfo)
                 return
             }
-            
+
             var stateCallbackCalled = false
-            
+
             let handlerCallbackWrapper = { (state: AsyncState) -> () in
-                
+
                 stateCallbackCalled = true
                 if finishCallbackHolder == nil {
                     return
                 }
-                
+
                 stateCallbackHolder?(state: state)
             }
-            
+
             asyncObject!.asyncWithResultCallback(
                 completionHandlerWrapper,
                 stateCallback   : handlerCallbackWrapper,
                 progressCallback: progressHandlerWrapper)
-            
+
             return { (task: AsyncHandlerTask) -> () in
 
                 guard let asyncObject = asyncObject else { return }
