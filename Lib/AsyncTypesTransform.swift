@@ -8,8 +8,6 @@
 
 import Foundation
 
-import iAsync_utils
-
 public enum AsyncTypesTransform<Value1, Value2, Error: ErrorType> {
 
     public typealias Async1 = AsyncTypes<Value1, Error>.Async
