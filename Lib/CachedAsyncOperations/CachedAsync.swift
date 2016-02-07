@@ -43,7 +43,7 @@ final public class CachedAsync<Key: Hashable, Value, Error: ErrorType> {
         }
         propertyExtractor.getObjectRelatedPropertyData().clearDelegates()
         propertyExtractor.getObjectRelatedPropertyData().loaderHandler = nil
-        propertyExtractor.getObjectRelatedPropertyData().asyncLoader = nil
+        propertyExtractor.getObjectRelatedPropertyData().asyncLoader   = nil
         propertyExtractor.clear()
     }
 
@@ -51,9 +51,7 @@ final public class CachedAsync<Key: Hashable, Value, Error: ErrorType> {
 
         return { (task: AsyncHandlerTask) -> () in
 
-            if propertyExtractor.cleared {
-                return
-            }
+            if propertyExtractor.cleared { return }
 
             let handlerOption = propertyExtractor.getObjectRelatedPropertyData().loaderHandler
 
@@ -79,9 +77,7 @@ final public class CachedAsync<Key: Hashable, Value, Error: ErrorType> {
 
             //TODO test this if
             //may happen when cancel
-            if propertyExtractor.cacheObject == nil {
-                return
-            }
+            if propertyExtractor.cacheObject == nil { return }
 
             let setter = propertyExtractor.setterOption
 
@@ -103,8 +99,8 @@ final public class CachedAsync<Key: Hashable, Value, Error: ErrorType> {
 
         func progressCallback(progressInfo: AnyObject) {
 
-            propertyExtractor.getObjectRelatedPropertyData().eachDelegate { delegate -> Void in
-                delegate.progressCallback?(progressInfo: progressInfo)
+            propertyExtractor.getObjectRelatedPropertyData().eachDelegate {
+                $0.progressCallback?(progressInfo: progressInfo)
             }
         }
 
