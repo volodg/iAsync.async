@@ -9,56 +9,26 @@
 import Foundation
 
 import iAsync_reactiveKit
-
-final private class URLLocalDataLoader : AsyncStreamInterface {
-
-    static func loader(url: NSURL) -> AsyncTypes<Value, Error>.Async {
-
-        let factory = { () -> URLLocalDataLoader in
-
-            let asyncObj = URLLocalDataLoader(url: url)
-            return asyncObj
-        }
-
-        let loader = createStream(factory).toAsync()
-        return loader
-    }
-
-    let url: NSURL
-
-    private init(url: NSURL) {
-
-        self.url = url
-    }
-
-    typealias Value = NSData
-    typealias Next  = AnyObject
-    typealias Error = NSError
-
-    private var success: (Value -> Void)?
-
-    func asyncWithCallbacks(
-        success success: Value -> Void,
-        next   : Next  -> Void,
-        error  : Error -> Void) {
-
-        url.localDataWithCallbacks({ (data) -> Void in
-
-            success(data)
-        }) { (value) -> Void in
-
-            error(value)
-        }
-    }
-
-    func cancel() {}
-}
+import ReactiveKit
 
 extension NSURL {
 
     public func localDataLoader() -> AsyncTypes<NSData, NSError>.Async {
 
+        let stream: AsyncStream<NSData, AnyObject, NSError> = create(producer: { observer -> DisposableType? in
+
+            self.localDataWithCallbacks({ data -> Void in
+
+                observer(.Success(data))
+            }) { error -> Void in
+
+                observer(.Failure(error))
+            }
+            return nil
+        })
+
         //TODO add merger
-        return URLLocalDataLoader.loader(self)
+        let loader = stream.toAsync()
+        return loader
     }
 }
