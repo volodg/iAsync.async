@@ -8,8 +8,6 @@
 
 import Foundation
 
-import iAsync_utils
-
 final public class LimitedLoadersQueue<Strategy: QueueStrategy> {
 
     private let state = QueueState<Strategy.ValueT, Strategy.ErrorT>()

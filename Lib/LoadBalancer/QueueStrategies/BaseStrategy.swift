@@ -8,22 +8,20 @@
 
 import Foundation
 
-import iAsync_utils
-
 public class BaseStrategy<Value, Error: ErrorType> {
-    
+
     public typealias ValueT = Value
     public typealias ErrorT = Error
-    
+
     var queueState: QueueState<ValueT, ErrorT>!
-    
+
     init(queueState: QueueState<ValueT, ErrorT>) {
-        
+
         self.queueState = queueState
     }
-    
+
     public func executePendingLoader(pendingLoader: BaseLoaderOwner<ValueT, ErrorT>) {
-        
+
         var objectIndex = Int.max
 
         for (index, loader) in queueState.pendingLoaders.enumerate() {
@@ -38,7 +36,7 @@ public class BaseStrategy<Value, Error: ErrorType> {
         }
 
         queueState.activeLoaders.append(pendingLoader)
-        
+
         //    #ifdef DEBUG
         //let pendingLoadersCount = queueState.activeLoaders.count
         //let activeLoadersCount  = queueState.activeLoaders.count

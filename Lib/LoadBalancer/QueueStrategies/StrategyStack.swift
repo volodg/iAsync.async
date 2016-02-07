@@ -8,16 +8,14 @@
 
 import Foundation
 
-import iAsync_utils
-
 final internal class StrategyStack<Value, Error: ErrorType> : BaseStrategy<Value, Error>, QueueStrategy {
-    
+
     required override init(queueState: QueueState<Value, Error>) {
         super.init(queueState: queueState)
     }
-    
+
     func firstPendingLoader() -> BaseLoaderOwner<Value, Error>? {
-        
+
         let result = queueState.pendingLoaders.last
         return result
     }

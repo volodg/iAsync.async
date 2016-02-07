@@ -8,14 +8,12 @@
 
 import Foundation
 
-import iAsync_utils
-
 final public class StrategyFifo<Value, Error: ErrorType> : BaseStrategy<Value, Error>, QueueStrategy {
-    
+
     required override public init(queueState: QueueState<Value, Error>) {
         super.init(queueState: queueState)
     }
-    
+
     public func firstPendingLoader() -> BaseLoaderOwner<Value, Error>? {
 
         return queueState.pendingLoaders.first

@@ -8,8 +8,6 @@
 
 import Foundation
 
-import iAsync_utils
-
 final public class QueueState<Value, Error: ErrorType>  {
     var activeLoaders  = [BaseLoaderOwner<Value, Error>]()
     var pendingLoaders = [BaseLoaderOwner<Value, Error>]()

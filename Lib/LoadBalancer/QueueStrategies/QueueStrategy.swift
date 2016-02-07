@@ -8,15 +8,13 @@
 
 import Foundation
 
-import iAsync_utils
-
 public protocol QueueStrategy {
-    
+
     typealias ValueT : Any
     typealias ErrorT : ErrorType
-    
+
     init(queueState: QueueState<ValueT, ErrorT>)
-    
+
     func firstPendingLoader() -> BaseLoaderOwner<ValueT, ErrorT>?
     func executePendingLoader(pendingLoader: BaseLoaderOwner<ValueT, ErrorT>)
 }

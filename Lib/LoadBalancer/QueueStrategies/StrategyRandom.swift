@@ -8,18 +8,16 @@
 
 import Foundation
 
-import iAsync_utils
-
 final internal class StrategyRandom<Value, Error: ErrorType> : BaseStrategy<Value, Error>, QueueStrategy {
-    
+
     required override init(queueState: QueueState<Value, Error>) {
         super.init(queueState: queueState)
     }
-    
+
     func firstPendingLoader() -> BaseLoaderOwner<Value, Error>? {
-        
+
         let index = Int(arc4random_uniform(UInt32(queueState.pendingLoaders.count)))
-        
+
         let result = queueState.pendingLoaders[index]
         return result
     }
