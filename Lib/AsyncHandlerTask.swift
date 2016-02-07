@@ -11,20 +11,4 @@ import Foundation
 public enum AsyncHandlerTask {
     case UnSubscribe
     case Cancel
-    case Resume
-    case Suspend
-
-    public var unsubscribedOrCanceled: Bool {
-
-        switch self {
-        case UnSubscribe:
-            return true
-        case Cancel:
-            return true
-        case Resume:
-            return false
-        case Suspend:
-            return false
-        }
-    }
 }

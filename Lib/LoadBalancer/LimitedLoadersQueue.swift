@@ -88,9 +88,8 @@ final public class LimitedLoadersQueue<Strategy: QueueStrategy> {
     }
 
     public func balancedLoaderWithLoader(loader: AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.Async, barrier: Bool) -> AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.Async {
-        
+
         return { (progressCallback: AsyncProgressCallback?,
-                  stateCallback   : AsyncChangeStateCallback?,
                   finishCallback  : AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.DidFinishAsyncCallback?) -> AsyncHandler in
 
             let loaderHolder = BaseLoaderOwner(loader:loader, didFinishActiveLoaderCallback: { (loader: BaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) -> () in
@@ -100,7 +99,6 @@ final public class LimitedLoadersQueue<Strategy: QueueStrategy> {
             loaderHolder.barrier = barrier
 
             loaderHolder.progressCallback = progressCallback
-            loaderHolder.stateCallback    = stateCallback
             loaderHolder.doneCallback     = finishCallback
 
             self.state.pendingLoaders.append(loaderHolder)
@@ -108,7 +106,7 @@ final public class LimitedLoadersQueue<Strategy: QueueStrategy> {
             self.performPendingLoaders()
 
             weak var weakLoaderHolder = loaderHolder
-            
+
             return { (task: AsyncHandlerTask) -> () in
 
                 guard let loaderHolder = weakLoaderHolder else { return }
@@ -116,38 +114,35 @@ final public class LimitedLoadersQueue<Strategy: QueueStrategy> {
                 switch (task) {
                 case .UnSubscribe:
                     loaderHolder.progressCallback = nil
-                    loaderHolder.stateCallback    = nil
                     loaderHolder.doneCallback     = nil
                     break
                 case .Cancel:
                     if let handler = loaderHolder.loadersHandler {
-                        
+
                         handler(task: .Cancel)
                     } else {
-                        
+
                         //TODO self owning here fix?
                         let doneCallback = loaderHolder.doneCallback
-                        
+
                         if let index = self.state.pendingLoaders.indexOf( { $0 === loaderHolder } ) {
                             self.state.pendingLoaders.removeAtIndex(index)
                         }
-                        
+
                         doneCallback?(result: .Interrupted)
                     }
-                case .Resume, .Suspend:
-                    fatalError("Unsupported type of task: \(task)")
                 }
             }
         }
     }
-    
+
     public func barrierBalancedLoaderWithLoader(loader: AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.Async) -> AsyncTypes<Strategy.ValueT, Strategy.ErrorT>.Async {
-        
+
         return balancedLoaderWithLoader(loader, barrier:true)
     }
-    
+
     private func didFinishActiveLoader(activeLoader: BaseLoaderOwner<Strategy.ValueT, Strategy.ErrorT>) {
-        
+
         var objectIndex = Int.max
         for (index, object) in self.state.activeLoaders.enumerate() {
             if object === activeLoader {

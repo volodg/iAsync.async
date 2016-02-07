@@ -13,7 +13,6 @@ import iAsync_utils
 public func async<Value, Error>(result result: AsyncResult<Value, Error>) -> AsyncTypes<Value, Error>.Async {
 
     return { (progressCallback: AsyncProgressCallback?,
-              stateCallback   : AsyncChangeStateCallback?,
               doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
 
         doneCallback?(result: result)
@@ -24,7 +23,6 @@ public func async<Value, Error>(result result: AsyncResult<Value, Error>) -> Asy
 public func async<Value, Error>(value value: Value) -> AsyncTypes<Value, Error>.Async {
 
     return { (progressCallback: AsyncProgressCallback?,
-              stateCallback   : AsyncChangeStateCallback?,
               doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
 
         doneCallback?(result: .Success(value))
@@ -35,7 +33,6 @@ public func async<Value, Error>(value value: Value) -> AsyncTypes<Value, Error>.
 public func async<Value, Error: ErrorType>(error error: Error) -> AsyncTypes<Value, Error>.Async {
 
     return { (progressCallback: AsyncProgressCallback?,
-              stateCallback   : AsyncChangeStateCallback?,
               doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
 
         doneCallback?(result: .Failure(error))
@@ -46,17 +43,15 @@ public func async<Value, Error: ErrorType>(error error: Error) -> AsyncTypes<Val
 public func async<Value, Error: ErrorType>(task task: AsyncHandlerTask) -> AsyncTypes<Value, Error>.Async {
 
     return { (progressCallback: AsyncProgressCallback?,
-              stateCallback   : AsyncChangeStateCallback?,
               doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
 
-        processHandlerTast(task, stateCallback: stateCallback, doneCallback: doneCallback)
+        processHandlerTast(task, doneCallback: doneCallback)
         return jStubHandlerAsyncBlock
     }
 }
 
 internal func processHandlerTast<Value, Error: ErrorType>(
     task         : AsyncHandlerTask,
-    stateCallback: AsyncChangeStateCallback?,
     doneCallback : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) {
 
     switch task {
@@ -64,10 +59,6 @@ internal func processHandlerTast<Value, Error: ErrorType>(
         doneCallback?(result: .Unsubscribed)
     case .Cancel:
         doneCallback?(result: .Interrupted)
-    case .Resume:
-        stateCallback?(state: .Resumed)
-    case .Suspend:
-        stateCallback?(state: .Suspended)
     }
 }
 
@@ -76,12 +67,10 @@ public func asyncWithFinishCallbackBlock<Value, Error>(
     finishCallback: AsyncTypes<Value, Error>.DidFinishAsyncCallback) -> AsyncTypes<Value, Error>.Async {
 
     return { (progressCallback: AsyncProgressCallback?,
-              stateCallback   : AsyncChangeStateCallback?,
               doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
 
         return loader(
             progressCallback: progressCallback,
-            stateCallback   : stateCallback,
             finishCallback  : { (result: AsyncResult<Value, Error>) -> () in
 
             finishCallback(result: result)
@@ -93,12 +82,10 @@ public func asyncWithFinishCallbackBlock<Value, Error>(
 public func asyncWithFinishHookBlock<Value1, Value2, Error>(loader: AsyncTypes<Value1, Error>.Async, finishCallbackHook: AsyncTypes2<Value1, Value2, Error>.JDidFinishAsyncHook) -> AsyncTypes<Value2, Error>.Async {
 
     return { (progressCallback: AsyncProgressCallback?,
-              stateCallback   : AsyncChangeStateCallback?,
               finishCallback  : AsyncTypes<Value2, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
 
         return loader(
             progressCallback: progressCallback,
-            stateCallback   : stateCallback   ,
             finishCallback  : { (result: AsyncResult<Value1, Error>) -> () in
 
             finishCallbackHook(result: result, finishCallback: finishCallback)
@@ -112,7 +99,6 @@ public func asyncWithStartAndFinishBlocks<Value, Error>(
     finishCallback: AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncTypes<Value, Error>.Async {
 
     return { (progressCallback: AsyncProgressCallback?,
-              stateCallback   : AsyncChangeStateCallback?,
               doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
 
         startCallback?()
@@ -124,7 +110,6 @@ public func asyncWithStartAndFinishBlocks<Value, Error>(
         }
         return loader(
             progressCallback: progressCallback,
-            stateCallback   : stateCallback   ,
             finishCallback  : wrappedDoneCallback)
     }
 }
@@ -133,7 +118,6 @@ public func logErrorForLoader<Value>(loader: AsyncTypes<Value, NSError>.Async) -
 
     return { (
         progressCallback: AsyncProgressCallback?,
-        stateCallback   : AsyncChangeStateCallback?,
         finishCallback  : AsyncTypes<Value, NSError>.DidFinishAsyncCallback?) -> AsyncHandler in
 
         let wrappedDoneCallback = { (result: AsyncResult<Value, NSError>) -> () in
@@ -144,7 +128,6 @@ public func logErrorForLoader<Value>(loader: AsyncTypes<Value, NSError>.Async) -
 
         let cancel = loader(
             progressCallback: progressCallback,
-            stateCallback   : stateCallback,
             finishCallback  : wrappedDoneCallback)
 
         return cancel

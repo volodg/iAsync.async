@@ -33,7 +33,6 @@ final public class AsyncsOwner {
 
         return { [weak self] (
             progressCallback: AsyncProgressCallback?,
-            stateCallback   : AsyncChangeStateCallback?,
             finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
 
             guard let self_ = self else {
@@ -63,7 +62,6 @@ final public class AsyncsOwner {
 
             loaderData.handler = loader(
                 progressCallback: progressCallback,
-                stateCallback   : stateCallback,
                 finishCallback  : finishCallbackWrapper)
 
             return { (task: AsyncHandlerTask) -> () in

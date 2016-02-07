@@ -11,71 +11,68 @@ import Foundation
 import iAsync_utils
 
 final public class ArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
-    
+
     public typealias AsyncOpAr = AsyncTypes<[Value], Error>.Async
-    
+
     public typealias ArrayOfObjectsLoader = (keys: [Arg]) -> AsyncOpAr
-    
+
     private var _pendingLoadersCallbacksByKey = [Arg:LoadersCallbacksData<Value, Error>]()
     private let _cachedAsyncOp = CachedAsync<Arg, Value, Error>()
-    
+
     private let _arrayLoader: ArrayOfObjectsLoader
-    
+
     private var activeArrayLoaders = [ActiveArrayLoader<Arg, Value, Error>]()
-    
+
     private func removeActiveLoader(loader: ActiveArrayLoader<Arg, Value, Error>) {
-        
+
         for (index, element) in activeArrayLoaders.enumerate() {
-            
+
             if element === loader {
                 self.activeArrayLoaders.removeAtIndex(index)
             }
         }
     }
-    
+
     public init(arrayLoader: ArrayOfObjectsLoader) {
         _arrayLoader = arrayLoader
     }
-    
+
     public func oneObjectLoader(key: Arg) -> AsyncTypes<Value, Error>.Async {
-        
+
         let loader = { (progressCallback: AsyncProgressCallback?,
-                        stateCallback   : AsyncChangeStateCallback?,
                         finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
-            
+
             if let currentLoader = self.activeLoaderForKey(key) {
-                
+
                 let resultIndex = currentLoader.indexOfKey(key)
-                
+
                 let loader = bindSequenceOfAsyncs(currentLoader.nativeLoader!, { (result: [Value]) -> AsyncTypes<Value, Error>.Async in
-                    
+
                     if result.count <= resultIndex {
                         //TODO fail
                         return async(result: .Interrupted)
                     }
-                    
+
                     return async(value: result[resultIndex])
                 })
-                
+
                 return loader(
                     progressCallback: progressCallback,
-                    stateCallback   : stateCallback,
                     finishCallback  : finishCallback)
             }
-            
+
             let callbacks = LoadersCallbacksData(
                 progressCallback: progressCallback,
-                stateCallback   : stateCallback,
                 doneCallback    : finishCallback)
-            
+
             self._pendingLoadersCallbacksByKey[key] = callbacks
-            
+
             dispatch_async(dispatch_get_main_queue(), { [weak self] () -> () in
                 self?.runLoadingOfPendingKeys()
             })
-            
+
             return { (task: AsyncHandlerTask) -> () in
-                
+
                 switch task {
                 case .UnSubscribe:
                     let indexOption = self._pendingLoadersCallbacksByKey.indexForKey(key)
@@ -103,30 +100,28 @@ final public class ArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
                     } else {
                         self.activeLoaderForKey(key)?.cancelLoader()
                     }
-                case .Resume, .Suspend:
-                    fatalError("unsupported parameter: \(task)")
                 }
             }
         }
-        
+
         return self._cachedAsyncOp.asyncOpWithPropertySetter(nil, getter: nil, uniqueKey: key, loader: loader)
     }
-    
+
     private func runLoadingOfPendingKeys() {
-        
+
         if _pendingLoadersCallbacksByKey.count == 0 {
             return
         }
-        
+
         let loader = ActiveArrayLoader(loadersCallbacksByKey:_pendingLoadersCallbacksByKey, owner: self)
-        
+
         activeArrayLoaders.append(loader)
-        
+
         _pendingLoadersCallbacksByKey.removeAll(keepCapacity: true)
-        
+
         loader.runLoader()
     }
-    
+
     private func activeLoaderForKey(key: Arg) -> ActiveArrayLoader<Arg, Value, Error>? {
 
         let index = activeArrayLoaders.indexOf( { (activeLoader: ActiveArrayLoader<Arg, Value, Error>) -> Bool in
@@ -138,45 +133,40 @@ final public class ArrayLoadersMerger<Arg: Hashable, Value, Error: ErrorType> {
 }
 
 final private class LoadersCallbacksData<Value, Error: ErrorType> {
-    
+
     var progressCallback: AsyncProgressCallback?
-    var stateCallback   : AsyncChangeStateCallback?
     var doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?
-    
+
     var suspended = false
-    
+
     init(
         progressCallback: AsyncProgressCallback?,
-        stateCallback   : AsyncChangeStateCallback?,
-        doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?)
-    {
+        doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) {
+
         self.progressCallback = progressCallback
-        self.stateCallback    = stateCallback
         self.doneCallback     = doneCallback
     }
-    
+
     func unsubscribe() {
         progressCallback = nil
-        stateCallback    = nil
         doneCallback     = nil
     }
-    
+
     func copy() -> LoadersCallbacksData {
         return LoadersCallbacksData(
             progressCallback: self.progressCallback,
-            stateCallback   : self.stateCallback   ,
             doneCallback    : self.doneCallback    )
     }
 }
 
 final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
-    
+
     var loadersCallbacksByKey: [Arg:LoadersCallbacksData<Value, Error>]
     weak var owner: ArrayLoadersMerger<Arg, Value, Error>?
     var keys = KeysType()
-    
+
     private func indexOfKey(key: Arg) -> Int {
-        
+
         for (index, currentKey) in keys.enumerate() {
             if currentKey == key {
                 return index
@@ -184,16 +174,16 @@ final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
         }
         return -1
     }
-    
+
     var nativeLoader : AsyncTypes<[Value], Error>.Async? //Should be strong
-    
+
     private var _nativeHandler: AsyncHandler?
-    
+
     init(loadersCallbacksByKey: [Arg:LoadersCallbacksData<Value, Error>], owner: ArrayLoadersMerger<Arg, Value, Error>) {
         self.loadersCallbacksByKey = loadersCallbacksByKey
         self.owner                 = owner
     }
-    
+
     func cancelLoader() {
 
         guard let block = _nativeHandler else { return }
@@ -202,7 +192,7 @@ final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
         block(task: .Cancel)
         self.clearState()
     }
-    
+
     func clearState() {
         for (_, value) in loadersCallbacksByKey {
             value.unsubscribe()
@@ -212,7 +202,7 @@ final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
         _nativeHandler = nil
         nativeLoader   = nil
     }
-    
+
     func unsubscribe(key: Arg) {
 
         guard let index = loadersCallbacksByKey.indexForKey(key) else { return }
@@ -221,26 +211,25 @@ final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
         callbacks.1.unsubscribe()
         loadersCallbacksByKey.removeAtIndex(index)
     }
-    
+
     typealias KeysType = HashableArray<Arg>
     let _cachedAsyncOp = CachedAsync<KeysType,[Value], Error>()
-    
+
     func runLoader() {
-        
+
         assert(self.nativeLoader == nil)
-        
+
         keys.removeAll()
         for (key, _) in loadersCallbacksByKey {
             keys.append(key)
         }
-        
+
         let arrayLoader = owner!._arrayLoader(keys: Array(keys))
-        
+
         let loader = { [weak self] (
             progressCallback: AsyncProgressCallback?,
-            stateCallback   : AsyncChangeStateCallback?,
             finishCallback  : AsyncTypes<[Value], Error>.DidFinishAsyncCallback?) -> AsyncHandler in
-            
+
             let progressCallbackWrapper = { (progressInfo: AnyObject) -> () in
 
                 if let self_ = self {
@@ -252,21 +241,9 @@ final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
 
                 progressCallback?(progressInfo: progressInfo)
             }
-            
-            let stateCallbackWrapper = { (state: AsyncState) -> () in
-                
-                if let self_ = self {
 
-                    for (_, value) in self_.loadersCallbacksByKey {
-                        value.stateCallback?(state: state)
-                    }
-                }
-
-                stateCallback?(state: state)
-            }
-            
             let doneCallbackWrapper = { (results: AsyncResult<[Value], Error>) -> () in
-                
+
                 if let self_ = self {
 
                     var loadersCallbacksByKey = [Arg:LoadersCallbacksData<Value, Error>]()
@@ -288,30 +265,28 @@ final private class ActiveArrayLoader<Arg: Hashable, Value, Error: ErrorType> {
 
                 finishCallback?(result: results)
             }
-            
+
             return arrayLoader(
                 progressCallback: progressCallbackWrapper,
-                stateCallback   : stateCallbackWrapper,
                 finishCallback  : doneCallbackWrapper)
         }
-        
+
         let setter: CachedAsyncTypes<[Value], Error>.JResultSetter? = nil
         let getter: CachedAsyncTypes<[Value], Error>.JResultGetter? = nil
-        
+
         let nativeLoader: AsyncTypes<[Value], Error>.Async = _cachedAsyncOp.asyncOpWithPropertySetter(
             setter,
             getter: getter,
             uniqueKey: keys,
             loader: loader)
-        
+
         self.nativeLoader = nativeLoader
-        
+
         var finished = false
         let handler = nativeLoader(
             progressCallback: nil,
-            stateCallback   : nil,
             finishCallback  : { (result: AsyncResult<[Value], Error>) -> () in finished = true })
-        
+
         if !finished {
             _nativeHandler = handler
         }

@@ -69,17 +69,6 @@ final public class CachedAsync<Key: Hashable, Value, Error: ErrorType> {
             case .Cancel:
                 handler(task: .Cancel)
                 self.clearDataForPropertyExtractor(propertyExtractor)//TODO should be already cleared here in finish callback
-            case .Suspend, .Resume:
-
-                propertyExtractor.eachDelegate({(callback: CallbacksBlocksHolder<Value, Error>) -> () in
-
-                    if let onState = callback.stateCallback {
-                        let state: AsyncState = task == .Resume
-                            ?.Resumed
-                            :.Suspended
-                        onState(state: state)
-                    }
-                })
             }
         }
     }
@@ -121,17 +110,9 @@ final public class CachedAsync<Key: Hashable, Value, Error: ErrorType> {
 
         let doneCallback = doneCallbackBlock(propertyExtractor)
 
-        func stateCallback(state: AsyncState) {
-
-            propertyExtractor.eachDelegate { delegate -> Void in
-                delegate.stateCallback?(state: state)
-            }
-        }
-
         let loader  = propertyExtractor.getAsyncLoader()
         let handler = loader!(
             progressCallback: progressCallback,
-            stateCallback   : stateCallback,
             finishCallback  : doneCallback)
 
         if propertyExtractor.cacheObject == nil {
@@ -167,7 +148,6 @@ final public class CachedAsync<Key: Hashable, Value, Error: ErrorType> {
     {
         return { (
             progressCallback: AsyncProgressCallback?,
-            stateCallback   : AsyncChangeStateCallback?,
             finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
 
             let propertyExtractor = PropertyExtractorType(
@@ -185,7 +165,7 @@ final public class CachedAsync<Key: Hashable, Value, Error: ErrorType> {
                 return jStubHandlerAsyncBlock
             }
 
-            let callbacks = CallbacksBlocksHolder(progressCallback: progressCallback, stateCallback: stateCallback, finishCallback: finishCallback)
+            let callbacks = CallbacksBlocksHolder(progressCallback: progressCallback, finishCallback: finishCallback)
 
             let hasDelegates = propertyExtractor.hasDelegates()
 
@@ -213,7 +193,6 @@ final private class ObjectRelatedPropertyData<Value, Error: ErrorType> {
 
             return CallbacksBlocksHolder(
                 progressCallback: callbacks.progressCallback,
-                stateCallback   : callbacks.stateCallback   ,
                 finishCallback  : callbacks.finishCallback)
         }
         return result
@@ -254,23 +233,19 @@ final private class ObjectRelatedPropertyData<Value, Error: ErrorType> {
 final private class CallbacksBlocksHolder<Value, Error: ErrorType> {
 
     var progressCallback: AsyncProgressCallback?
-    var stateCallback   : AsyncChangeStateCallback?
     var finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?
 
     init(
         progressCallback: AsyncProgressCallback?,
-        stateCallback   : AsyncChangeStateCallback?,
         finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) {
 
         self.progressCallback = progressCallback
-        self.stateCallback    = stateCallback
         self.finishCallback   = finishCallback
     }
 
     func clearCallbacks() {
 
         progressCallback = nil
-        stateCallback    = nil
         finishCallback   = nil
     }
 }

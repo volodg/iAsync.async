@@ -48,22 +48,16 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
 
         return { (
             progressCallback: AsyncProgressCallback?,
-            stateCallback   : AsyncChangeStateCallback?,
             finishCallback  : AsyncTypes<Result2, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
 
             var handlerBlockHolder: AsyncHandler?
 
             var progressCallbackHolder = progressCallback
-            var stateCallbackHolder    = stateCallback
             var finishCallbackHolder   = finishCallback
 
             let progressCallbackWrapper = { (progressInfo: AnyObject) -> () in
 
                 progressCallbackHolder?(progressInfo: progressInfo)
-            }
-            let stateCallbackWrapper = { (state: AsyncState) -> () in
-
-                stateCallbackHolder?(state: state)
             }
             let doneCallbackWrapper = { (result: AsyncResult<Result2, Error>) -> () in
 
@@ -74,7 +68,6 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
                 }
 
                 progressCallbackHolder = nil
-                stateCallbackHolder    = nil
                 handlerBlockHolder     = nil
             }
 
@@ -87,7 +80,6 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
                     let secondLoader = secondBinder(value)
                     handlerBlockHolder = secondLoader(
                         progressCallback: progressCallbackWrapper,
-                        stateCallback   : stateCallbackWrapper,
                         finishCallback  : doneCallbackWrapper)
                 case .Failure(let error):
                     finished = true
@@ -104,7 +96,6 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
             let firstLoader = firstBinder(bindResult)
             let firstCancel = firstLoader(
                 progressCallback: progressCallbackWrapper,
-                stateCallback   : stateCallbackWrapper,
                 finishCallback  : fistLoaderDoneCallback)
 
             if finished {
@@ -133,7 +124,6 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
                 if task == .Cancel || task == .UnSubscribe {
 
                     progressCallbackHolder = nil
-                    stateCallbackHolder    = nil
                     finishCallbackHolder   = nil
                 }
             }
@@ -215,23 +205,16 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
         let firstLoader = firstBinder(binderResult)
 
         return { (progressCallback: AsyncProgressCallback?,
-                  stateCallback   : AsyncChangeStateCallback?,
                   finishCallback  : AsyncTypes<Result, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
 
             var handlerBlockHolder: AsyncHandler?
 
             var progressCallbackHolder = progressCallback
-            var stateCallbackHolder    = stateCallback
             var finishCallbackHolder   = finishCallback
 
             let progressCallbackWrapper = { (progressInfo: AnyObject) -> () in
 
                 progressCallbackHolder?(progressInfo: progressInfo)
-                return
-            }
-            let stateCallbackWrapper = { (state: AsyncState) -> () in
-
-                stateCallbackHolder?(state: state)
                 return
             }
             let doneCallbackWrapper = { (result: AsyncResult<Result, Error>) -> () in
@@ -242,13 +225,11 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
                 }
 
                 progressCallbackHolder = nil
-                stateCallbackHolder    = nil
                 handlerBlockHolder     = nil
             }
 
             let firstHandler = firstLoader(
                 progressCallback: progressCallbackWrapper,
-                stateCallback   : stateCallbackWrapper,
                 finishCallback  : { (result: AsyncResult<Result, Error>) -> () in
 
                     switch result {
@@ -258,7 +239,6 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
                         let secondLoader = secondBinder(error)
                         handlerBlockHolder = secondLoader(
                             progressCallback: progressCallbackWrapper,
-                            stateCallback   : stateCallbackWrapper,
                             finishCallback  : doneCallbackWrapper)
                     case .Interrupted:
                         doneCallbackWrapper(.Interrupted)
@@ -279,9 +259,7 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
 
                 let currentHandler = handlerBlockHolder
 
-                if task.unsubscribedOrCanceled {
-                    handlerBlockHolder = nil
-                }
+                handlerBlockHolder = nil
 
                 if task == .UnSubscribe {
                     finishCallbackHolder?(result: .Unsubscribed)
@@ -289,12 +267,8 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
                     currentHandler!(task: task)
                 }
 
-                if task.unsubscribedOrCanceled {
-
-                    progressCallbackHolder = nil
-                    stateCallbackHolder    = nil
-                    finishCallbackHolder   = nil
-                }
+                progressCallbackHolder = nil
+                finishCallbackHolder   = nil
             }
         }
     }
@@ -387,15 +361,12 @@ final private class ResultHandlerData<Value1, Value2, Error: ErrorType> {
     var handlerHolder2: AsyncHandler?
 
     var progressCallbackHolder: AsyncProgressCallback?
-    var stateCallbackHolder   : AsyncChangeStateCallback?
     var finishCallbackHolder  : AsyncTypes<(Value1, Value2), Error>.DidFinishAsyncCallback?
 
     init(progressCallback: AsyncProgressCallback?,
-         stateCallback   : AsyncChangeStateCallback?,
          finishCallback  : AsyncTypes<(Value1, Value2), Error>.DidFinishAsyncCallback?) {
 
         progressCallbackHolder = progressCallback
-        stateCallbackHolder    = stateCallback
         finishCallbackHolder   = finishCallback
     }
 }
@@ -431,7 +402,6 @@ private func makeResultHandler<Value, Value1, Value2, Error: ErrorType>(
                 fields.handlerHolder2 = nil
 
                 fields.progressCallbackHolder = nil
-                fields.stateCallbackHolder    = nil
 
                 if let finish = fields.finishCallbackHolder {
                     fields.finishCallbackHolder   = nil
@@ -446,7 +416,6 @@ private func makeResultHandler<Value, Value1, Value2, Error: ErrorType>(
             fields.finished = true
 
             fields.progressCallbackHolder = nil
-            fields.stateCallbackHolder    = nil
 
             if let finish = fields.finishCallbackHolder {
                 fields.finishCallbackHolder = nil
@@ -456,7 +425,6 @@ private func makeResultHandler<Value, Value1, Value2, Error: ErrorType>(
             fields.finished = true
 
             fields.progressCallbackHolder = nil
-            fields.stateCallbackHolder    = nil
 
             if let finish = fields.finishCallbackHolder {
                 fields.finishCallbackHolder = nil
@@ -466,7 +434,6 @@ private func makeResultHandler<Value, Value1, Value2, Error: ErrorType>(
             fields.finished = true
 
             fields.progressCallbackHolder = nil
-            fields.stateCallbackHolder    = nil
 
             if let finish = fields.finishCallbackHolder {
                 fields.finishCallbackHolder = nil
@@ -481,21 +448,14 @@ private func groupOfAsyncsPair<Value1, Value2, Error: ErrorType>(
     _ secondLoader: AsyncTypes<Value2, Error>.Async) -> AsyncTypes<(Value1, Value2), Error>.Async
 {
     return { (progressCallback: AsyncProgressCallback?,
-              stateCallback   : AsyncChangeStateCallback?,
               finishCallback  : AsyncTypes<(Value1, Value2), Error>.DidFinishAsyncCallback?) -> AsyncHandler in
 
         let fields = ResultHandlerData(
             progressCallback: progressCallback,
-            stateCallback   : stateCallback,
             finishCallback  : finishCallback)
 
         let progressCallbackWrapper = { (progressInfo: AnyObject) -> () in
             fields.progressCallbackHolder?(progressInfo: progressInfo)
-            return
-        }
-
-        let stateCallbackWrapper = { (state: AsyncState) -> () in
-            stateCallback?(state: state)
             return
         }
 
@@ -506,7 +466,6 @@ private func groupOfAsyncsPair<Value1, Value2, Error: ErrorType>(
         let firstLoaderResultHandler = makeResultHandler(index: 0, resultSetter: setter1, fields: fields)
         let loaderHandler1 = firstLoader(
             progressCallback: progressCallbackWrapper,
-            stateCallback   : stateCallbackWrapper,
             finishCallback  : firstLoaderResultHandler)
 
         if fields.finished {
@@ -524,7 +483,6 @@ private func groupOfAsyncsPair<Value1, Value2, Error: ErrorType>(
         let secondLoaderResultHandler = makeResultHandler(index: 1, resultSetter: setter2, fields: fields)
         let loaderHandler2 = secondLoader(
             progressCallback: progressCallback,
-            stateCallback   : stateCallback,
             finishCallback  : secondLoaderResultHandler)
 
         if fields.finished {
@@ -536,30 +494,20 @@ private func groupOfAsyncsPair<Value1, Value2, Error: ErrorType>(
 
         return { (task: AsyncHandlerTask) -> () in
 
-            let cancelOrUnSubscribe = task.unsubscribedOrCanceled
-
             if let handler = fields.handlerHolder1 {
 
-                if cancelOrUnSubscribe {
-                    fields.handlerHolder1 = nil
-                }
+                fields.handlerHolder1 = nil
                 handler(task: task)
             }
 
             if let handler = fields.handlerHolder2 {
 
-                if cancelOrUnSubscribe {
-                    fields.handlerHolder2 = nil
-                }
+                fields.handlerHolder2 = nil
                 handler(task: task)
             }
 
-            if cancelOrUnSubscribe {
-
-                fields.progressCallbackHolder = nil
-                fields.stateCallbackHolder    = nil
-                fields.finishCallbackHolder   = nil
-            }
+            fields.progressCallbackHolder = nil
+            fields.finishCallbackHolder   = nil
         }
     }
 }

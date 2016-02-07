@@ -14,8 +14,6 @@ import ReactiveKit
 
 public typealias AsyncProgressCallback = (progressInfo: AnyObject) -> ()
 
-public typealias AsyncChangeStateCallback = (state: AsyncState) -> ()
-
 public typealias AsyncHandler = (task: AsyncHandlerTask) -> ()
 
 public enum AsyncTypes<Value, Error: ErrorType> {
@@ -24,7 +22,6 @@ public enum AsyncTypes<Value, Error: ErrorType> {
 
     public typealias Async = (
         progressCallback: AsyncProgressCallback?,
-        stateCallback   : AsyncChangeStateCallback?,
         finishCallback  : DidFinishAsyncCallback?) -> AsyncHandler
 
     //Synchronous block which can take a lot of time
@@ -51,12 +48,12 @@ public func runAsync<Value, Error: ErrorType>(loader: AsyncTypes<Value, Error>.A
 
     if let onFinish = onFinish {
 
-        let _ = loader(progressCallback: nil, stateCallback: nil, finishCallback: { (result) -> () in
+        let _ = loader(progressCallback: nil, finishCallback: { (result) -> () in
 
             onFinish(result: result)
         })
     } else {
 
-        let _ = loader(progressCallback: nil, stateCallback: nil, finishCallback: nil)
+        let _ = loader(progressCallback: nil, finishCallback: nil)
     }
 }
