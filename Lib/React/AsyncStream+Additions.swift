@@ -61,7 +61,7 @@ public extension AsyncStreamType where Self.Next == AnyObject {
                 progressCallbackHolder = nil
 
                 if let finishCallback = finishCallbackHolder {
-                    finishCallbackHolder   = nil
+                    finishCallbackHolder = nil
                     finishCallback(result: result)
                 }
             }
