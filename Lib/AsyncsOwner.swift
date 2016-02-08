@@ -29,22 +29,22 @@ final public class AsyncsOwner {
         self.task = task
     }
 
-    public func ownedAsync<Value, Error: ErrorType>(loader: AsyncTypes<Value, Error>.Async) -> AsyncTypes<Value, Error>.Async {
+    public func ownedAsync<Value>(loader: AsyncTypes<Value, NSError>.Async) -> AsyncTypes<Value, NSError>.Async {
 
         return { [weak self] (
             progressCallback: AsyncProgressCallback?,
-            finishCallback  : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
+            finishCallback  : AsyncTypes<Value, NSError>.DidFinishAsyncCallback?) -> AsyncHandler in
 
             guard let self_ = self else {
 
-                finishCallback?(result: .Interrupted)
+                finishCallback?(result: .Failure(AsyncInterruptedError()))
                 return jStubHandlerAsyncBlock
             }
 
             let loaderData = ActiveLoaderData()
             self_.loaders.append(loaderData)
 
-            let finishCallbackWrapper = { (result: AsyncResult<Value, Error>) -> () in
+            let finishCallbackWrapper = { (result: AsyncResult<Value, NSError>) -> () in
 
                 if let self_ = self {
 

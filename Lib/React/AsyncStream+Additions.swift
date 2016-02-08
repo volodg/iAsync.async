@@ -29,8 +29,6 @@ public func asyncToStream<Value, Error: ErrorType>(loader: AsyncTypes<Value, Err
                 observer(.Success(value))
             case .Failure(let error):
                 observer(.Failure(error))
-            case .Interrupted:
-                break
             case .Unsubscribed:
                 break
             }
@@ -45,7 +43,7 @@ public func asyncToStream<Value, Error: ErrorType>(loader: AsyncTypes<Value, Err
     return result
 }
 
-public extension AsyncStreamType where Self.Next == AnyObject {
+public extension AsyncStreamType where Self.Next == AnyObject, Self.Error == NSError {
 
     public func toAsync() -> AsyncTypes<Self.Value, Self.Error>.Async {
 
@@ -85,7 +83,7 @@ public extension AsyncStreamType where Self.Next == AnyObject {
                 switch task {
                 case .Cancel:
                     dispose.dispose()
-                    finishOnce(.Interrupted)
+                    finishOnce(.Failure(AsyncInterruptedError()))
                 case .UnSubscribe:
                     finishOnce(.Unsubscribed)
                 }

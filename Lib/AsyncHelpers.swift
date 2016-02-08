@@ -40,25 +40,25 @@ public func async<Value, Error: ErrorType>(error error: Error) -> AsyncTypes<Val
     }
 }
 
-public func async<Value, Error: ErrorType>(task task: AsyncHandlerTask) -> AsyncTypes<Value, Error>.Async {
+public func async<Value>(task task: AsyncHandlerTask) -> AsyncTypes<Value, NSError>.Async {
 
     return { (progressCallback: AsyncProgressCallback?,
-              doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
+              doneCallback    : AsyncTypes<Value, NSError>.DidFinishAsyncCallback?) -> AsyncHandler in
 
         processHandlerTast(task, doneCallback: doneCallback)
         return jStubHandlerAsyncBlock
     }
 }
 
-internal func processHandlerTast<Value, Error: ErrorType>(
+internal func processHandlerTast<Value>(
     task         : AsyncHandlerTask,
-    doneCallback : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) {
+    doneCallback : AsyncTypes<Value, NSError>.DidFinishAsyncCallback?) {
 
     switch task {
     case .UnSubscribe:
         doneCallback?(result: .Unsubscribed)
     case .Cancel:
-        doneCallback?(result: .Interrupted)
+        doneCallback?(result: .Failure(AsyncInterruptedError()))
     }
 }
 

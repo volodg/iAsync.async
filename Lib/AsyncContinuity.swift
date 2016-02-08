@@ -84,9 +84,6 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
                 case .Failure(let error):
                     finished = true
                     doneCallbackWrapper(.Failure(error))
-                case .Interrupted:
-                    finished = true
-                    doneCallbackWrapper(.Interrupted)
                 case .Unsubscribed:
                     finished = true
                     doneCallbackWrapper(.Unsubscribed)
@@ -165,9 +162,9 @@ public func bindSequenceOfAsyncs<R1, R2, R3, Error: ErrorType>(
 /////////////////////////////////// TRY SEQUENCE ///////////////////////////////////
 
 //calls loaders untill success
-public func trySequenceOfAsyncs<Value, Error: ErrorType>(
-    firstLoader: AsyncTypes<Value, Error>.Async,
-    _ nextLoaders: AsyncTypes<Value, Error>.Async...) -> AsyncTypes<Value, Error>.Async
+public func trySequenceOfAsyncs<Value>(
+    firstLoader: AsyncTypes<Value, NSError>.Async,
+    _ nextLoaders: AsyncTypes<Value, NSError>.Async...) -> AsyncTypes<Value, NSError>.Async
 {
     var allLoaders = [firstLoader]
     allLoaders += nextLoaders
@@ -175,17 +172,17 @@ public func trySequenceOfAsyncs<Value, Error: ErrorType>(
     return trySequenceOfAsyncsArray(allLoaders)
 }
 
-private func trySequenceOfAsyncsArray<Value, Error: ErrorType>(loaders: [AsyncTypes<Value, Error>.Async]) -> AsyncTypes<Value, Error>.Async {
+private func trySequenceOfAsyncsArray<Value>(loaders: [AsyncTypes<Value, NSError>.Async]) -> AsyncTypes<Value, NSError>.Async {
 
     assert(loaders.count > 0)
 
-    var firstBlock = { (result: JWaterwallFirstObject) -> AsyncTypes<Value, Error>.Async in
+    var firstBlock = { (result: JWaterwallFirstObject) -> AsyncTypes<Value, NSError>.Async in
         return loaders[0]
     }
 
     for index in 1..<(loaders.count) {
 
-        let secondBlockBinder = { (result: Error) -> AsyncTypes<Value, Error>.Async in
+        let secondBlockBinder = { (result: NSError) -> AsyncTypes<Value, NSError>.Async in
             return loaders[index]
         }
         firstBlock = bindTrySequenceOfBindersPair(firstBlock, secondBlockBinder)
@@ -194,18 +191,18 @@ private func trySequenceOfAsyncsArray<Value, Error: ErrorType>(loaders: [AsyncTy
     return firstBlock(JWaterwallFirstObject.sharedWaterwallFirstObject())
 }
 
-private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
-    firstBinder: AsyncTypes2<Value, Result, Error>.AsyncBinder,
-    _ secondBinder: AsyncTypes2<Error, Result, Error>.AsyncBinder?) -> AsyncTypes2<Value, Result, Error>.AsyncBinder
+private func bindTrySequenceOfBindersPair<Value, Result>(
+    firstBinder: AsyncTypes2<Value, Result, NSError>.AsyncBinder,
+    _ secondBinder: AsyncTypes2<NSError, Result, NSError>.AsyncBinder?) -> AsyncTypes2<Value, Result, NSError>.AsyncBinder
 {
     guard let secondBinder = secondBinder else { return firstBinder }
 
-    return { (binderResult: Value) -> AsyncTypes<Result, Error>.Async in
+    return { (binderResult: Value) -> AsyncTypes<Result, NSError>.Async in
 
         let firstLoader = firstBinder(binderResult)
 
         return { (progressCallback: AsyncProgressCallback?,
-                  finishCallback  : AsyncTypes<Result, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
+                  finishCallback  : AsyncTypes<Result, NSError>.DidFinishAsyncCallback?) -> AsyncHandler in
 
             var handlerBlockHolder: AsyncHandler?
 
@@ -217,7 +214,7 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
                 progressCallbackHolder?(progressInfo: progressInfo)
                 return
             }
-            let doneCallbackWrapper = { (result: AsyncResult<Result, Error>) -> () in
+            let doneCallbackWrapper = { (result: AsyncResult<Result, NSError>) -> () in
 
                 if let finish = finishCallbackHolder {
                     finishCallbackHolder = nil
@@ -230,18 +227,20 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
 
             let firstHandler = firstLoader(
                 progressCallback: progressCallbackWrapper,
-                finishCallback  : { (result: AsyncResult<Result, Error>) -> () in
+                finishCallback  : { (result: AsyncResult<Result, NSError>) -> () in
 
                     switch result {
                     case .Success(let value):
                         doneCallbackWrapper(.Success(value))
                     case .Failure(let error):
+                        if error is AsyncInterruptedError {
+                            doneCallbackWrapper(result)
+                            return
+                        }
                         let secondLoader = secondBinder(error)
                         handlerBlockHolder = secondLoader(
                             progressCallback: progressCallbackWrapper,
                             finishCallback  : doneCallbackWrapper)
-                    case .Interrupted:
-                        doneCallbackWrapper(.Interrupted)
                     case .Unsubscribed:
                         doneCallbackWrapper(.Unsubscribed) //TODO review
                     }
@@ -278,11 +277,11 @@ private func bindTrySequenceOfBindersPair<Value, Result, Error: ErrorType>(
 
 //calls loaders while success
 //@@ next binder will receive an error if previous operation fails
-public func bindTrySequenceOfAsyncs<Value, Error: ErrorType>(
-    firstLoader: AsyncTypes<Value, Error>.Async,
-    _ nextBinders: AsyncTypes2<Error, Value, Error>.AsyncBinder...) -> AsyncTypes<Value, Error>.Async {
+public func bindTrySequenceOfAsyncs<Value>(
+    firstLoader: AsyncTypes<Value, NSError>.Async,
+    _ nextBinders: AsyncTypes2<NSError, Value, NSError>.AsyncBinder...) -> AsyncTypes<Value, NSError>.Async {
 
-    var firstBlock = { (data: JWaterwallFirstObject) -> AsyncTypes<Value, Error>.Async in
+    var firstBlock = { (data: JWaterwallFirstObject) -> AsyncTypes<Value, NSError>.Async in
         return firstLoader
     }
 
@@ -420,15 +419,6 @@ private func makeResultHandler<Value, Value1, Value2, Error: ErrorType>(
             if let finish = fields.finishCallbackHolder {
                 fields.finishCallbackHolder = nil
                 finish(result: .Failure(error))
-            }
-        case .Interrupted:
-            fields.finished = true
-
-            fields.progressCallbackHolder = nil
-
-            if let finish = fields.finishCallbackHolder {
-                fields.finishCallbackHolder = nil
-                finish(result: .Interrupted)
             }
         case .Unsubscribed:
             fields.finished = true
