@@ -56,7 +56,7 @@ internal func processHandlerTast<Value>(
 
     switch task {
     case .UnSubscribe:
-        doneCallback?(result: .Unsubscribed)
+        break
     case .Cancel:
         doneCallback?(result: .Failure(AsyncInterruptedError()))
     }

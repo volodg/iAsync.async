@@ -29,8 +29,6 @@ public func asyncToStream<Value, Error: ErrorType>(loader: AsyncTypes<Value, Err
                 observer(.Success(value))
             case .Failure(let error):
                 observer(.Failure(error))
-            case .Unsubscribed:
-                break
             }
         })
 
@@ -85,7 +83,8 @@ public extension AsyncStreamType where Self.Next == AnyObject, Self.Error == NSE
                     dispose.dispose()
                     finishOnce(.Failure(AsyncInterruptedError()))
                 case .UnSubscribe:
-                    finishOnce(.Unsubscribed)
+                    progressCallbackHolder = nil
+                    finishCallbackHolder   = nil
                 }
             }
         }

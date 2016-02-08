@@ -84,9 +84,6 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
                 case .Failure(let error):
                     finished = true
                     doneCallbackWrapper(.Failure(error))
-                case .Unsubscribed:
-                    finished = true
-                    doneCallbackWrapper(.Unsubscribed)
                 }
             }
 
@@ -112,17 +109,12 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
                     handlerBlockHolder = nil
                 }
 
-                if task == .UnSubscribe {
-                    finishCallbackHolder?(result: .Unsubscribed)
-                } else {
+                if task != .UnSubscribe {
                     currentHandler(task: task)
                 }
 
-                if task == .Cancel || task == .UnSubscribe {
-
-                    progressCallbackHolder = nil
-                    finishCallbackHolder   = nil
-                }
+                progressCallbackHolder = nil
+                finishCallbackHolder   = nil
             }
         }
     }
@@ -241,8 +233,6 @@ private func bindTrySequenceOfBindersPair<Value, Result>(
                         handlerBlockHolder = secondLoader(
                             progressCallback: progressCallbackWrapper,
                             finishCallback  : doneCallbackWrapper)
-                    case .Unsubscribed:
-                        doneCallbackWrapper(.Unsubscribed) //TODO review
                     }
             })
 
@@ -260,9 +250,7 @@ private func bindTrySequenceOfBindersPair<Value, Result>(
 
                 handlerBlockHolder = nil
 
-                if task == .UnSubscribe {
-                    finishCallbackHolder?(result: .Unsubscribed)
-                } else {
+                if task != .UnSubscribe {
                     currentHandler!(task: task)
                 }
 
@@ -419,15 +407,6 @@ private func makeResultHandler<Value, Value1, Value2, Error: ErrorType>(
             if let finish = fields.finishCallbackHolder {
                 fields.finishCallbackHolder = nil
                 finish(result: .Failure(error))
-            }
-        case .Unsubscribed:
-            fields.finished = true
-
-            fields.progressCallbackHolder = nil
-
-            if let finish = fields.finishCallbackHolder {
-                fields.finishCallbackHolder = nil
-                finish(result: .Unsubscribed)
             }
         }
     }

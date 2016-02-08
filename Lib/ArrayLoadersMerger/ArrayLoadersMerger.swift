@@ -80,10 +80,7 @@ final public class ArrayLoadersMerger<Arg: Hashable, Value> {
                     if let index = indexOption {
                         let (_, callbacks) = self._pendingLoadersCallbacksByKey[index]
                         self._pendingLoadersCallbacksByKey.removeAtIndex(index)
-                        if let finishCallback = callbacks.doneCallback {
-                            callbacks.doneCallback = nil
-                            finishCallback(result: .Unsubscribed)
-                        }
+                        callbacks.doneCallback = nil
                         callbacks.unsubscribe()
                     } else {
                         self.activeLoaderForKey(key)?.unsubscribe(key)
