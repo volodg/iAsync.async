@@ -414,8 +414,8 @@ private func makeResultHandler<Value, Value1, Value2, Error: ErrorType>(
 
 private func groupOfAsyncsPair<Value1, Value2, Error: ErrorType>(
     firstLoader: AsyncTypes<Value1, Error>.Async,
-    _ secondLoader: AsyncTypes<Value2, Error>.Async) -> AsyncTypes<(Value1, Value2), Error>.Async
-{
+    _ secondLoader: AsyncTypes<Value2, Error>.Async) -> AsyncTypes<(Value1, Value2), Error>.Async {
+
     return { (progressCallback: AsyncProgressCallback?,
               finishCallback  : AsyncTypes<(Value1, Value2), Error>.DidFinishAsyncCallback?) -> AsyncHandler in
 
