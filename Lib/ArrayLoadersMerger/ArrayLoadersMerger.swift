@@ -11,6 +11,8 @@ import Foundation
 import iAsync_utils
 import iAsync_reactiveKit
 
+import ReactiveKit
+
 final public class ArrayLoadersMerger<Arg: Hashable, Value> {
 
     public typealias AsyncOpAr = AsyncTypes<[Value], NSError>.Async
@@ -240,7 +242,7 @@ final private class ActiveArrayLoader<Arg: Hashable, Value> {
                 progressCallback?(progressInfo: progressInfo)
             }
 
-            let doneCallbackWrapper = { (results: AsyncResult<[Value], NSError>) -> () in
+            let doneCallbackWrapper = { (results: Result<[Value], NSError>) -> () in
 
                 if let self_ = self {
 
@@ -276,7 +278,7 @@ final private class ActiveArrayLoader<Arg: Hashable, Value> {
         var finished = false
         let handler = nativeLoader(
             progressCallback: nil,
-            finishCallback  : { (result: AsyncResult<[Value], NSError>) -> () in finished = true })
+            finishCallback  : { (result: Result<[Value], NSError>) -> () in finished = true })
 
         if !finished {
             _nativeHandler = handler

@@ -10,7 +10,9 @@ import Foundation
 
 import iAsync_utils
 
-public func async<Value, Error>(result result: AsyncResult<Value, Error>) -> AsyncTypes<Value, Error>.Async {
+import ReactiveKit
+
+public func async<Value, Error>(result result: Result<Value, Error>) -> AsyncTypes<Value, Error>.Async {
 
     return { (progressCallback: AsyncProgressCallback?,
               doneCallback    : AsyncTypes<Value, Error>.DidFinishAsyncCallback?) -> AsyncHandler in
@@ -71,7 +73,7 @@ public func asyncWithFinishCallbackBlock<Value, Error>(
 
         return loader(
             progressCallback: progressCallback,
-            finishCallback  : { (result: AsyncResult<Value, Error>) -> () in
+            finishCallback  : { (result: Result<Value, Error>) -> () in
 
             finishCallback(result: result)
             doneCallback?(result: result)
@@ -86,7 +88,7 @@ public func asyncWithFinishHookBlock<Value1, Value2, Error>(loader: AsyncTypes<V
 
         return loader(
             progressCallback: progressCallback,
-            finishCallback  : { (result: AsyncResult<Value1, Error>) -> () in
+            finishCallback  : { (result: Result<Value1, Error>) -> () in
 
             finishCallbackHook(result: result, finishCallback: finishCallback)
         })
@@ -103,7 +105,7 @@ public func asyncWithStartAndFinishBlocks<Value, Error>(
 
         startCallback?()
 
-        let wrappedDoneCallback = { (result: AsyncResult<Value, Error>) -> () in
+        let wrappedDoneCallback = { (result: Result<Value, Error>) -> () in
 
             finishCallback?(result: result)
             doneCallback?(result: result)
@@ -120,7 +122,7 @@ public func logErrorForLoader<Value>(loader: AsyncTypes<Value, NSError>.Async) -
         progressCallback: AsyncProgressCallback?,
         finishCallback  : AsyncTypes<Value, NSError>.DidFinishAsyncCallback?) -> AsyncHandler in
 
-        let wrappedDoneCallback = { (result: AsyncResult<Value, NSError>) -> () in
+        let wrappedDoneCallback = { (result: Result<Value, NSError>) -> () in
 
             result.error?.writeErrorWithLogger()
             finishCallback?(result: result)

@@ -10,6 +10,8 @@ import Foundation
 
 import iAsync_utils
 
+import ReactiveKit
+
 private var waterfallFirstObjectInstance: JWaterwallFirstObject? = nil
 
 final private class JWaterwallFirstObject {
@@ -59,7 +61,7 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
 
                 progressCallbackHolder?(progressInfo: progressInfo)
             }
-            let doneCallbackWrapper = { (result: AsyncResult<Result2, Error>) -> () in
+            let doneCallbackWrapper = { (result: Result<Result2, Error>) -> () in
 
                 if let callback = finishCallbackHolder {
 
@@ -73,7 +75,7 @@ private func bindSequenceOfBindersPair<Param, Result1, Result2, Error: ErrorType
 
             var finished = false
 
-            let fistLoaderDoneCallback = { (result: AsyncResult<Result1, Error>) -> () in
+            let fistLoaderDoneCallback = { (result: Result<Result1, Error>) -> () in
 
                 switch result {
                 case .Success(let value):
@@ -183,18 +185,18 @@ private func trySequenceOfAsyncsArray<Value>(loaders: [AsyncTypes<Value, NSError
     return firstBlock(JWaterwallFirstObject.sharedWaterwallFirstObject())
 }
 
-private func bindTrySequenceOfBindersPair<Value, Result>(
-    firstBinder: AsyncTypes2<Value, Result, NSError>.AsyncBinder,
-    _ secondBinder: AsyncTypes2<NSError, Result, NSError>.AsyncBinder?) -> AsyncTypes2<Value, Result, NSError>.AsyncBinder
+private func bindTrySequenceOfBindersPair<Value, Res>(
+    firstBinder: AsyncTypes2<Value, Res, NSError>.AsyncBinder,
+    _ secondBinder: AsyncTypes2<NSError, Res, NSError>.AsyncBinder?) -> AsyncTypes2<Value, Res, NSError>.AsyncBinder
 {
     guard let secondBinder = secondBinder else { return firstBinder }
 
-    return { (binderResult: Value) -> AsyncTypes<Result, NSError>.Async in
+    return { (binderResult: Value) -> AsyncTypes<Res, NSError>.Async in
 
         let firstLoader = firstBinder(binderResult)
 
         return { (progressCallback: AsyncProgressCallback?,
-                  finishCallback  : AsyncTypes<Result, NSError>.DidFinishAsyncCallback?) -> AsyncHandler in
+                  finishCallback  : AsyncTypes<Res, NSError>.DidFinishAsyncCallback?) -> AsyncHandler in
 
             var handlerBlockHolder: AsyncHandler?
 
@@ -206,7 +208,7 @@ private func bindTrySequenceOfBindersPair<Value, Result>(
                 progressCallbackHolder?(progressInfo: progressInfo)
                 return
             }
-            let doneCallbackWrapper = { (result: AsyncResult<Result, NSError>) -> () in
+            let doneCallbackWrapper = { (result: Result<Res, NSError>) -> () in
 
                 if let finish = finishCallbackHolder {
                     finishCallbackHolder = nil
@@ -219,7 +221,7 @@ private func bindTrySequenceOfBindersPair<Value, Result>(
 
             let firstHandler = firstLoader(
                 progressCallback: progressCallbackWrapper,
-                finishCallback  : { (result: AsyncResult<Result, NSError>) -> () in
+                finishCallback  : { (result: Result<Res, NSError>) -> () in
 
                     switch result {
                     case .Success(let value):
@@ -364,7 +366,7 @@ private func makeResultHandler<Value, Value1, Value2, Error: ErrorType>(
     fields: ResultHandlerData<Value1, Value2, Error>
     ) -> AsyncTypes<Value, Error>.DidFinishAsyncCallback
 {
-    return { (result: AsyncResult<Value, Error>) -> () in
+    return { (result: Result<Value, Error>) -> () in
 
         if fields.finished {
             return

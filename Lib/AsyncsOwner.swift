@@ -10,6 +10,8 @@ import Foundation
 
 import iAsync_utils
 
+import ReactiveKit
+
 final public class AsyncsOwner {
 
     private final class ActiveLoaderData {
@@ -44,7 +46,7 @@ final public class AsyncsOwner {
             let loaderData = ActiveLoaderData()
             self_.loaders.append(loaderData)
 
-            let finishCallbackWrapper = { (result: AsyncResult<Value, NSError>) -> () in
+            let finishCallbackWrapper = { (result: Result<Value, NSError>) -> () in
 
                 if let self_ = self {
 

@@ -52,7 +52,7 @@ public extension AsyncStreamType where Self.Next == AnyObject, Self.Error == NSE
             var progressCallbackHolder = progressCallback
             var finishCallbackHolder   = finishCallback
 
-            let finishOnce = { (result: AsyncResult<Self.Value, Self.Error>) -> Void in
+            let finishOnce = { (result: Result<Self.Value, Self.Error>) -> Void in
 
                 progressCallbackHolder = nil
 

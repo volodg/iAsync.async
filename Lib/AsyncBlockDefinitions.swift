@@ -18,7 +18,7 @@ public typealias AsyncHandler = (task: AsyncHandlerTask) -> ()
 
 public enum AsyncTypes<Value, Error: ErrorType> {
 
-    public typealias DidFinishAsyncCallback = (result: AsyncResult<Value, Error>) -> Void
+    public typealias DidFinishAsyncCallback = (result: Result<Value, Error>) -> Void
 
     public typealias Async = (
         progressCallback: AsyncProgressCallback?,
@@ -40,7 +40,7 @@ public enum AsyncTypes2<Value1, Value2, Error: ErrorType> {
     public typealias AsyncBinder = Value1 -> AsyncTypes<Value2, Error>.Async
 
     public typealias JDidFinishAsyncHook = (
-        result        : AsyncResult<Value1, Error>,
+        result        : Result<Value1, Error>,
         finishCallback: AsyncTypes<Value2, Error>.DidFinishAsyncCallback?) -> ()
 }
 
