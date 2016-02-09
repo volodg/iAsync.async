@@ -13,9 +13,9 @@ import ReactiveKit
 
 extension NSURL {
 
-    public func localDataLoader() -> AsyncTypes<NSData, NSError>.Async {
+    public func localDataLoader() -> AsyncStream<NSData, AnyObject, NSError> {
 
-        let stream: AsyncStream<NSData, AnyObject, NSError> = create(producer: { observer -> DisposableType? in
+        return create(producer: { observer -> DisposableType? in
 
             self.localDataWithCallbacks({ data -> Void in
 
@@ -26,9 +26,5 @@ extension NSURL {
             }
             return nil
         })
-
-        //TODO add merger
-        let loader = stream.toAsync()
-        return loader
     }
 }
