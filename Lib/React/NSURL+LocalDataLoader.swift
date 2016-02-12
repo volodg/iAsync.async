@@ -13,7 +13,7 @@ import ReactiveKit
 
 extension NSURL {
 
-    public func localDataLoader() -> AsyncStream<NSData, AnyObject, NSError> {
+    public func localDataStream() -> AsyncStream<NSData, AnyObject, NSError> {
 
         return create(producer: { observer -> DisposableType? in
 
