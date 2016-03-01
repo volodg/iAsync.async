@@ -8,37 +8,7 @@
 
 import Foundation
 
-public enum AsyncHandlerTask : CustomStringConvertible {
+public enum AsyncHandlerTask {
     case UnSubscribe
     case Cancel
-    case Resume
-    case Suspend
-    
-    public var description: String {
-        
-        switch self {
-        case .Cancel:
-            return "AsyncHandlerTask.Cancel"
-        case .Resume:
-            return "AsyncHandlerTask.Resume"
-        case .Suspend:
-            return "AsyncHandlerTask.Suspend"
-        case .UnSubscribe:
-            return "AsyncHandlerTask.UnSubscribe"
-        }
-    }
-    
-    public var unsubscribedOrCanceled: Bool {
-        
-        switch self {
-        case UnSubscribe:
-            return true
-        case Cancel:
-            return true
-        case Resume:
-            return false
-        case Suspend:
-            return false
-        }
-    }
 }
